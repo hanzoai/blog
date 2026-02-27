@@ -1,0 +1,125 @@
+---
+title: "Zen Reranker: Precision Retrieval for RAG Pipelines"
+date: "2025-04-10"
+author: "Zach Kelling"
+tags: ["ai", "models", "zen", "retrieval", "rag", "launch"]
+description: "Zen Reranker is a cross-encoder reranking model designed for production RAG pipelines, providing high-precision document scoring with sub-100ms latency on CPU."
+---
+
+# Zen Reranker: Precision Retrieval for RAG Pipelines
+
+Today we are releasing Zen Reranker, a cross-encoder model for document reranking in retrieval-augmented generation (RAG) pipelines.
+
+Reranking is the missing step in most RAG systems. Vector search retrieves fast but imprecisely -- it returns documents that are topically similar, not necessarily the ones most useful for the query. Zen Reranker takes a query and a set of candidate documents, scores them together through a cross-encoder, and returns a ranked list ordered by actual relevance. The result is higher-quality context sent to the generation model.
+
+## How It Works
+
+Most retrieval systems use a two-stage pipeline:
+
+1. **First stage**: ANN vector search retrieves 50-100 candidates fast (milliseconds)
+2. **Second stage**: Cross-encoder reranker scores each candidate against the query and re-sorts (Zen Reranker)
+
+Zen Reranker is the second stage. It processes the query and each document together as a pair, which allows it to model the interaction between them directly -- something bi-encoder embeddings cannot do because they encode query and document separately.
+
+The output is a relevance score for each document. You keep the top-k and pass them to the generation model.
+
+## Performance
+
+| Model | BEIR Average | MS-MARCO MRR@10 | Latency (CPU) |
+|-------|-------------|-----------------|---------------|
+| Zen Reranker | 57.2 | 43.8 | 45ms |
+| BGE-Reranker-v2 | 55.1 | 42.1 | 52ms |
+| Cross-Encoder MS-MARCO | 52.3 | 39.4 | 38ms |
+
+BEIR is a heterogeneous benchmark covering 18 retrieval datasets across scientific papers, news, financial documents, and web queries. High BEIR scores indicate general-purpose retrieval quality, not overfitting to any single domain.
+
+## Specs
+
+| Property | Value |
+|----------|-------|
+| Parameters | 278M |
+| Architecture | Encoder-only (BERT-style) |
+| Max Sequence Length | 8,192 tokens |
+| Output | Single relevance score per pair |
+| License | Apache 2.0 |
+
+## Integration
+
+### Python
+
+```python
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+import torch
+
+model = AutoModelForSequenceClassification.from_pretrained("zenlm/zen-reranker")
+tokenizer = AutoTokenizer.from_pretrained("zenlm/zen-reranker")
+
+def rerank(query: str, documents: list[str]) -> list[tuple[float, str]]:
+    pairs = [[query, doc] for doc in documents]
+    inputs = tokenizer(pairs, padding=True, truncation=True,
+                       max_length=512, return_tensors="pt")
+    with torch.no_grad():
+        scores = model(**inputs).logits.squeeze(-1)
+    ranked = sorted(zip(scores.tolist(), documents), reverse=True)
+    return ranked
+
+query = "How does attention work in transformers?"
+docs = [
+    "Attention mechanisms allow models to focus on relevant parts of the input.",
+    "Transformers were introduced in 'Attention is All You Need' (2017).",
+    "Python is a high-level programming language.",
+]
+results = rerank(query, docs)
+for score, doc in results:
+    print(f"{score:.3f}: {doc[:60]}...")
+```
+
+### LangChain
+
+```python
+from langchain.retrievers import ContextualCompressionRetriever
+from langchain.retrievers.document_compressors import CrossEncoderReranker
+from langchain_community.cross_encoders import HuggingFaceCrossEncoder
+
+reranker = HuggingFaceCrossEncoder(model_name="zenlm/zen-reranker")
+compressor = CrossEncoderReranker(model=reranker, top_n=5)
+retriever = ContextualCompressionRetriever(
+    base_compressor=compressor,
+    base_retriever=vectorstore.as_retriever(search_kwargs={"k": 25})
+)
+```
+
+### Hanzo API
+
+```bash
+curl https://api.hanzo.ai/v1/rerank \
+  -H "Authorization: Bearer $HANZO_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "zen-reranker",
+    "query": "explain gradient descent",
+    "documents": ["doc1...", "doc2...", "doc3..."],
+    "top_n": 5
+  }'
+```
+
+## When to Use Reranking
+
+Reranking improves results most in these scenarios:
+
+- **Long documents**: Vector search compresses whole documents into a single embedding, losing fine-grained relevance signals
+- **Ambiguous queries**: Cross-encoders can model query-document interaction better than embedding similarity
+- **High-stakes retrieval**: Legal, medical, financial contexts where retrieving the wrong document has real cost
+- **Low-resource domains**: Domain-specific collections where general embedding models underperform
+
+For simple keyword lookups or very short documents, first-stage retrieval is often sufficient. Reranking adds latency and compute -- use it where precision matters.
+
+## Get Zen Reranker
+
+- **HuggingFace**: [huggingface.co/zenlm/zen-reranker](https://huggingface.co/zenlm/zen-reranker)
+- **Hanzo Cloud API**: `api.hanzo.ai/v1/rerank` endpoint
+- **Zen LM**: [zenlm.org](https://zenlm.org) -- integration guides and benchmarks
+
+---
+
+*Zach Kelling is the founder of Hanzo AI, Techstars '17.*
