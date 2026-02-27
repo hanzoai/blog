@@ -1,36 +1,62 @@
 ---
-title: "Forking Ethereum: The Birth of Coreth"
+title: "Multi-Chain Architecture: Early Thoughts on Programmable Money"
 date: "2013-12-26"
 author: "Zach Kelling"
-tags: ["blockchain", "ethereum", "lux", "smart-contracts"]
-description: "Why we forked go-ethereum and built Coreth - the EVM implementation that powers the Lux blockchain."
+tags: ["blockchain", "architecture", "lux", "smart-contracts", "research"]
+description: "Early explorations into programmable money and why we believed multi-chain architecture was the right foundation for trustless commerce."
 ---
 
-# Forking Ethereum: The Birth of Coreth
+# Multi-Chain Architecture: Early Thoughts on Programmable Money
 
-Ethereum was still in development when we started. The whitepaper had been published, but mainnet was over a year away. We saw the potential of programmable money and smart contracts, but we also saw the limitations.
+2013. The Ethereum whitepaper had just been published. Bitcoin was starting to show real limitations for anything beyond simple value transfer. We were building Crowdstart — a commerce platform for crowdfunding campaigns — and thinking hard about what programmable money would mean for creators and backers.
 
-## Why Fork?
+This is a retrospective on those early architectural explorations that eventually became Lux.
 
-Ethereum made revolutionary design choices, but some felt like they would limit scalability:
+## The Problem With Single-Chain Architectures
 
-- **Single chain**: All transactions compete for the same block space
-- **Global state**: Every node stores everything
-- **Proof of Work**: Energy-intensive and slow finality
+The Bitcoin model — every transaction on one global ledger — was revolutionary but limiting:
 
-We wanted EVM compatibility (the developer ecosystem was too valuable to ignore) with different consensus and architecture.
+- **Throughput**: All transactions compete for the same block space
+- **Finality**: Probabilistic finality means waiting for confirmations
+- **Programmability**: Limited scripting, no native smart contracts
+- **Specialization**: One chain trying to serve every use case
 
-## What is Coreth?
+Ethereum's whitepaper solved the programmability problem elegantly. But it was still fundamentally a single-chain design. We believed the future would be purpose-built chains that interoperate.
 
-Coreth (Core Ethereum) is our fork of go-ethereum, modified to work with Lux's consensus:
+## What We Were Building Toward
+
+The architecture we eventually built into Lux:
+
+**Specialized chains, shared consensus**
+- Different chains optimized for different workloads
+- High-throughput for payments and commerce
+- Smart contract execution for complex logic
+- Asset issuance and transfer
+- Governance and validator management
+
+**Sub-second finality**
+- PoW and PoS have inherent latency tied to probabilistic finality
+- Snow consensus family achieves deterministic finality in under a second
+- This matters enormously for commerce — you need to know a payment is final
+
+**EVM compatibility**
+- The developer ecosystem around smart contract tooling is too valuable to ignore
+- Thousands of audited contracts, battle-tested libraries, experienced developers
+- We wanted full compatibility while running different consensus under the hood
+
+## The EVM Question
+
+The Ethereum Virtual Machine represents a remarkable standard. The tooling ecosystem — wallets, development frameworks, the Solidity compiler, auditing firms — all built around one VM specification.
+
+When building Lux's C-Chain (the smart contract chain), we wanted this compatibility. Our implementation runs the EVM specification on Lux's high-performance consensus layer:
 
 - **Same EVM**: All Solidity contracts work unchanged
-- **Same RPC**: Existing tools (MetaMask, Hardhat, ethers.js) just work
-- **Different consensus**: Snow* family instead of Nakamoto consensus
-- **Subnet capable**: Run your own chain with your own validators
+- **Same RPC**: Existing tools just work
+- **Different consensus**: Snow* family for sub-second finality
+- **Multi-chain**: C-Chain interoperates with X-Chain (assets) and P-Chain (validators)
 
 ```go
-// Coreth plugs into Lux's VM interface
+// The Lux VM interface — pluggable execution behind consensus
 type VM interface {
     Initialize(ctx *snow.Context, ...) error
     BuildBlock() (snowman.Block, error)
@@ -39,36 +65,32 @@ type VM interface {
 }
 ```
 
-## The Integration Challenge
+## Lux Consensus
 
-Making Ethereum's state machine work with a different consensus was non-trivial:
+The Snow* consensus family is probabilistic-but-fast. Each node repeatedly samples a small random subset of peers. When sufficient agreement is detected, the network reaches consensus in milliseconds.
 
-**Block production**: Ethereum assumes PoW determines who makes blocks. We needed leader selection from consensus.
+This enables:
 
-**Finality**: Ethereum has probabilistic finality (wait for confirmations). Lux has deterministic finality (once accepted, it's final).
+- **1-2 second finality** for payment confirmation
+- **4,500+ TPS** on the C-Chain
+- **Subnet architecture** for infinite scalability
+- **Deterministic finality** — once accepted, it's final
 
-**Gas pricing**: Ethereum's fee market assumes block space scarcity. With higher throughput, we needed different economics.
+## Commerce and Crypto
 
-## What We Changed
+From a commerce perspective, what matters:
 
-1. **Consensus interface**: Pluggable consensus instead of hardcoded PoW/PoS
-2. **State sync**: Fast sync using Lux's state bootstrapping
-3. **Fee model**: Dynamic fees based on network load
-4. **Precompiles**: Additional precompiled contracts for cross-chain communication
+**For creators**: Campaign funding that clears in seconds, not hours. Smart contracts that automatically disburse funds when milestones are reached.
 
-## Why This Matters
+**For platforms**: Composable financial primitives. On-chain reputation. Cross-chain payment rails.
 
-EVM compatibility is a moat. There are thousands of audited contracts, battle-tested libraries, and experienced developers. By maintaining compatibility, we got:
+**For developers**: Full EVM compatibility means existing Solidity knowledge transfers directly.
 
-- **Instant ecosystem**: DeFi protocols could deploy unchanged
-- **Tooling**: Years of development tools work out of the box
-- **Talent**: Solidity developers are productive immediately
+## Fast Forward to 2020
 
-## The Broader Vision
+We published the Lux mainnet in 2020. The multi-chain architecture we'd sketched in 2013-2014 was built out: C-Chain for EVM contracts, X-Chain for native Lux asset exchange, P-Chain for validator coordination. Post-quantum cryptography via lattice-based signatures baked in from the start.
 
-Coreth was the first piece of a larger puzzle: **specialized chains that interoperate**. The C-Chain (Coreth) handles EVM contracts. The X-Chain handles native assets. The P-Chain manages validators and subnets.
-
-Each chain optimized for its purpose, all connected by Lux consensus.
+The AI/compute layer came later — but the same architectural instincts apply. Specialized chains for specialized workloads. High throughput, deterministic finality, interoperability.
 
 ---
 
