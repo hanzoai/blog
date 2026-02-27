@@ -1,0 +1,157 @@
+---
+title: "Zen Pro: Professional-Grade 8B AI with Instruct, Thinking, and Agent Modes"
+date: "2025-09-15"
+author: "Zach Kelling"
+tags: ["ai", "models", "zen", "launch", "reasoning", "agents", "zen-pro"]
+description: "Zen Pro is an 8B professional model with three specialized variants — instruct for chat, thinking for complex reasoning, and agent for tool use — running on a single 16GB GPU."
+---
+
+# Zen Pro: Professional-Grade 8B AI with Instruct, Thinking, and Agent Modes
+
+Today we are releasing Zen Pro, an 8B professional model purpose-built for production workloads.
+
+Zen Pro ships as three distinct variants optimized for different task types. You pick the right variant for the job rather than prompting your way around a general-purpose model's limitations.
+
+## The Three Variants
+
+| Variant | HuggingFace | Optimized For |
+|---------|-------------|--------------|
+| **zen-pro-instruct** | `zenlm/zen-pro-instruct` | Chat, Q&A, summarization, drafting |
+| **zen-pro-thinking** | `zenlm/zen-pro-thinking` | Complex reasoning, math, multi-step analysis |
+| **zen-pro-agent** | `zenlm/zen-pro-agent` | Tool use, API calls, autonomous workflows |
+
+All three run on a single GPU with 16GB VRAM in BF16. At 6GB VRAM in GGUF Q4.
+
+## Why Three Variants
+
+General-purpose fine-tunes try to do everything and excel at nothing. The tradeoffs are real: a model optimized for extended reasoning behaves differently under instruction following than a model fine-tuned purely on conversation data. Tool-calling models need different training signal than either.
+
+Zen Pro separates these concerns. Each variant is trained on data and with objectives specific to its use case. You get better results by picking the right variant upfront.
+
+## Instruct
+
+The instruct variant is for conversational tasks: answering questions, summarizing text, drafting emails, explaining concepts. It follows instructions reliably and produces structured outputs (JSON, Markdown, lists) without coaxing.
+
+```python
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import torch
+
+model = AutoModelForCausalLM.from_pretrained(
+    "zenlm/zen-pro-instruct",
+    torch_dtype=torch.bfloat16,
+    device_map="auto"
+)
+tokenizer = AutoTokenizer.from_pretrained("zenlm/zen-pro-instruct")
+
+messages = [
+    {"role": "system", "content": "You are Zen Pro, a professional AI assistant."},
+    {"role": "user", "content": "Summarize the key differences between REST and GraphQL."}
+]
+
+text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+inputs = tokenizer(text, return_tensors="pt").to(model.device)
+outputs = model.generate(**inputs, max_new_tokens=512, temperature=0.6)
+print(tokenizer.decode(outputs[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True))
+```
+
+## Thinking
+
+The thinking variant enables extended chain-of-thought reasoning before producing output. It is trained to work through problems explicitly before committing to an answer. For mathematics, logic, multi-step analysis, and tasks where the path to the answer matters, the thinking variant outperforms instruct by a significant margin.
+
+```python
+messages = [
+    {"role": "user", "content": "A company has 3 products with 40%, 35%, and 25% market share. "
+     "Product A grows 10%/year, B shrinks 5%/year, C grows 20%/year. "
+     "What are the market shares after 3 years?"}
+]
+
+text = tokenizer.apply_chat_template(
+    messages, tokenize=False, add_generation_prompt=True,
+    enable_thinking=True
+)
+outputs = model.generate(**inputs, max_new_tokens=2048, temperature=0.6)
+```
+
+The thinking variant uses a reasoning trace internally -- you see only the final answer by default, but you can parse the trace by setting `include_thinking=True`.
+
+## Agent
+
+The agent variant is trained for tool use: calling functions, chaining API calls, parsing results, and taking action based on the output. It generates well-formed JSON tool calls reliably and handles multi-turn tool call sequences without degrading.
+
+```python
+tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "search_web",
+            "description": "Search the web for current information",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string"}
+                },
+                "required": ["query"]
+            }
+        }
+    }
+]
+
+messages = [{"role": "user", "content": "What are the latest developments in fusion energy?"}]
+text = tokenizer.apply_chat_template(messages, tools=tools, tokenize=False, add_generation_prompt=True)
+```
+
+## Benchmarks
+
+| Benchmark | Zen Pro 8B | Llama 3.1 8B | Mistral 7B |
+|-----------|-----------|-------------|------------|
+| MMLU | 75.4 | 73.0 | 64.2 |
+| GSM8K (thinking) | 93.1 | 84.4 | 74.7 |
+| HumanEval | 72.8 | 68.3 | 60.2 |
+| BFCL v2 (tool use) | 67.3 | 58.2 | 52.1 |
+| MT-Bench | 8.4 | 8.1 | 7.6 |
+
+GSM8K scores are for the thinking variant with extended reasoning enabled. BFCL (Berkeley Function Calling Leaderboard) measures tool call accuracy.
+
+## Specs
+
+| Property | Value |
+|----------|-------|
+| Parameters | 8B |
+| Architecture | Transformer (decoder-only) |
+| Context Window | 32,768 tokens |
+| License | Apache 2.0 |
+| Quantization | SafeTensors (BF16), GGUF (Q4_K_M, Q5_K_M, Q8_0), MLX |
+
+## Hardware Requirements
+
+| Format | VRAM | Speed |
+|--------|------|-------|
+| BF16 (full) | 16 GB | Fastest |
+| GGUF Q8_0 | 10 GB | Fast |
+| GGUF Q4_K_M | 6 GB | Moderate |
+| MLX 4-bit | 6 GB (Apple Silicon) | Native Metal |
+
+## Production Deployment
+
+```bash
+# vLLM
+vllm serve zenlm/zen-pro-instruct \
+  --dtype bfloat16 \
+  --max-model-len 32768
+
+# Hanzo API
+curl https://api.hanzo.ai/v1/chat/completions \
+  -H "Authorization: Bearer $HANZO_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "zen-pro", "messages": [{"role": "user", "content": "Your query"}]}'
+```
+
+## Get Zen Pro
+
+- **HuggingFace**: [huggingface.co/zenlm](https://huggingface.co/zenlm) -- instruct, thinking, agent variants
+- **Hanzo Cloud API**: `zen-pro` model at `api.hanzo.ai/v1/chat/completions`
+- **Zen LM**: [zenlm.org](https://zenlm.org) -- benchmarks and deployment guides
+
+---
+
+*Zach Kelling is the founder of Hanzo AI, Techstars '17.*

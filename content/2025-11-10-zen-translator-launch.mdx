@@ -1,0 +1,143 @@
+---
+title: "Zen Translator: High-Quality Machine Translation for 100+ Languages"
+date: "2025-11-10"
+author: "Zach Kelling"
+tags: ["ai", "models", "zen", "translation", "multilingual", "launch"]
+description: "Zen Translator is a specialized translation model covering 100+ languages with document-level coherence, domain adaptation, and tone-preserving translation for production localization pipelines."
+---
+
+# Zen Translator: High-Quality Machine Translation for 100+ Languages
+
+Today we are releasing Zen Translator, a model built specifically for high-quality machine translation across more than 100 languages.
+
+General-purpose language models can translate, but they are not optimized for it. Zen Translator is trained from the ground up on translation data with explicit objectives for faithfulness, fluency, and domain consistency. It handles the things that trip up general models: maintaining consistent terminology across a document, preserving formatting and markup, adapting tone to the target language's conventions, and translating idiomatic expressions without literal rendering.
+
+## Coverage
+
+| Tier | Languages | Description |
+|------|-----------|-------------|
+| **Tier 1** | EN, ZH, ES, FR, DE, JA, KO, PT, IT, RU | Best quality, widest training data |
+| **Tier 2** | AR, HI, NL, PL, TR, VI, SV, DA, CS, RO | Strong quality, extensive evaluation |
+| **Tier 3** | 90+ additional languages | Good quality, less evaluation coverage |
+
+Full language list at [zenlm.org/translator](https://zenlm.org/translator).
+
+## Document-Level Coherence
+
+Most MT models translate sentence by sentence, losing document context. Zen Translator processes multi-sentence context windows (up to 8,192 tokens) and maintains consistency across:
+
+- Named entities and proper nouns
+- Technical terminology and domain vocabulary
+- Pronoun reference chains (especially critical for languages with gendered pronouns)
+- Formal/informal register
+
+A document translated with Zen Translator reads like it was written in the target language, not like a concatenation of independently translated sentences.
+
+## Domain Adaptation
+
+Technical content has its own vocabulary. Zen Translator was trained with domain-specific terminology sets for:
+
+- **Legal**: Contract language, regulatory terms, legal procedure
+- **Medical**: Clinical terminology, drug names, diagnostic language
+- **Technical**: Software documentation, engineering specs, API references
+- **Financial**: Market terminology, accounting terms, regulatory filings
+- **Marketing**: Idioms, cultural adaptation, tone matching
+
+```python
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import torch
+
+model = AutoModelForCausalLM.from_pretrained(
+    "zenlm/zen-translator",
+    torch_dtype=torch.bfloat16,
+    device_map="auto"
+)
+tokenizer = AutoTokenizer.from_pretrained("zenlm/zen-translator")
+
+def translate(text: str, source: str, target: str, domain: str = "general") -> str:
+    prompt = f"""Translate the following {source} text to {target}.
+Domain: {domain}
+Preserve all formatting, technical terms, and proper nouns.
+
+Text:
+{text}
+
+Translation:"""
+
+    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+    outputs = model.generate(**inputs, max_new_tokens=len(text) * 2, temperature=0.3)
+    return tokenizer.decode(outputs[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True)
+
+# Technical documentation
+result = translate(
+    "The API rate limit is 1000 requests per minute per API key.",
+    source="English", target="Japanese", domain="technical"
+)
+```
+
+## Benchmarks
+
+| Direction | Zen Translator | NLLB-3.3B | DeepL API |
+|-----------|---------------|-----------|-----------|
+| EN → ZH | 28.4 BLEU | 25.1 | 28.8 |
+| EN → DE | 32.1 BLEU | 28.7 | 33.2 |
+| EN → JA | 24.7 BLEU | 21.3 | 25.1 |
+| ZH → EN | 26.3 BLEU | 23.8 | 27.4 |
+| ES → FR | 35.8 BLEU | 32.1 | 36.4 |
+| AR → EN | 22.1 BLEU | 18.9 | 23.8 |
+
+BLEU scores on WMT 2024 test sets. Zen Translator matches commercial API quality across major language pairs while running fully on-premise.
+
+## Markup Preservation
+
+Zen Translator handles HTML, Markdown, and XML without breaking tags:
+
+```python
+html_text = """<h1>Getting Started</h1>
+<p>Install the <code>package</code> using:</p>
+<pre><code>npm install @hanzo/sdk</code></pre>"""
+
+result = translate(html_text, "English", "French", domain="technical")
+# Output preserves all HTML tags; only human-readable text is translated
+```
+
+## Deployment
+
+```bash
+# Self-hosted via API
+curl https://api.hanzo.ai/v1/translate \
+  -H "Authorization: Bearer $HANZO_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "zen-translator",
+    "text": "The system processes requests asynchronously.",
+    "source": "en",
+    "target": "de",
+    "domain": "technical"
+  }'
+
+# Batch translation
+curl https://api.hanzo.ai/v1/translate/batch \
+  -d '{"texts": ["sentence 1", "sentence 2"], "source": "en", "target": "zh"}'
+```
+
+## Specs
+
+| Property | Value |
+|----------|-------|
+| Parameters | 7B |
+| Architecture | Encoder-decoder (seq2seq) |
+| Source Languages | 100+ |
+| Target Languages | 100+ |
+| Max Input Tokens | 8,192 |
+| License | Apache 2.0 |
+
+## Get Zen Translator
+
+- **HuggingFace**: [huggingface.co/zenlm/zen-translator](https://huggingface.co/zenlm/zen-translator)
+- **Hanzo Cloud API**: `zen-translator` model at `api.hanzo.ai/v1/translate`
+- **Zen LM**: [zenlm.org](https://zenlm.org) -- localization pipeline guides
+
+---
+
+*Zach Kelling is the founder of Hanzo AI, Techstars '17.*

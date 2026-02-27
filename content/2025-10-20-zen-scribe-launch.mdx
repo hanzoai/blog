@@ -1,0 +1,157 @@
+---
+title: "Zen Scribe: Professional Content Writing at 4B"
+date: "2025-10-20"
+author: "Zach Kelling"
+tags: ["ai", "models", "zen", "writing", "content", "launch"]
+description: "Zen Scribe is a 4B parameter model fine-tuned for long-form content generation — blog posts, technical documentation, business writing, and structured content pipelines — with consistent voice across extended outputs."
+---
+
+# Zen Scribe: Professional Content Writing at 4B
+
+Today we are releasing Zen Scribe, a 4B model purpose-built for writing tasks.
+
+General-purpose language models write adequately. Zen Scribe was trained specifically on high-quality long-form content: technical documentation, editorial articles, business reports, and structured prose. The difference shows in extended outputs -- Zen Scribe maintains voice consistency, logical progression, and editorial quality across 2,000+ word documents where general models start to drift.
+
+## What It Is Optimized For
+
+- **Technical documentation**: API references, guides, READMEs, how-to articles
+- **Blog and editorial**: Long-form articles, explainers, opinion pieces with clear argument structure
+- **Business writing**: Executive summaries, proposals, investor updates, case studies
+- **Creative writing**: Fiction with consistent character voice, narrative coherence, scene structure
+- **Structured output**: Product descriptions, templated content, form letters, emails
+
+## Performance
+
+Zen Scribe was evaluated on the WritingBench benchmark, which assesses instruction following, coherence, factuality, and style consistency across 500 writing tasks.
+
+| Model | WritingBench | Coherence | Style Consistency | Instruction Follow |
+|-------|-------------|-----------|-------------------|--------------------|
+| Zen Scribe 4B | 74.2 | 8.6/10 | 87% | 91% |
+| Llama 3 8B Instruct | 68.5 | 7.9/10 | 79% | 88% |
+| Mistral 7B Instruct | 64.1 | 7.4/10 | 75% | 85% |
+
+Zen Scribe 4B outperforms larger general-purpose models on writing-specific tasks despite having fewer parameters. Specialization matters.
+
+## Quickstart
+
+```python
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import torch
+
+model = AutoModelForCausalLM.from_pretrained(
+    "zenlm/zen-scribe",
+    torch_dtype=torch.bfloat16,
+    device_map="auto"
+)
+tokenizer = AutoTokenizer.from_pretrained("zenlm/zen-scribe")
+
+prompt = """Write a 600-word technical blog post about vector databases.
+Include: what they are, why they matter for AI applications, and when to use one vs a traditional database.
+Tone: clear and accessible for a developer audience without being condescending."""
+
+inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+outputs = model.generate(
+    **inputs,
+    max_new_tokens=900,
+    temperature=0.7,
+    top_p=0.9,
+    repetition_penalty=1.1,
+)
+print(tokenizer.decode(outputs[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True))
+```
+
+## Content Pipeline Integration
+
+Zen Scribe integrates with Hanzo Flow for automated content pipelines. A typical pipeline:
+
+1. **Brief** → outline generation
+2. **Draft** → full article from outline
+3. **Edit** → rewrite for clarity and concision
+4. **Publish** → format for CMS
+
+```python
+import hanzo
+
+client = hanzo.Client()
+
+# Step 1: Generate outline
+outline = client.completions.create(
+    model="zen-scribe",
+    messages=[
+        {"role": "system", "content": "You are a technical writer. Generate a structured outline."},
+        {"role": "user", "content": "Outline: Introduction to Kubernetes networking for developers"}
+    ],
+    max_tokens=400,
+)
+
+# Step 2: Write from outline
+draft = client.completions.create(
+    model="zen-scribe",
+    messages=[
+        {"role": "system", "content": "Write a technical blog post from this outline."},
+        {"role": "user", "content": outline.choices[0].message.content}
+    ],
+    max_tokens=1500,
+)
+```
+
+## Working With Style Guides
+
+Zen Scribe accepts style constraints in the system prompt and follows them reliably:
+
+```python
+system = """You are a technical writer for Stripe's developer documentation.
+Style rules:
+- Use second person ("you", not "the user")
+- Keep sentences under 20 words
+- Lead each paragraph with the most important point
+- Use Oxford commas
+- Avoid: "leverage", "utilize", "robust", "seamless"
+"""
+
+messages = [
+    {"role": "system", "content": system},
+    {"role": "user", "content": "Explain how webhook signatures work."}
+]
+```
+
+## Formats
+
+| Format | Size | Use Case |
+|--------|------|----------|
+| SafeTensors BF16 | 8.2 GB | GPU inference, fine-tuning |
+| GGUF Q8_0 | 4.3 GB | High-quality CPU inference |
+| GGUF Q4_K_M | 2.5 GB | Fast CPU inference |
+| MLX | 2.7 GB | Apple Silicon native |
+
+4B is a good size for content generation workloads. It fits in 8GB VRAM with headroom, handles 32K context for long-form drafting, and processes at 65 tokens/second on an M3 MacBook Pro.
+
+## Specs
+
+| Property | Value |
+|----------|-------|
+| Parameters | 4B |
+| Architecture | Transformer (decoder-only) |
+| Context Window | 32,768 tokens |
+| License | Apache 2.0 |
+| HuggingFace | `zenlm/zen-scribe` |
+
+## Apple Silicon
+
+```bash
+pip install mlx-lm
+mlx_lm.generate \
+  --model zenlm/zen-scribe \
+  --prompt "Write an introduction to:" \
+  --max-tokens 500
+```
+
+## Get Zen Scribe
+
+- **HuggingFace**: [huggingface.co/zenlm/zen-scribe](https://huggingface.co/zenlm/zen-scribe)
+- **Hanzo Cloud API**: `zen-scribe` model at `api.hanzo.ai/v1/chat/completions`
+- **Zen LM**: [zenlm.org](https://zenlm.org) -- content pipeline setup guides
+
+---
+
+*Zach Kelling is the founder of Hanzo AI, Techstars '17.*
