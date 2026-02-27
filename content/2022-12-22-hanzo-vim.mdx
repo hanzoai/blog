@@ -1,0 +1,194 @@
+---
+title: "hanzo.vim: AI-Powered Vim for Terminal Purists"
+date: "2022-12-22"
+author: "Zach Kelling"
+tags: ["vim", "editor", "ai", "developer-tools"]
+description: "Bringing AI capabilities to Vim without sacrificing the terminal-native experience."
+---
+
+# hanzo.vim: AI-Powered Vim for Terminal Purists
+
+VS Code has Copilot. JetBrains has AI Assistant. What about those of us who never left the terminal? hanzo.vim brings AI to Vim and Neovim without compromising the keyboard-first workflow we love.
+
+## Why Vim?
+
+Vim users chose Vim for reasons:
+
+- **Speed**: Thought → keystroke → result, no mouse
+- **Ubiquity**: SSH into any server, Vim is there
+- **Efficiency**: Do more with fewer keystrokes
+- **Focus**: No distractions, just text
+
+AI tools shouldn't break these principles.
+
+## Installation
+
+```vim
+" Using vim-plug
+Plug 'hanzoai/hanzo.vim'
+
+" Using packer.nvim
+use 'hanzoai/hanzo.vim'
+```
+
+## Core Features
+
+### Inline Completion
+
+Suggestions appear as you type, accept with `<Tab>`:
+
+```python
+def calculate_fibonacci(n):
+    # Cursor here, suggestions appear ghosted
+    if n <= 1:
+        return n
+    return calculate_fibonacci(n-1) + calculate_fibonacci(n-2)
+```
+
+Toggle with `<Leader>ai` or disable entirely - your choice.
+
+### Chat Interface
+
+`:HanzoChat` opens a split with AI conversation:
+
+```
+┌─────────────────────┬───────────────────┐
+│                     │ > Explain this    │
+│    Your Code        │   function        │
+│                     │                   │
+│                     │ This function...  │
+│                     │                   │
+└─────────────────────┴───────────────────┘
+```
+
+Select code visually, then `:HanzoChat` includes it as context.
+
+### Code Actions
+
+Visual select, then command:
+
+- `:HanzoExplain` - Explain selected code
+- `:HanzoRefactor` - Suggest refactoring
+- `:HanzoTest` - Generate tests
+- `:HanzoDoc` - Add documentation
+- `:HanzoFix` - Fix errors/warnings
+
+### Multi-File Context
+
+`:HanzoContext` manages what files the AI sees:
+
+```vim
+:HanzoContext add src/*.py    " Add Python files
+:HanzoContext add tests/      " Add test directory
+:HanzoContext list            " Show current context
+:HanzoContext clear           " Reset context
+```
+
+## Keybindings
+
+Default mappings (customizable):
+
+| Mapping | Action |
+|---------|--------|
+| `<Tab>` | Accept suggestion |
+| `<C-]>` | Next suggestion |
+| `<C-[>` | Previous suggestion |
+| `<Leader>ac` | Open chat |
+| `<Leader>ae` | Explain selection |
+| `<Leader>ar` | Refactor selection |
+| `<Leader>at` | Generate tests |
+| `<Leader>af` | Fix errors |
+
+## Configuration
+
+```vim
+let g:hanzo_model = 'zen-coder-34b'  " Model to use
+let g:hanzo_auto_complete = 1        " Enable auto-complete
+let g:hanzo_completion_delay = 300   " Delay in ms
+let g:hanzo_max_context = 8000       " Max tokens of context
+let g:hanzo_endpoint = 'local'       " Use local model
+```
+
+## Local vs Cloud
+
+Run AI locally or in the cloud:
+
+```vim
+" Use local Ollama
+let g:hanzo_endpoint = 'http://localhost:11434'
+
+" Use Hanzo API
+let g:hanzo_endpoint = 'https://api.hanzo.ai'
+let g:hanzo_api_key = $HANZO_API_KEY
+```
+
+## Terminal Integration
+
+Works in terminal Vim, not just GUI:
+
+- **tmux compatible**: Splits work alongside tmux panes
+- **SSH friendly**: Use AI on remote servers
+- **Low latency**: Optimized for slow connections
+- **Minimal UI**: No fancy floating windows (unless you want them)
+
+## Neovim Lua API
+
+For Neovim users, a full Lua API:
+
+```lua
+local hanzo = require('hanzo')
+
+-- Custom completion source
+hanzo.setup({
+    completion = {
+        enabled = true,
+        trigger = "auto",  -- or "manual"
+    },
+    chat = {
+        position = "right",
+        width = 40,
+    },
+    keymaps = {
+        accept = "<Tab>",
+        chat = "<leader>ac",
+    }
+})
+
+-- Programmatic usage
+local response = hanzo.ask("Explain this code", vim.fn.getline('.'))
+```
+
+## Integration with Other Plugins
+
+hanzo.vim plays nice with:
+
+- **coc.nvim**: Completion sources integrate
+- **telescope.nvim**: Fuzzy find AI history
+- **which-key.nvim**: Discoverable keymaps
+- **lualine.nvim**: Status line indicators
+
+## Performance
+
+| Metric | hanzo.vim | Copilot.vim |
+|--------|-----------|-------------|
+| Startup time | +15ms | +50ms |
+| Memory | +20MB | +100MB |
+| Completion latency | 200ms* | 400ms |
+| Offline capable | Yes | No |
+
+*With local model
+
+## Philosophy
+
+hanzo.vim follows Vim philosophy:
+
+1. **Composable**: Works with existing Vim commands
+2. **Modal**: Respects insert/normal/visual modes
+3. **Minimal**: Do one thing well
+4. **Configurable**: Adapt to your workflow, not vice versa
+
+AI should enhance your editor, not replace it.
+
+---
+
+*This post is part of our retrospective series exploring the technical foundations of Hanzo.*

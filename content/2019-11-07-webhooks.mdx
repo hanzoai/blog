@@ -1,0 +1,203 @@
+---
+title: "Webhooks: Real-Time Event Delivery"
+date: "2019-11-07"
+author: "Zach Kelling"
+tags: ["webhooks", "events", "integration", "real-time"]
+description: "Announcing Hanzo Webhooks: reliable, secure, real-time event delivery for your integrations."
+---
+
+# Webhooks: Real-Time Event Delivery
+
+Polling APIs wastes resources and introduces latency. Today we are launching Hanzo Webhooks: push-based event delivery for real-time integrations.
+
+## The Problem with Polling
+
+Traditional integration pattern:
+
+```
+while True:
+    response = api.get('/orders?since=last_check')
+    process(response)
+    sleep(60)
+```
+
+Issues:
+
+- Wasted requests when nothing changes
+- 60-second delay for new events
+- Missed events if polling fails
+- Rate limits constrain frequency
+
+## Webhooks Solution
+
+Register an endpoint. Receive events immediately:
+
+```
+POST https://your-app.com/hanzo-webhook
+
+{
+  "id": "evt_abc123",
+  "type": "order.created",
+  "created": "2019-11-07T14:30:00Z",
+  "data": {
+    "order": { ... }
+  }
+}
+```
+
+Events delivered within seconds of occurrence.
+
+## Event Types
+
+Webhooks available for all major events:
+
+**Orders**
+- order.created
+- order.updated
+- order.fulfilled
+- order.refunded
+
+**Products**
+- product.created
+- product.updated
+- product.deleted
+
+**Customers**
+- customer.created
+- customer.updated
+
+**Subscriptions**
+- subscription.created
+- subscription.renewed
+- subscription.cancelled
+
+**Payments**
+- payment.succeeded
+- payment.failed
+
+## Reliability
+
+Webhooks are critical infrastructure. Our delivery guarantees:
+
+### At-Least-Once Delivery
+
+Every event delivered at least once. Your endpoint must be idempotent.
+
+### Automatic Retries
+
+Failed deliveries retry with exponential backoff:
+
+- Immediate retry
+- 1 minute
+- 5 minutes
+- 30 minutes
+- 2 hours
+- 24 hours
+
+### Event Ordering
+
+Events include sequence numbers for ordering:
+
+```json
+{
+  "id": "evt_abc123",
+  "sequence": 47293,
+  ...
+}
+```
+
+### Dead Letter Queue
+
+After all retries exhausted, events queue for manual review. No events lost.
+
+## Security
+
+### Signature Verification
+
+Every webhook signed with your secret:
+
+```python
+import hmac
+import hashlib
+
+def verify_webhook(payload, signature, secret):
+    expected = hmac.new(
+        secret.encode(),
+        payload.encode(),
+        hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(signature, expected)
+```
+
+### IP Allowlisting
+
+Webhook requests come from known IPs. Allowlist for additional security.
+
+### HTTPS Required
+
+Webhook endpoints must use HTTPS. No exceptions.
+
+## Configuration
+
+Dashboard configuration:
+
+1. Add endpoint URL
+2. Select event types
+3. Copy signing secret
+4. Test with sample event
+
+API configuration:
+
+```javascript
+const webhook = await hanzo.webhooks.create({
+  url: 'https://your-app.com/hanzo-webhook',
+  events: ['order.created', 'order.fulfilled'],
+  secret: 'whsec_xxx'
+});
+```
+
+## Monitoring
+
+Dashboard shows:
+
+- Delivery success rate
+- Average latency
+- Recent failures with details
+- Event history
+
+## SDK Support
+
+All SDKs include webhook helpers:
+
+```javascript
+import { Hanzo } from '@hanzo/sdk';
+
+app.post('/webhook', (req, res) => {
+  const event = Hanzo.webhooks.verify(
+    req.body,
+    req.headers['hanzo-signature'],
+    webhookSecret
+  );
+
+  switch (event.type) {
+    case 'order.created':
+      handleNewOrder(event.data.order);
+      break;
+  }
+
+  res.status(200).send('OK');
+});
+```
+
+## What's Next
+
+- Webhook filtering (e.g., only orders over $100)
+- Transformation rules (modify payload before delivery)
+- Fan-out to multiple endpoints
+- Event replay for debugging
+
+Real-time integration should be simple. Webhooks make it so.
+
+---
+
+*Zach Kelling is the founder of Hanzo Industries.*

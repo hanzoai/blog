@@ -1,0 +1,98 @@
+---
+title: "Lux Node: A New Kind of Blockchain"
+date: "2020-03-10"
+author: "Zach Kelling"
+tags: ["blockchain", "lux", "consensus", "launch"]
+description: "Launching the Lux mainnet - a high-performance blockchain with sub-second finality."
+---
+
+# Lux Node: A New Kind of Blockchain
+
+Today we launch Lux mainnet. After years of research and development, our vision for a better blockchain is live.
+
+## What Makes Lux Different
+
+### Sub-Second Finality
+
+Bitcoin takes an hour. Ethereum takes minutes. Lux: under one second.
+
+Traditional consensus requires nodes to agree on blocks sequentially. Lux uses repeated subsampled voting - nodes query random peers until the network reaches consensus. Finality emerges from probability, not computation.
+
+### Multi-Chain Architecture
+
+Lux isn't one blockchain. It's a platform for blockchains:
+
+- **C-Chain**: EVM compatibility for smart contracts
+- **X-Chain**: Native asset transfers with UTXO model
+- **P-Chain**: Staking and subnet coordination
+- **Subnets**: Custom blockchains with custom rules
+
+Each chain optimized for its purpose. All secured by the same validators.
+
+### Throughput
+
+4,500+ transactions per second on the primary network. Unlimited with subnets - each subnet adds capacity without affecting others.
+
+Compare:
+- Bitcoin: 7 TPS
+- Ethereum: 15-30 TPS
+- Solana: ~3,000 TPS (but weaker finality)
+- Lux: 4,500+ TPS with true finality
+
+## The Snow* Protocol Family
+
+Our consensus is based on metastable dynamics - systems that can tip from one state to another, like supercooled water crystallizing:
+
+**Snowball**: Binary consensus on yes/no decisions
+
+**Snowman**: Chain consensus for sequential blocks
+
+**Avalanche**: DAG consensus for parallel transactions
+
+Each protocol handles different use cases. The C-Chain uses Snowman. The X-Chain uses Avalanche.
+
+## Why This Matters
+
+Blockchain adoption has been limited by:
+
+1. **Speed**: Users won't wait minutes for confirmation
+2. **Cost**: High fees exclude small transactions
+3. **Scalability**: Networks get slower as they grow
+
+Lux solves all three. Fast enough for payments. Cheap enough for microtransactions. Scalable through subnets.
+
+## What You Can Build
+
+**DeFi**: Deploy Uniswap, Aave, Compound - any EVM protocol
+**NFTs**: Mint and trade with sub-second confirmation
+**Gaming**: On-chain game state without waiting
+**Enterprise**: Private subnets with permissioned validators
+**Interoperability**: Bridge assets from Ethereum, Bitcoin, and more
+
+## The Road Here
+
+2013: Forked Ethereum, started Coreth
+2017: Began consensus research
+2019: Added post-quantum cryptography
+2020: Mainnet launch
+
+Tens of thousands of hours of development. Formal verification of consensus. Multiple security audits. We're confident it's ready.
+
+## Getting Started
+
+```bash
+# Install the Lux CLI
+brew install luxfi/tap/lux
+
+# Create a wallet
+lux wallet create
+
+# Connect to mainnet
+lux network connect mainnet
+```
+
+The future of blockchain is fast, cheap, and scalable. Welcome to Lux.
+
+---
+
+*Zach Kelling is the founder of Hanzo Industries and Lux Network.*
