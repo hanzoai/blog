@@ -1,20 +1,20 @@
 ---
-title: "MCP: Model Context Protocol"
+title: "The Context Layer: Our Early Work on Multi-Model State Management"
 date: "2021-05-19"
 author: "Zach Kelling"
 tags: ["mcp", "protocol", "ai", "context", "infrastructure"]
-description: "Introducing MCP, a protocol for managing context across AI models and applications."
+description: "How we built a context management protocol for multi-model AI pipelines — early research that shaped how we think about AI state."
 ---
 
-# MCP: Model Context Protocol
+# The Context Layer: Our Early Work on Multi-Model State Management
 
-AI models are powerful but stateless. Every request starts fresh. Today we are introducing MCP (Model Context Protocol), a standard for managing context across AI models and applications.
+AI models are powerful but stateless. Every request starts fresh. In 2021, we started formalizing our internal protocol for managing context across AI models and applications — work that predated the broader industry's adoption of standardized model context protocols by several years.
 
 ## The Context Problem
 
-Modern AI applications face a challenge:
+By 2021, we were running AI pipelines that chained multiple models together:
 
-1. User interacts with AI assistant
+1. User interacts with an AI assistant
 2. Assistant queries multiple models (language, vision, retrieval)
 3. Each model needs relevant context
 4. Context must be consistent across models
@@ -22,22 +22,20 @@ Modern AI applications face a challenge:
 
 Without a standard protocol, every application reinvents context management. Poorly.
 
-## What is MCP
+## What We Built
 
-MCP is a protocol specification for:
+Our internal context management system handled:
 
-- **Context representation**: How to structure context data
-- **Context transmission**: How to send context between systems
-- **Context storage**: How to persist context
-- **Context retrieval**: How to fetch relevant context
-
-## Protocol Design
+- **Context representation**: Structured context data as typed entries
+- **Context transmission**: Moving context between models and services
+- **Context storage**: Persisting context across sessions (Redis-backed)
+- **Context retrieval**: Fetching relevant context with windowing strategies
 
 ### Context Structure
 
 ```json
 {
-  "mcp_version": "1.0",
+  "version": "1.0",
   "context_id": "ctx_abc123",
   "created_at": "2021-05-19T10:00:00Z",
   "entries": [
@@ -50,7 +48,7 @@ MCP is a protocol specification for:
     {
       "type": "data",
       "source": "orders_api",
-      "content": { "orders": [...] },
+      "content": { "orders": ["..."] },
       "timestamp": "2021-05-19T10:00:01Z"
     }
   ],
@@ -61,35 +59,9 @@ MCP is a protocol specification for:
 }
 ```
 
-### Context Operations
-
-**Append**: Add entries to context
-
-```
-POST /context/{context_id}/entries
-```
-
-**Retrieve**: Get context for model input
-
-```
-GET /context/{context_id}?limit=10&types=message,data
-```
-
-**Fork**: Create derived context
-
-```
-POST /context/{context_id}/fork
-```
-
-**Merge**: Combine contexts
-
-```
-POST /context/merge
-```
-
 ### Context Windows
 
-Models have limited context windows. MCP handles this:
+Models have limited context windows. Our system handled this with relevance-based windowing:
 
 ```json
 {
@@ -99,69 +71,28 @@ Models have limited context windows. MCP handles this:
 }
 ```
 
-The protocol compresses context intelligently.
-
-## Reference Implementation
-
-We are releasing a reference implementation:
-
-```bash
-pip install mcp-protocol
-```
-
-```python
-from mcp import ContextManager, Context
-
-manager = ContextManager(storage="redis://localhost")
-
-# Create context
-ctx = manager.create_context(user_id="user_123")
-
-# Add entries
-ctx.add_message(role="user", content="What were my orders?")
-ctx.add_data(source="orders_api", content=orders)
-
-# Retrieve for model
-model_input = ctx.to_model_input(
-    max_tokens=4096,
-    strategy="relevance"
-)
-```
-
 ## Integration with Hanzo
 
-MCP powers context management across Hanzo AI features:
+This system powered AI features across our commerce platform:
 
-- **Recommendations**: Context includes browsing history, purchases, preferences
-- **Support agents**: Context includes order history, previous conversations
-- **Analytics queries**: Context includes previous questions and results
+- **Recommendations**: Context included browsing history, purchases, preferences
+- **Support agents**: Context included order history, previous conversations
+- **Analytics queries**: Context included previous questions and results
 
-## Why a Protocol
+## What We Learned
 
-Protocols enable ecosystems:
+Managing context at scale is harder than it looks. The key insight: context isn't just a conversation history. It's a typed graph of information with relevance scores, expiry windows, and compression strategies.
 
-- **Interoperability**: Different systems share context
-- **Portability**: Context moves between providers
-- **Tooling**: Shared infrastructure benefits everyone
-- **Standards**: Best practices become conventions
+We compressed context intelligently rather than truncating — preserving semantic meaning even when token limits forced us to drop raw content.
 
-## Specification
+## The Broader Landscape
 
-The full MCP specification is published at:
+This work shaped how we think about AI infrastructure. When Anthropic published the Model Context Protocol (MCP) standard in 2024, we recognized the patterns we'd been working with independently — the industry had converged on similar conclusions about how AI systems should manage state and access tools.
 
-[mcp.hanzo.ai/spec](https://mcp.hanzo.ai/spec)
+Our current `@hanzo/mcp` implementation builds on Anthropic's MCP standard, extending it with 260+ tools for commerce, infrastructure, and AI workflows. The early internal work gave us strong intuitions about what the protocol needed to get right.
 
-We invite feedback and contributions.
-
-## What's Next
-
-- MCP 1.1: Streaming context updates
-- Multi-modal context (images, audio)
-- Context compression standards
-- Privacy-preserving context sharing
-
-Context is the missing layer in AI infrastructure. MCP provides it.
+Context is the missing layer in AI infrastructure. The industry is finally building it properly.
 
 ---
 
-*Zach Kelling is the founder of Hanzo Industries.*
+*Zach Kelling is the founder of Hanzo AI (Techstars '17).*
