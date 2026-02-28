@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
+import Script from "next/script";
 import { ThemeProvider } from "@/components/theme-provider";
 import { siteConfig } from "@/lib/site";
 import { metadataKeywords } from "./metadata";
@@ -33,6 +34,14 @@ export default function RootLayout({
       className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}
       suppressHydrationWarning
     >
+      {process.env.NEXT_PUBLIC_CF_ANALYTICS_TOKEN && (
+        <Script
+          defer
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon={`{"token":"${process.env.NEXT_PUBLIC_CF_ANALYTICS_TOKEN}"}`}
+          strategy="afterInteractive"
+        />
+      )}
       <body>
         <ThemeProvider
           attribute="class"
