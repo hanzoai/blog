@@ -1,0 +1,54 @@
+---
+title: "Hexagram 22 — Bì: Beautiful Interfaces and Aesthetic Code"
+date: "2025-05-28"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "api-design", "aesthetics", "clarity", "developer-experience"]
+description: "Fire at the mountain's foot — illumination of the external form. Bì is grace: the elegant surface that makes the underlying substance accessible. Good API design is not decoration. It is the form that makes the function usable."
+---
+
+# ䷕ Bì — Grace: The Aesthetics of Good Interface Design
+
+Fire at the foot of the mountain. Light illuminating the external form. The twenty-second hexagram is about grace — the quality of beautiful adornment that makes substance accessible. The I-Ching is specific: grace is real, valuable, and not superficial — but it is the complement of substance, not a substitute for it. Form serves function.
+
+Good API design is this principle applied to software: the interface is the face of the system. It is the surface every user encounters. It should be beautiful not for its own sake but because beautiful interfaces reduce friction, reduce mistakes, and make the system's capabilities accessible to the people who need them.
+
+## What Makes an Interface Beautiful
+
+Beauty in an API is not visual. It is structural: the property of having exactly the right concepts, named precisely, organized in a way that matches the caller's mental model of what they are trying to accomplish.
+
+The canonical example of a beautiful interface: `git`. The core commands — `add`, `commit`, `push`, `pull`, `branch`, `checkout`, `merge` — are exactly the operations a developer needs for the core workflows. Each command does one thing, named with a verb that accurately describes the operation. The git object model — commits, trees, blobs, refs — is exposed enough that advanced users can understand exactly what is happening, while basic workflows require no understanding of the model at all.
+
+Compare this to `svn` or early `cvs`, where the interface concepts did not match developer workflows as cleanly, where basic operations required more commands with more flags, where the mental model required was steeper than the operations performed.
+
+The difference is grace: one interface makes the operations feel natural, the other makes them feel labored.
+
+## Naming as Craft
+
+The most important element of API design is naming. Every function name, every parameter name, every error message is a communication to the next developer who encounters it. The name should communicate:
+
+- What the function does (a verb phrase that accurately describes the operation)
+- What it operates on (the subject of the verb)
+- The unit and type of parameters where not obvious from context
+- What can go wrong (error names should describe the error condition, not the error code)
+
+`createUser(email, password)` is less good than `registerUser(credentials: UserCredentials): Promise<User | RegistrationError>` — the second version communicates that this is the registration operation (not just creation), that credentials is a structured object, that it returns a User or an explicit error type.
+
+Names are not a cosmetic concern. They are the primary documentation of the system for anyone reading the code.
+
+## The Hanzo API Design Principles
+
+The Hanzo API has maintained consistency across major versions because it was designed with these principles from the beginning:
+
+**Resource-first naming**: The API is organized around resources (orders, products, users, payments), not operations. You don't "process checkout" — you create an order. You don't "run a refund" — you create a refund for an order. The resource model gives every operation a natural home.
+
+**Consistent error shapes**: Every error response has the same structure: an error code (machine-readable), an error message (human-readable), and a context object (operation-specific details). Callers don't need to learn different error handling patterns for different endpoints.
+
+**Symmetric operations**: If you can create something, you can also get, update, and delete it through consistent patterns. `POST /orders`, `GET /orders/{id}`, `PATCH /orders/{id}`, `DELETE /orders/{id}`. The symmetry is not enforced by a framework — it is a design commitment.
+
+## Grace Serves Substance
+
+The hexagram is explicit that grace is real value — but it does not substitute for substance. A beautiful API wrapping a broken system is still a broken system. The grace makes the brokenness more accessible, which is not an improvement.
+
+The correct order: first substance (the system works), then grace (the interface is beautiful). The reverse — beautiful interface over broken internals — is worse than both, because it induces trust in something that cannot be trusted.
+
+Fire at the mountain's foot illuminates the form. The mountain must be there. Illuminate it well.

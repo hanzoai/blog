@@ -1,0 +1,47 @@
+---
+title: "Hexagram 25 — Wú Wàng: Simple, Correct Implementations"
+date: "2025-06-18"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "simplicity", "correctness", "over-engineering", "data-trust"]
+description: "Heaven above thunder — natural action without ulterior motive. Wú Wàng is innocence: doing the right thing without calculation, without cleverness, without adding what doesn't belong. Don't over-engineer. Trust the data."
+---
+
+# ䷘ Wú Wàng — Innocence: The Simple, Correct Implementation
+
+Heaven above, thunder below. The image is spontaneous, natural action — doing what is called for without calculation, without hidden agenda, without attempting to be clever. The twenty-fifth hexagram is called "Innocence" or "Without Guile." The warning it carries: if you act with hidden motives, from something other than genuine correctness, disaster follows.
+
+In engineering, the analogous failure is over-engineering: adding abstraction, generalization, or complexity that the problem doesn't require, because it feels cleverer than the simple solution. The disaster it produces is real: unmaintainable systems, slow teams, bugs in the complex paths that the simple version would never have had.
+
+## The Over-Engineering Pattern
+
+Over-engineering is not random. It follows recognizable patterns, each driven by a motive that sounds reasonable but isn't:
+
+**"We might need this later"**: Adding a generalization for a case that doesn't yet exist. The cost is immediate (the code is more complex now) and the benefit is hypothetical (we might need this). In practice, when the hypothetical case arrives, the generalization is almost never exactly right and has to be changed anyway — at the cost of the complexity it added.
+
+**"This is the right architecture"**: Imposing a design pattern (event sourcing, CQRS, hexagonal architecture) on a system that doesn't have the problem the pattern solves. These are good patterns for specific problems. Applying them to systems that don't have those problems creates the overhead without the benefit.
+
+**"This is more testable"**: Introducing indirection (interfaces, dependency injection, factory patterns) not because the code needs to be swapped out but because the developer has been told "always use interfaces." Interfaces that have exactly one implementation add nothing except an extra file to read.
+
+**"This is more scalable"**: Building distributed, sharded infrastructure for a system that currently has one hundred users. The distributed system's complexity is real today. The scaling requirement is theoretical. When the scaling requirement arrives, the requirements will be better understood and the design can be done with real data.
+
+## Trust the Data
+
+The hexagram's specific instruction: without guile — act from what is genuinely needed, not from what seems impressive or clever. In engineering terms: trust the data.
+
+Don't add caching until you've measured that the system is slow without it and profiled where the slowness lives. Don't add a message queue until you've measured that synchronous calls are creating latency problems. Don't add sharding until you've measured that a single node is insufficient.
+
+Premature optimization is the classic statement of this principle (Knuth). But it generalizes: premature abstraction, premature distribution, premature generalization — all are violations of Wú Wàng. They introduce the complexity of the solution before there is evidence of the problem.
+
+## The Zen Model Approach: Do Less
+
+The zen-nano model is an example of Wú Wàng applied to AI: it is 0.6 billion parameters, running on edge hardware, doing one thing (text generation for edge inference) without trying to be more than it is. No multimodal capabilities bolted on. No enormous context window that requires hardware the target use case doesn't have. Simple, correct, complete for its purpose.
+
+The alternative — training every model to handle every use case at every scale — produces large, expensive models that do no specific thing as well as a model designed for that specific thing. The innocence of purpose is a capability, not a limitation.
+
+## The Test for Innocence
+
+Before adding any component, abstraction, or generalization, ask: does the problem I am solving *require* this? Not "might benefit from" or "would be interesting with" — requires. Is there a specific, measurable failure mode that this addition prevents?
+
+If the answer is no: don't add it. The simple implementation is the correct implementation until evidence suggests otherwise. Gather the evidence first. Act from what is genuinely present, not from what might be needed.
+
+Heaven and thunder acting in their natural courses, without calculation. Correctness that comes from doing exactly what is required and nothing else.

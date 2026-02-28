@@ -1,0 +1,45 @@
+---
+title: "Hexagram 44 — Gòu: APIs That Meet Developers Where They Are"
+date: "2025-06-18"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "api-design", "developer-experience", "sdk", "ergonomics"]
+description: "Gòu is the meeting — one yin rising to meet five yang. The API that requires users to adapt entirely to its model is an API that does not understand this hexagram. Good APIs move toward their users. The encounter is mutual."
+---
+
+# ䷫ Gòu — Coming to Meet: SDK Design and Developer Experience
+
+Heaven above, wind below. Wind moves beneath the sky, reaching everywhere — the image of meeting, of coming into contact with what is already there. The single yin line at the base rises upward to meet the yang above. This is not passive waiting. It is active movement toward encounter.
+
+API design has a direction. The question is whether the API moves toward its users or requires users to move entirely toward it. The best APIs, like the best protocols, move both directions. They meet developers in the environment and paradigm they already inhabit.
+
+## The Meeting Requirement
+
+An API that requires a new mental model for every operation has not moved toward its users. The developer must hold the entire API's conceptual framework in mind before writing the first line of useful code. This is not inherently wrong — complex domains require complex models — but it is a cost that should be minimized, not accumulated out of design laziness.
+
+The Hanzo SDK design principle is: default behavior should be correct behavior. A developer who has read the first example should be able to complete 80% of their integration without reading further. The edge cases, the advanced options, the full configuration surface — these are available but not required.
+
+Concretely: an LLM API call should be one function call with two arguments (model, prompt) in the simple case. Authentication should be discoverable from the environment automatically. Error messages should tell the developer what went wrong and what to change. These are not nice-to-haves — they are the measure of whether the API has moved toward its users.
+
+## SDK as Translation Layer
+
+An SDK is a translation layer between the API's native model and the developer's native environment. A Python SDK should feel like Python, not like the HTTP API with a Python wrapper. A TypeScript SDK should use TypeScript idioms: async/await, typed errors, chainable builders where appropriate.
+
+This requires writing the SDK in the language of the ecosystem, not in the language of the API author. An API author who writes Python with the ergonomics of their primary language (Go, in many cases) produces an SDK that works but does not feel right. The friction is low but real — developers use it less than they would if it felt native.
+
+The Zoo Labs inference SDK exists in Python, TypeScript, and Go. Each is idiomatic to its language. The Python version uses context managers for session handling. The TypeScript version uses typed async generators for streaming responses. The Go version uses channels and interfaces. Underlying HTTP calls are identical. The surface presented to each ecosystem is different.
+
+## The Principle of Minimal Surprise
+
+Gòu's meeting requires that both parties recognize each other. An API that surprises developers — that behaves differently than analogous APIs in the same domain — imposes a re-learning cost that is exactly the cost of not meeting.
+
+The minimal surprise principle: when two options are equivalent in capability, prefer the one that matches the convention the developer already knows. REST APIs use standard HTTP verbs. CLI tools follow POSIX conventions. Error codes follow established HTTP status semantics. The API's novelty should live in its capability, not in its conventions.
+
+When Hanzo deployed the unified LLM gateway, the decision to make it compatible with the OpenAI API format was not a commercial calculation. It was a developer experience calculation. Every developer who has used any OpenAI-compatible client can use the gateway without re-learning. The meeting is immediate.
+
+## The Cost of Not Meeting
+
+APIs that do not move toward their users get used less than their capability warrants. The technical capabilities can be excellent. If the interface is hostile — undiscoverable, surprising, requiring extensive setup before first use — adoption decays.
+
+Open infrastructure must be adopted to be useful. Computation that no one can reach does not serve the goal of computation that should not be owned by any single entity. Meet the developers. The encounter is the infrastructure.
+
+Wind beneath heaven. Reach everywhere. The meeting is the point.

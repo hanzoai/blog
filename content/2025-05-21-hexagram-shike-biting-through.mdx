@@ -1,0 +1,59 @@
+---
+title: "Hexagram 21 — Shì Hé: Cutting Through Complexity"
+date: "2025-05-21"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "architecture", "decisions", "complexity", "simplicity"]
+description: "Fire above thunder — teeth biting through an obstacle. Shì Hé is the decisive architectural choice. Complexity is the obstacle. The bite that removes it is not aggression — it is precision."
+---
+
+# ䷔ Shì Hé — Biting Through: The Decisive Architectural Choice
+
+Fire above, thunder below. The image is a mouth biting — something in the way, teeth coming together with force and precision to remove it. The twenty-first hexagram is about decisive action to remove an obstacle. Not gradual wearing away. Not working around. Biting through.
+
+In system design, the obstacle is almost always complexity that has accumulated to the point where it must be removed decisively rather than managed incrementally.
+
+## Complexity Is the Enemy
+
+Accidental complexity — complexity introduced by the implementation rather than inherent in the problem — is the largest ongoing cost in most software systems. It manifests as:
+
+**Indirection without abstraction**: Code that is split across ten files not because the concerns are different but because someone believed files should be small. The result: following any control flow requires opening ten files.
+
+**Abstraction without benefit**: An interface layer that wraps a single implementation, adds zero configurability, and exists because someone thought "everything should be behind an interface." The result: changing behavior requires changing two things instead of one.
+
+**Configuration over code**: A system where behavior is controlled by complex configuration files rather than code, because someone wanted "flexibility." The result: behavior is determined by the interaction of a configuration system no one fully understands.
+
+**Generic over specific**: Code that tries to handle every possible case because "we might need it later." The result: code that handles no specific case elegantly and every case inefficiently.
+
+Each of these is an obstacle. Biting through means removing the indirection, collapsing the unnecessary abstraction, replacing configuration with code, making the general case specific.
+
+## The Decisive Choice
+
+Shì Hé describes a moment of decision, not a process of gradual improvement. Some complexity problems cannot be solved incrementally — they require a decisive architectural choice that changes the structure of the system.
+
+Examples of decisive architectural choices:
+
+**SQL to NoSQL (or vice versa)**: When the access patterns are fundamentally mismatched to the database model, incremental improvement is not available. The data must be migrated to a model that matches the access patterns.
+
+**Monolith split**: When a monolith's domains have diverged to the point where deploying one change requires coordinating multiple teams and risking unrelated functionality, the monolith must be split. Incremental decoupling helps, but the split itself is decisive.
+
+**Synchronous to asynchronous**: When a synchronous request-response system has accumulated enough latency that user experience is unacceptable, and the bottleneck is inherent in the synchrony, the architecture must change. Individual optimization cannot overcome architectural constraints.
+
+**Protocol version**: When a protocol has accumulated enough backward-compatibility cruft that new capabilities cannot be added without breaking existing clients, a new version must be cut. There is no gradual path from a protocol that cannot express what you need to one that can.
+
+## How to Bite Through Correctly
+
+The hexagram is about biting through with precision, not brute force. Fire and thunder together: clarity about the target, decisive action to remove it.
+
+The steps:
+
+**Name the obstacle precisely**: "We have too much complexity" is not a target. "The payment service is synchronously called during cart checkout, creating a 2-second latency requirement that blocks all checkout improvements" is a target.
+
+**Design the alternative before removing the obstacle**: Know what the system looks like after the obstacle is removed before you start removing it. The decisive choice is preceded by careful design.
+
+**Remove cleanly, with tests**: Each piece of the obstacle that is removed is accompanied by tests that verify the system's behavior is preserved. The removal is complete, not partial.
+
+**Verify the simplification**: After the obstacle is removed, the system should be measurably simpler. If it is not — if removing one abstraction layer revealed a deeper abstraction layer that is equally complex — the bite did not go deep enough.
+
+The Hanzo LLM gateway went through this process: an initial implementation with a complex middleware stack was replaced by a simpler pipeline that did the same work in fewer layers. The decisive choice was to delete the middleware framework and rewrite as a linear pipeline. The result was half the code and twice the clarity.
+
+Bite through. Do not nibble.

@@ -1,0 +1,47 @@
+---
+title: "Hexagram 36 — Míng Yí: Building When Visibility Is Denied"
+date: "2025-02-26"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "privacy", "zero-knowledge", "mpc", "adversarial"]
+description: "The light is buried in the earth. You cannot see clearly, and hostile conditions will use your visibility against you. This is the engineering challenge of privacy-preserving computation — building systems that work when observation itself is the attack."
+---
+
+# ䷣ Míng Yí — Darkening of the Light: Privacy-Preserving Computation
+
+Fire beneath the earth. The light is suppressed, not extinguished. The hexagram warns: you are in conditions where demonstrating your full capabilities invites attack. Conceal your methods while continuing to work. Maintain the inner light; do not let the outer darkness reach it.
+
+This is the threat model for privacy-preserving computation. The adversary is not absent — they are observing. What you cannot hide from them, they will use. The engineering question is: how do you produce useful outputs without revealing the inputs?
+
+## The Surveillance Problem in Computation
+
+Cloud computation as it exists today requires trust in the cloud operator. You send your data. You send your model. The operator executes and returns results. At every step, the operator can observe everything: inputs, intermediate states, outputs, access patterns.
+
+For most commercial applications, this is fine. For applications involving financial data, medical data, proprietary models, or personal communications, it is not. The data is the sensitive asset, and it is exposed at the moment it provides value.
+
+Míng Yí is the hexagram of building in conditions where that exposure is the attack vector.
+
+## Zero-Knowledge Proofs: Outputs Without Inputs
+
+A zero-knowledge proof is the mathematical formalization of Míng Yí. It allows one party to convince another that a statement is true without revealing why it is true. The verifier learns the output: "this transaction is valid." They learn nothing about the inputs: the account balances, the private keys, the transaction history.
+
+Hanzo's infrastructure integrates ZK proofs at the settlement layer. Lux supports EVM-compatible ZK precompiles. AI inference can be verified without revealing the model weights or the user's query. The computation happens; the proof attests to correctness; the sensitive material remains dark.
+
+This is not theoretical. The Poseidon2 hash function — GPU-accelerated, ZK-circuit-efficient — is deployed in the Lux network specifically because ZK verification at scale requires hash functions designed for the circuit constraint model, not for general-purpose computation.
+
+## Multi-Party Computation: Shared Work Without Shared Secrets
+
+MPC is Míng Yí applied to distributed computation. Multiple parties collaborate on a computation. No single party's input is revealed to any other party. The output — the result of the joint computation — is the only thing shared.
+
+The 2021 Hanzo threshold signature work applied this directly: private keys are never reconstructed in any single location. Signing happens across parties. The key is conceptually present but physically absent from any attack surface. An adversary who compromises one signer learns nothing about the full key.
+
+This architecture is not slower by the amounts people expect. Modern CGGMP21-based threshold signature protocols run at practical speeds. The Hanzo MPC stack handles signing latencies measured in milliseconds, not seconds.
+
+## Building Under Observation
+
+The broader engineering lesson of Míng Yí is about design under adversarial observation. Systems that assume a trusted environment fail catastrophically when that assumption is violated. Systems designed for adversarial conditions are robust by construction.
+
+Concretely: encrypt data at rest and in transit, not as a compliance checkbox but as an architectural invariant. Treat the infrastructure operator as potentially adversarial. Design APIs that reveal only what is necessary to produce the output.
+
+The inner light continues. The outer conditions are not your problem to fix — they are your constraints to design around.
+
+Work in the dark. Build to last.

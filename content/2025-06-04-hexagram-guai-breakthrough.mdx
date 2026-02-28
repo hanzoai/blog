@@ -1,0 +1,46 @@
+---
+title: "Hexagram 43 — Guài: Decisive Action, Cutting Through Ambiguity"
+date: "2025-06-04"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "decisiveness", "shipping", "ambiguity", "leadership"]
+description: "Guài is five yang lines and one yin at the top — the moment just before complete resolution. The single remaining obstacle yields to firm, committed action. This is the engineering principle of decisive shipping: when the conditions are right, do not hesitate."
+---
+
+# ䷪ Guài — Breakthrough: Ship It
+
+Five unbroken lines. One broken line at the top. The obstacle is minimal; the force behind it is overwhelming. Guài is the moment when every condition for resolution is met. The I-Ching is precise: act with determination, speak clearly about the problem, do not hesitate. The hesitation itself becomes the obstacle.
+
+Most engineering delays in the final stage are not technical. The code is written. The tests pass. The review is done. The delay is a decision that has not been made, usually because the decision-maker is waiting for a certainty that cannot exist before deployment.
+
+This is the domain of Guài: the decisive cut through final ambiguity.
+
+## What "Ship It" Actually Means
+
+Decisive action requires clear criteria. "Ship it" is not a feeling — it is the result of meeting a defined bar. What are the criteria?
+
+- Tests pass. Not "mostly pass" or "pass except for these known flaky ones" — pass.
+- Monitoring is in place. You will know within five minutes if the deployment breaks something in production.
+- Rollback is verified. The rollback procedure has been tested. You know how long it takes.
+- On-call is informed. The person who will receive the alert if something goes wrong knows the change is deploying.
+
+When these four criteria are met, deploy. When they are not met, do not deploy — but also do not deploy once criteria are met and then wait for additional reassurance. The waiting after criteria are met is the broken yin line blocking five yang lines. Remove it.
+
+## Ambiguity as Obstacle
+
+The hardest deployments are not technically complex deployments. They are deployments of technically simple changes that carry organizational ambiguity: who approved this? Is this consistent with the API we're building toward? Should this wait for the broader refactor?
+
+These are legitimate questions. They require answers, not indefinite deferral. The correct response is to escalate the question, get the answer, and act on it. A decision that the change should wait is a decision. A decision that the change should ship is a decision. The non-decision — leaving it in review, leaving it in staging, leaving it in the "needs discussion" column — is the obstacle.
+
+At Hanzo, product decisions that block engineering shipping have a maximum 48-hour response window. If the decision is not made in 48 hours, the default is to ship. This is not a policy of recklessness — it is a policy that decision costs accumulate and must be owned by whoever is choosing not to decide.
+
+## The False Safety of Waiting
+
+There is a common belief that waiting makes things safer. The code that sits in staging for two weeks is "more tested" than the code that shipped after one week. This belief is wrong in two directions.
+
+First: staging is not production. No amount of staging time tests the interactions with production load, production data, and production behavior. The only environment that tests production is production.
+
+Second: time accumulates risk in a different form. The longer a change sits undeployed, the more the codebase evolves around it. Merge conflicts accumulate. The assumptions baked into the change become stale. The person who wrote it has context that is fading. The change that was ready two weeks ago is now slightly less ready.
+
+Ship when criteria are met. Do not wait for confidence that only comes from shipping.
+
+Five yang lines. One small obstacle. Clear it and advance.

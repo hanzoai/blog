@@ -1,0 +1,49 @@
+---
+title: "Hexagram 26 — Dà Xù: Training Data and Accumulated Knowledge"
+date: "2025-06-25"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "training-data", "ml", "knowledge", "model-weights", "corpus"]
+description: "Mountain above heaven — containing and accumulating the greatest force. Dà Xù is great accumulation: the slow, deliberate gathering of knowledge over time. Training data is exactly this. The corpus is not noise — it is accumulated human intelligence."
+---
+
+# ䷙ Dà Xù — Great Accumulation: The Value of the Corpus
+
+Mountain above heaven. The mountain contains and accumulates — holding tremendous force in reserve, building potential through patient collection. The twenty-sixth hexagram is about great accumulation: the value that comes from gathering and holding, over time, things of worth.
+
+Training a language model is great accumulation made computational. The corpus — hundreds of billions of tokens of human text, code, mathematics, conversation — is not raw material to be processed and discarded. It is the substance of the model. What the model knows is a direct function of what was accumulated.
+
+## The Corpus Is Not Noise
+
+There is a tendency to treat training data as a data engineering problem: clean it, deduplicate it, filter it, and then forget about it. The data is a means to the model.
+
+This is wrong. The corpus is the knowledge base. The model's capabilities — what it can reason about, what domains it understands, what it can generate — are bounded by the corpus. A model trained on code-heavy data will generate better code than a model trained on a general web crawl. A model trained on mathematical reasoning datasets will perform better on mathematical tasks.
+
+This means the corpus is a direct expression of intentions about the model's capabilities. The data curation decisions are model capability decisions. They deserve the same careful attention as architecture decisions.
+
+## What Quality Means in Training Data
+
+"Quality" in training data is not well-defined, but some dimensions are:
+
+**Diversity of perspective**: A corpus that represents many domains, many languages, many argumentative positions, many writing styles produces a model that is more robust to the variation in inputs it will encounter. Narrow corpora produce narrow models.
+
+**Accuracy of information**: A corpus full of misinformation produces a model that confidently generates misinformation. For factual domains, the accuracy of the training data is a direct predictor of the model's factual accuracy.
+
+**Representation of intended use**: A model that will be used for coding should be trained on code. Not exclusively — the general capability of language models comes from broad text training — but the specialization comes from representation in the corpus.
+
+**Anti-patterns**: Toxic content, biased framing, harmful instructions. Filtering these from the corpus is not censorship — it is specification. The model will generate more of what it was trained on. If the training data contains patterns you don't want the model to reproduce, it will reproduce them.
+
+## Zen's Training Data Philosophy
+
+The Zen model family is built on Qwen3's base training, which represents broad multilingual coverage. The fine-tuning applied to Zen models is where the curation philosophy is most directly expressed: identity training (giving the model a consistent persona), task specialization (the coder variants have code-heavy fine-tuning), and capability extension (the VL variants add vision-language pairs to the training mix).
+
+The abliterated variants in the zen4 family make a specific data choice: removing or downweighting the training signal that produces refusal behaviors. This is not removing safety training indiscriminately — it is removing the patterns that make models refuse legitimate use cases because they superficially resemble disallowed ones. The corpus shapes the behavior; shaping the corpus is how you shape the model.
+
+## The Lux Chain as Accumulated Truth
+
+The Lux blockchain is an accumulation problem of a different kind: the chain accumulates consensus-validated state over time. Each block is a layer of mountain added to the accumulation. The chain's value — as a settlement layer, as a record of compute transactions, as a source of verifiable truth — grows with the accumulation.
+
+This is why chain reorganizations (reorgs) are expensive in proof-of-work systems: they destroy accumulated work. The Lux network's consensus mechanism is designed to make reorgs nearly impossible after finality — once a block is finalized, the accumulation is permanent.
+
+Accumulation only has value if it is reliable. A corpus you can't trust doesn't train a model you can trust. A chain that can be reorganized doesn't provide reliable settlement.
+
+Accumulate carefully. The mountain grows one layer at a time.

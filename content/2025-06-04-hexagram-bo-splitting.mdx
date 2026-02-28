@@ -1,0 +1,55 @@
+---
+title: "Hexagram 23 — Bō: Decomposition and the Right Way to Split"
+date: "2025-06-04"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "microservices", "decomposition", "separation-of-concerns", "architecture"]
+description: "Mountain above earth — rock peeling away layer by layer. Bō is splitting apart. Decomposition is not destruction. When a system splits correctly, each part is more coherent than the whole was. When it splits incorrectly, you have distributed complexity."
+---
+
+# ䷖ Bō — Splitting Apart: Decomposition Done Right
+
+Mountain over earth. Rock peeling away from the base, layer by layer. The twenty-third hexagram is about disintegration — but the I-Ching's treatment is instructive: this is not violent destruction. It is natural separation along the grain. The mountain does not shatter — it sheds layers that are ready to separate.
+
+Decomposing a system — splitting a monolith, separating services, dividing a module into components — follows the same principle. Correct decomposition happens along natural seams. Forced decomposition, against the grain, produces something worse than the original.
+
+## The Microservices Failure Mode
+
+The microservices pattern was introduced to solve a real problem: large monoliths that have become too large to deploy independently, where different parts of the system have different scaling requirements, and where team boundaries can be expressed more cleanly as service boundaries.
+
+The failure mode that followed: teams applied microservices to systems that didn't have those problems, splitting along arbitrary lines (this seems like a separate thing) rather than natural seams (this thing has fundamentally different scaling requirements, deployment cadence, and team ownership).
+
+The result: a distributed monolith. Multiple services that must be deployed together because they share data models, that communicate through synchronous API calls that create tight coupling, that require orchestrated releases because they are not actually independent. All the operational complexity of distributed systems, none of the deployment independence that justified the split.
+
+Bō describes splitting along the grain of the stone. The seams must already exist in the material. Microservices work when the seams already exist in the system — when the domains are genuinely independent, the data is genuinely owned by separate bounded contexts, and the deployment cadence genuinely differs.
+
+## Finding the Natural Seams
+
+Natural seams in a system can be identified by answering:
+
+**What data does each part own?** If two components must share mutable state, they are not separate services — they are parts of the same service with an internal interface. Genuine service boundaries are where data ownership is unambiguous.
+
+**What is the deployment cadence?** If two parts always change together, they are not independently deployable and should not be deployed separately. If two parts change independently and have different release schedules, a service boundary may make sense.
+
+**What is the team boundary?** Conway's Law: systems reflect the communication structure of the organizations that build them. The most durable service boundaries are those that align with team boundaries. If the same team maintains both services, the service boundary creates process overhead without organizational benefit.
+
+**What is the scaling requirement?** If two parts have identical load profiles and identical scaling requirements, there is no operational reason to deploy them separately. If one part receives 100x more requests than the other, or requires different hardware (GPU vs CPU), the split is justified by operational requirements.
+
+## The Hanzo Service Architecture
+
+The Hanzo infrastructure was split from a monolith into services over time, guided by these criteria:
+
+The commerce API and the analytics pipeline were split because they have fundamentally different scaling requirements (the commerce API is latency-sensitive, the analytics pipeline is throughput-sensitive), different failure models (commerce must be highly available, analytics can have brief processing delays), and eventually different team ownership.
+
+The inference router was split from the application layer because it requires different hardware proximity to the models and different scaling characteristics (routes many requests through a small number of GPU resources).
+
+The identity layer was split because it is a shared service across commerce, AI, and blockchain surfaces — shared data, single ownership, deployed once.
+
+What was *not* split: the order management system from the payment processing system. They share a transaction boundary. Splitting them would require distributed transaction coordination that would introduce failure modes more expensive than the problems the split would solve.
+
+## The Virtue of the Monolith
+
+The twenty-third hexagram also implies a season of appropriate wholeness. Not every system should be split. A monolith that is well-structured, with clear internal module boundaries, is a valid end state for many systems. The internal module boundaries are the seams — they make a future split possible without requiring it.
+
+Start with the monolith. Add internal boundaries as the domains clarify. Split when the operational requirements genuinely demand it, along the seams you've already established.
+
+Splitting before the seams are ready produces rubble. Splitting along natural seams produces components.

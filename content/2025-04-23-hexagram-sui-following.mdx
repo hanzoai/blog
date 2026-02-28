@@ -1,0 +1,51 @@
+---
+title: "Hexagram 17 — Suí: Data-Driven Product and the Art of Following"
+date: "2025-04-23"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "product", "analytics", "a-b-testing", "user-behavior", "data-driven"]
+description: "Thunder in the lake — movement where the water is. Following is not weakness. Adapting to what users actually do, rather than what you wish they would do, is the highest form of product intelligence."
+---
+
+# ䷐ Suí — Following: Data-Driven Product Development
+
+Lake above, thunder below. Thunder moves into the lake — dynamic energy directed by the containing form. The seventeenth hexagram is about following: adapting to conditions, moving where the movement is correct, not insisting on a direction that circumstances don't support.
+
+In product development, this is the discipline of listening to what users actually do — not what they say, not what you think they should do, but the revealed preference expressed in their behavior.
+
+## The Founder's Trap
+
+Every product is built on a model of user behavior. Founders are usually convinced they understand their users — they've talked to them, they've interviewed them, they've built personas. The problem: what users say and what users do are often different, and what users say they want and what makes them successful with your product are often different.
+
+The solution is not better user research, though better user research helps. The solution is instrumentation: the technical infrastructure to observe what users actually do in the system, at scale, over time, without introducing observer bias.
+
+A/B testing is not a technique for validating opinions. It is a technique for measuring outcomes — the only data that directly answers "does this change make users more successful?" Everything else is a hypothesis.
+
+## What "Data-Driven" Actually Requires
+
+Being data-driven is not a mindset — it is an infrastructure investment. It requires:
+
+**Event instrumentation**: Every significant user action emits a structured event with a timestamp, a user identifier, and the parameters of the action. "User searched" with the query string. "User added to cart" with the product ID and quantity. "User abandoned checkout" with the last completed step.
+
+**Funnel analysis**: The ability to trace the path users take through a flow and identify where they drop off. Not aggregate drop-off rates — per-step rates, with the ability to segment by user cohort, by acquisition source, by device type.
+
+**Experiment infrastructure**: The ability to route a percentage of users to a variant and measure outcomes against the control. Randomized, with statistical significance calculation, with guardrail metrics that abort the experiment if something unexpected is happening.
+
+**Feedback loops**: The ability to act on the data quickly. An A/B test that runs for six months produces information that is six months late. Experiments should run for the minimum time needed to reach statistical significance, then be decided.
+
+## The Hanzo Analytics Foundation
+
+The Hanzo analytics infrastructure was built early specifically because the commerce use case demands it. A product that cannot tell whether a change to the checkout flow increased or decreased conversion is flying blind. Every change to the checkout is a bet — the analytics infrastructure tells you whether the bet paid off.
+
+At the implementation level, this means: every API endpoint that handles a user action emits an analytics event. The event goes to a stream processor (Kafka or equivalent), which fans it out to: the data warehouse (for long-term analysis), the real-time analytics database (for live dashboards), and the experiment tracking system (for running A/B test calculations).
+
+The analytics pipeline is not a bolt-on. It is as critical as the commerce logic itself. A checkout that works but cannot be measured is less valuable than a slightly less perfect checkout that can be instrumented and improved.
+
+## Following Is Not Capitulation
+
+The hexagram distinguishes between following correctly and following blindly. Suí does not mean doing whatever users ask. It means reading what the data says about what users *need*, which is often different from what they ask for.
+
+Users asked for faster horses. The data about what they were actually doing — spending hours in transit, not getting to places they needed to be — suggested something different. Following in the Suí sense is following the underlying need revealed by behavior, not the surface-level request.
+
+This is also why "user interviews" alone are insufficient: interviews reveal conscious wants. Behavior data reveals unconscious needs. Both are required for a complete picture.
+
+Thunder moves into the lake. The movement follows the water. Adapt to what the data reveals, not what the hypothesis assumed.

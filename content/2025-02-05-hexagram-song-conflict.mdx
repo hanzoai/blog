@@ -1,0 +1,51 @@
+---
+title: "Hexagram 6 — Sòng: Resolving Architectural Conflicts"
+date: "2025-02-05"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "architecture", "cap-theorem", "trade-offs", "distributed-systems"]
+description: "Heaven above water — opposing forces, both valid. Conflict in system design is not a failure of imagination. It is the CAP theorem, made personal. Name the trade-off, make the choice, move forward."
+---
+
+# ䷅ Sòng — Conflict: The CAP Theorem, Made Explicit
+
+Heaven above, water below. Two forces, both moving according to their nature, pulling in opposite directions. The sixth hexagram does not promise resolution — it promises that conflict is a natural state and must be engaged honestly, not wished away.
+
+In distributed systems, there is a theorem that says the same thing mathematically: you cannot have consistency, availability, and partition tolerance simultaneously. Choose two. The conflict is not a failure of implementation — it is a property of the system's nature. Engage it honestly.
+
+## The Architecture Meeting That Never Ends
+
+Most architectural conflicts in engineering teams are not resolved — they are deferred. The team disagrees about whether to use eventual consistency or strong consistency, about whether to centralize or distribute a service, about whether to optimize for write throughput or read latency. Unable to agree, they either table the decision (debt accumulates) or someone overrides without consensus (resentment accumulates).
+
+Sòng says: meet the conflict directly, with a mediator, early. Do not let it reach the point of full battle — the text is specific that going all the way to conflict is inauspicious.
+
+The mediator in architectural conflicts is the requirements. The actual user behavior. The measured access patterns. The SLA the business has committed to. These are not opinions — they are constraints. Name the constraints explicitly and the conflict often resolves itself: one option satisfies the constraints and the other does not.
+
+## The CAP Trade-off Made Concrete
+
+The CAP theorem is the most important framework for making architectural conflict visible in distributed systems. Let's be specific about how it applies.
+
+**CP systems** (consistent, partition-tolerant): When the network partitions, the system refuses to answer rather than return potentially stale data. This is correct for: financial balances, inventory that must not be oversold, identity state. Users will see errors during partition events, but they will never see incorrect data.
+
+**AP systems** (available, partition-tolerant): When the network partitions, the system returns its best current answer — which may be stale. This is correct for: analytics dashboards, product catalog, session data. Users see slightly stale data during partition events, but the system remains responsive.
+
+**CA systems** (consistent, available): Only possible in single-node systems or systems with no network partitions — i.e., systems that will eventually have network partitions. This is not a real option for distributed production infrastructure, regardless of what any distributed database vendor claims.
+
+Naming which two you've chosen is not an engineering detail — it is a product commitment. If your inventory system is AP and you've promised never to oversell, you have made a commitment you cannot keep. The conflict lives in the product requirements, not in the database configuration.
+
+## Applying Sòng to Hanzo Commerce
+
+The Hanzo commerce infrastructure runs two classes of state with explicitly different consistency models:
+
+Cart state is AP: a user's cart can be served from the nearest replica, accepting that concurrent sessions might briefly diverge. The cost of stale cart data (a user doesn't see an item they just added in another tab) is low.
+
+Order state is CP: when an order is placed, the system requires acknowledgment from the primary before responding. The cost of an error response (the user retries) is lower than the cost of inconsistent order state (inventory gone, order confirmed twice, payment charged twice).
+
+This is not a sophisticated architecture. It is a direct consequence of naming the conflict and choosing a side on each piece of state. The conflict is engaged, the trade-off is explicit, and the system behaves according to its stated properties.
+
+## When to Stop Arguing
+
+Sòng advises against taking conflict all the way to full battle. At some point, the discussion has surfaced the relevant information. The constraints are known. Making the decision imperfectly and moving forward is better than indefinite debate.
+
+Document the decision and the reasoning. Use an ADR (Architecture Decision Record). Name the trade-off you accepted and why. Future developers — and future you — will have the context to revisit the decision when constraints change.
+
+Heaven and water move in opposite directions. They do not stop. Acknowledge the direction of each force, choose your alignment, and build accordingly.

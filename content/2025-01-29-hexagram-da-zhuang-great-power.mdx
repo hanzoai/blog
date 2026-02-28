@@ -1,0 +1,48 @@
+---
+title: "Hexagram 34 — Dà Zhuàng: Architecture That Scales Without Restructuring"
+date: "2025-01-29"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "scalability", "architecture", "infrastructure"]
+description: "Great Power is not force applied to a problem — it is structural strength that makes force unnecessary. A system that handles 10M requests as easily as 10 is not faster; it is shaped differently."
+---
+
+# ䷡ Dà Zhuàng — Great Power: Scalability Through Structure
+
+Four yang lines below, two yin above. The strong occupies the majority; movement upward is natural. This is power expressed through structure, not effort. Dà Zhuàng is not about trying harder — it is about building something whose architecture makes scale a consequence rather than a challenge.
+
+The mistake most systems make is architectural: they are designed for the load they face today, with a vague intention to "scale later." Later arrives, and the restructuring required is more expensive than the original build.
+
+## What Scale Actually Means
+
+A system that handles 10M requests as easily as 10 has one property that a system handling only 10 usually lacks: it externalizes state. The request handlers are stateless. State lives in storage layers that are themselves designed for concurrent access. No single process holds anything that another process needs to proceed.
+
+This is the structural insight. Force — more CPUs, more memory, bigger instances — applies to a system that cannot be shaped. Structure — stateless handlers, explicit state machines, append-only logs — is what makes 10M look like 10.
+
+Hanzo's inference routing layer is built on this principle. Each request arrives, carries all context needed to route and serve it, and completes without touching shared mutable state. The routing table is read-only at request time. Updates to the routing table happen through a separate control path. 10M requests per day and 10 requests per day look the same to the handler. The only variable is concurrency, and concurrency is a configuration parameter, not an architectural problem.
+
+## The Cost of Not Designing for Scale
+
+The systems that fail at scale were almost always correct at small scale. They passed their tests. They shipped. They worked. The problems emerged when the second dimension — time — revealed all the implicit assumptions baked into the first-pass design.
+
+Implicit assumptions that break at scale:
+- Single database connections rather than connection pools
+- Synchronous I/O in critical request paths
+- State held in process memory rather than external stores
+- Sequential processing where parallel processing is safe
+- Unbounded queues that become memory leaks under sustained load
+
+Each of these is invisible at 10 requests. Each of them becomes a production incident at 10M.
+
+## Structure Over Cleverness
+
+Dà Zhuàng is not about clever optimization. It is about structural choices made early that compound positively. The append-only event log is not clever. The stateless HTTP handler is not clever. The explicit cache invalidation strategy is not clever. They are structural. Their value is that they do not require revisiting under load.
+
+The Lux network processes consensus messages at high throughput because the consensus algorithm itself is designed for concurrent message processing. Validators do not share mutable state during a consensus round. The protocol's structure makes the throughput possible; no optimization after the fact could compensate for a structurally concurrent-hostile design.
+
+## Building for the Load You Don't Have Yet
+
+This is the only situation where designing ahead of requirements is justified: when the cost of retrofit is structurally higher than the cost of building correctly from the start. Stateless handlers cost almost nothing extra to build. Adding connection pooling retroactively requires touching every database access in the codebase. The differential is enormous.
+
+Build the structure. The load will arrive. When it does, the system should not notice.
+
+Four yang lines below. The foundation is strong. The top yields without breaking.

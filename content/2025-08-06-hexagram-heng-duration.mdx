@@ -1,0 +1,63 @@
+---
+title: "Hexagram 32 — Héng: Infrastructure That Outlasts Trends"
+date: "2025-08-06"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "infrastructure", "persistence", "long-term", "durability", "unix"]
+description: "Thunder above wind — continuous movement in the same direction. Héng is duration: the property of things that persist. Real infrastructure outlasts the trends that motivated it. Build for permanence, not for the current hype cycle."
+---
+
+# ䷟ Héng — Duration: Infrastructure That Outlasts
+
+Thunder above, wind below. Not a single explosive event but continuous, maintained movement in the same direction. The thirty-second hexagram is about duration — the property of things that persist. Not because they are unchanging, but because they adapt continuously while maintaining their essential nature.
+
+The internet is Héng. It has changed enormously since its original design: the topology, the hardware, the applications built on it. But the core protocols — TCP/IP, DNS, HTTP — persist because they solved real problems in minimal ways that left room for everything built on top to evolve.
+
+This is the standard for infrastructure. Not whether it is fashionable. Whether it will still be necessary in ten years.
+
+## The Hype Cycle Problem
+
+Technology hype cycles are real and expensive. Blockchain for everything (2017-2018). Kubernetes for everything (2019-2020). Serverless for everything (2020-2021). Microservices for everything (2016-2019). AI for everything (2023-present).
+
+Each cycle produces real technology with real applications and a massive overshoot in adoption — teams applying the technology to problems it doesn't solve, building infrastructure they don't need, accumulating operational complexity they cannot maintain.
+
+The filter for whether to adopt a technology is not "is this exciting" or "is this being written about." It is: does this solve a problem I actually have, is the solution better than what I'm already using, and is the operational complexity worth the benefit?
+
+Héng asks: will this still be here and necessary in five years? Technologies that answer yes to that question are candidates for infrastructure. Technologies that don't are candidates for applications.
+
+## What Lasts
+
+The technologies that have lasted in computing share common properties:
+
+**They solve real problems**: DNS solves the real problem that you cannot ask humans to remember IP addresses and that IP addresses change. HTTP solves the real problem of exchanging documents over a network. git solves the real problem of distributed version control with branching. These are not manufactured problems.
+
+**They are minimal**: The core protocol is as small as possible. Extension mechanisms exist but the core is stable. You can implement a conforming TCP stack, or an HTTP server, or a git compatible remote from the specification without reading the reference implementation's source code.
+
+**They are documented**: The specification is public, precise, and complete enough to implement against. Proprietary implementations of public specifications can compete on quality without the specification being closed.
+
+**They compose**: DNS composes with HTTP. HTTP composes with TLS. TLS composes with X.509. The protocols were designed with their composition surface in mind.
+
+**They don't require a vendor**: Using DNS doesn't require a commercial relationship with the DNS inventors. Using HTTP doesn't require a license from Tim Berners-Lee. The technology is available to anyone who implements the specification.
+
+## The Hanzo Long Game
+
+Hanzo has been building commerce infrastructure since 2008. That context shapes how infrastructure decisions are made: is this something we will still be running in 2035? If yes, build it correctly. If no, buy it or use a managed service.
+
+The payment processing abstraction, the analytics pipeline, the identity layer — these are things Hanzo will still be running in 2035 because commerce requires them and they are core to the product's value. They get the investment: correct data models, extensive tests, careful interface design, investment in documentation.
+
+The AI inference infrastructure — which models are available, which inference engines are used, which hardware is targeted — will look very different in 2035. The interface that the application layer uses to call models should be stable. The implementation behind that interface will evolve.
+
+This is the architectural expression of Héng: the interface that lasts is stable; the implementation behind it adapts to conditions. The interface is the thunder — continuous, maintained movement. The implementation is the wind — responsive, adapting, but directed.
+
+## Duration Through Openness
+
+The deepest durability principle in the Hanzo ecosystem: open source and open protocols are more durable than closed ones. A closed source system's continuity depends on its creator's commercial success. An open source system's continuity depends on whether it is useful — which is a much more reliable durability criterion.
+
+Linux has outlasted every proprietary operating system of its era. TCP/IP has outlasted every proprietary networking stack of its era. The open web has outlasted every proprietary content platform of its era (though the contest continues).
+
+The Lux protocol, the Zen model weights, the MCP specification, the Zoo open research network: these are built to outlast Hanzo AI as a company. The protocols continue as long as they are useful. The company is the steward, not the owner.
+
+Thunder above, wind below. Continuous movement. Build the thing that will still be here when the current hype has passed.
+
+---
+
+*This concludes the I-Ching engineering series: 32 hexagrams, 32 principles, one underlying theme — build systems that are correct, open, composable, and durable. Clarity through intelligence.*

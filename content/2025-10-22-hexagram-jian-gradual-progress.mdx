@@ -1,0 +1,47 @@
+---
+title: "Hexagram 53 — Jiàn: Incremental Rollouts and the Art of the Gradual"
+date: "2025-10-22"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "deployment", "canary", "blue-green", "rollouts"]
+description: "Jiàn is the wild goose moving step by step — landing on rock, then tree, then hilltop, then peak. Each landing is verified before the next. This is the engineering practice of incremental rollout: not because you don't trust the code, but because production is the only environment where production behavior is observable."
+---
+
+# ䷴ Jiàn — Gradual Progress: The Art of the Incremental Rollout
+
+Mountain below, wind above. Wind moves gently and persistently across the mountain landscape. Jiàn describes a tree on a mountain growing slowly but in the right direction — gradual, steady, correctly positioned. The I-Ching is explicit: gradual progress is the right approach when the stakes are high and the terrain is complex.
+
+Software deployment is exactly this terrain. The stakes (user-facing failures, data corruption, revenue impact) are high. The terrain (production traffic patterns, data distributions, edge cases in user behavior) is complex in ways that staging environments cannot replicate. Gradual rollout is not caution-for-its-own-sake. It is the only way to learn from the only environment that tells the truth.
+
+## The Canary
+
+A canary deployment sends a small fraction of production traffic to the new version while the rest continues on the old version. The fraction starts small — 1% — and observes. Error rates, latency, business metrics. If the canary is healthy, the fraction increases: 5%, 25%, 50%, 100%.
+
+The power of the canary is in what it tests: real production traffic, real user data, real downstream dependencies, real hardware. Staging tests your ability to construct an environment. Production tests your code.
+
+The second power of the canary is blast radius. A 1% canary that fails affects 1% of users. A full deployment that fails affects 100% of users. The gradual rollout does not eliminate the risk of a bad deployment — it limits its damage while still providing the signal that the deployment is bad.
+
+The Hanzo model serving infrastructure routes to new model versions via weighted load balancing. A new ZenLM model release starts at 1% traffic, monitored for 30 minutes, then graduated if clean. The new model might have regressions on specific input types that evaluation benchmarks didn't cover. Production traffic finds them. The canary catches them before 100% exposure.
+
+## Blue-Green as Instantaneous Jiàn
+
+Blue-green deployment is a different form of gradual progress: not gradual in the percentage-rollout sense, but gradual in the sense that the new environment is fully prepared and verified before the traffic switch is made. The preparation is the gradual part. The switch is instantaneous.
+
+Blue-green is appropriate when the deployment is all-or-nothing — when the change is a schema migration, when the old and new versions cannot run simultaneously, when there is no safe mixed-version state. In these cases, the "gradual" work happens before traffic switch: smoke tests, synthetic traffic, database migrations verified against a full snapshot of production data.
+
+The cost of blue-green is infrastructure: you run two full environments simultaneously during the transition. For many systems this is acceptable. For large infrastructure, it requires planning.
+
+## The Validation Checkpoint
+
+Jiàn's wild goose lands and rests. Each landing is a checkpoint: is this position stable? Is this the right direction? Only after verifying does it continue upward.
+
+Automated health checks at each rollout stage are the engineering implementation of this. The deployment pipeline pauses at each percentage threshold, runs the health checks, waits for the health metric window to pass, and then proceeds. The pause is not optional. The health check criteria are defined before the rollout begins, not adjusted during it.
+
+The criterion for proceeding is not "no alerts have fired." It is "positive evidence that the key metrics are within acceptable bounds." These are different standards. The absence of alerts may mean the monitoring is missing something. Positive evidence means the monitoring is measuring the right things and they look correct.
+
+## The Patience Requirement
+
+Jiàn requires patience. The temptation during a successful rollout is to accelerate: 1% to 100% in one jump, skipping the intermediate stages because everything looks clean. This is the mistake. The problems that appear at 50% traffic do not appear at 1%. The problems that appear at 100% do not appear at 50%.
+
+Each stage reveals something the previous stage could not. The gradual is the point.
+
+Wind over the mountain. Step by step. Verify, then advance.

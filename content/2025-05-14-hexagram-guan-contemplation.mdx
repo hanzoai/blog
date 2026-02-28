@@ -1,0 +1,59 @@
+---
+title: "Hexagram 20 — Guān: Monitoring and the Importance of Watching Before Acting"
+date: "2025-05-14"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "monitoring", "observability", "alerting", "dashboards", "sre"]
+description: "Wind above earth — looking out over vast territory. Guān is contemplation, observation at scale. Before you act on a production system, you must be able to see it. Watching correctly is itself a skill."
+---
+
+# ䷓ Guān — Contemplation: Watch Before You Act
+
+Wind above earth. The image of standing on high ground, looking out — being looked at and looking at the same time. The twentieth hexagram is about contemplation in the classical sense: the act of careful observation that precedes correct action.
+
+The I-Ching describes two modes of Guān: observation from a distance (childlike, limited) and observation that penetrates below the surface. The instruction for one in a position of responsibility: the deeper observation is required. You must understand what you are seeing, not just see it.
+
+This is the principle behind correct monitoring. Not dashboards — understanding.
+
+## The Dashboard That Doesn't Help
+
+Most monitoring systems are full of dashboards that don't help. Hundreds of metrics graphed over time, green when normal, red when threshold is crossed. The on-call engineer looks at the dashboard and sees red. What do they do?
+
+If the answer is "look at more dashboards," the monitoring system has failed. A monitoring system that responds to failure with more data is not a monitoring system — it is a data retrieval system. The monitoring system's job is to surface the specific, actionable information that an engineer needs to determine: what broke, why, and what to do about it.
+
+Guān distinguishes between looking and understanding. The wind ranges over vast territory — it sees everything. But the wind alone does not understand what it sees. Understanding requires structure: the high ground of correct abstraction from which the territory below becomes legible.
+
+## Alert Design as Product Design
+
+Alerts are the output of your monitoring system. They should be designed with the same care as any other product interface — because the "user" of an alert is an engineer who may be asleep when it fires, and who needs to understand the situation quickly enough to act.
+
+A well-designed alert has:
+
+**A precise condition**: Not "CPU > 80%" (too ambiguous — for 5 seconds? 5 minutes? On what hosts?) but "p99 request latency > 2000ms for 5 consecutive minutes across all production API servers."
+
+**A severity**: Is this a page-at-3am severity? Or a Slack message severity? Paging on everything desensitizes engineers. Paging on nothing means real failures go unnoticed.
+
+**A runbook link**: The alert message includes a link to the document that tells the on-call engineer what to check first, what the common causes are, and what the remediation steps are. The runbook is not the alert. The alert is a pointer to the runbook.
+
+**A context window**: The alert includes the current value of the metric and the baseline — not just "latency is high" but "p99 latency is 2400ms (baseline 180ms), started approximately 4 minutes ago."
+
+## The Hanzo Production Monitoring Stack
+
+The Hanzo infrastructure uses a tiered alerting model:
+
+**Tier 1 (page immediately)**: User-impacting failures. Payment processing errors above 0.1%. API error rate above 5%. Model inference latency above SLA for multiple minutes.
+
+**Tier 2 (Slack alert, respond within 1 hour)**: Elevated error rates that haven't yet hit user-impact thresholds. Queue depth trends that suggest saturation within 30 minutes. Certificate expiry within 7 days.
+
+**Tier 3 (daily digest)**: Slow trends that need attention but aren't urgent. Disk usage growing faster than expected. Cache hit rates declining. Model performance drift.
+
+The tiers are not based on metric names. They are based on user impact. An engineer looking at a Tier 1 alert knows they need to act immediately. An engineer looking at a Tier 3 digest knows they have time to investigate and plan.
+
+## Watching as Practice
+
+Guān also implies that observation is itself a practice — something that improves with attention over time. The engineer who has watched the same system for months develops intuition about its normal patterns. They recognize anomalies before the alerting system catches them. They understand the correlation between traffic patterns and resource consumption that no automated system has been configured to look for.
+
+This is not mysticism. It is pattern recognition built from data. The monitoring system is the infrastructure. The engineer's attention is the practice.
+
+Before you act, watch. Before you optimize, understand the baseline. Before you page someone, know what you're paging them about.
+
+Wind across the earth sees everything. Understanding requires the elevation to see what matters.

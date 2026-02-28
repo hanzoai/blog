@@ -1,0 +1,45 @@
+---
+title: "Hexagram 49 — Gé: Breaking Changes and When Backward Compatibility Must End"
+date: "2025-08-27"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "versioning", "breaking-changes", "semver", "migration"]
+description: "Gé is revolution — fire below the lake, the heat that transforms. Change that cannot be incremental must be complete. The breaking change is not a failure of planning; sometimes it is the only correct move. The question is when."
+---
+
+# ䷰ Gé — Revolution: When Backward Compatibility Must End
+
+Lake above, fire below. Fire heats the lake from beneath — radical transformation of the existing state. The I-Ching does not treat revolution lightly. It requires precise timing (not too early, not too late), clear justification (the existing state has become genuinely untenable), and complete execution (half-revolution is worse than no revolution).
+
+Breaking changes in software — major version increments, API removals, schema migrations that cannot be rolled back — are engineering revolutions. The same requirements apply.
+
+## When Backward Compatibility Has Become the Problem
+
+Backward compatibility is valuable. It is also a cost. The cost is paid by the system's evolution: every backward-compatible design decision accumulates technical debt that constrains future decisions. At some point — for some systems, some APIs, some protocols — the accumulated constraints from backward compatibility exceed the value of maintaining it.
+
+The signs that this point has been reached:
+- New features cannot be added without breaking the invariants the existing API implicitly assumes
+- Security vulnerabilities in the existing interface cannot be fixed without changing the interface
+- The existing interface encodes assumptions about the environment that are no longer true (cryptographic algorithms that are now considered weak, data formats that don't support Unicode, authentication mechanisms that predate modern threat models)
+- The complexity required to maintain backward compatibility is greater than the complexity of a clean break
+
+The Lux network's cryptographic migration is an example in progress. The post-quantum cryptography work means that some of the existing signature schemes must eventually be deprecated. This is not optional — the threat model has changed. The backward-compatible path (supporting both old and new schemes indefinitely) creates a surface where a sufficiently advanced adversary can target the weaker old scheme specifically. The revolution is required.
+
+## How to Execute a Breaking Change Correctly
+
+The I-Ching's conditions for revolution: timing, justification, completeness. In engineering:
+
+**Timing**: Do not make a breaking change when users cannot immediately upgrade. Give migration lead time. Announce the deprecation before removing. Maintain the old version in a supported-but-frozen state during the migration window. The migration window should be measured in months for production APIs, not weeks.
+
+**Justification**: Breaking changes that exist to fix the developer's aesthetic preferences are not justified. Breaking changes that exist because the old design is genuinely limiting or insecure are. Document the reason explicitly. Users need to understand why the pain of migration is less than the pain of staying.
+
+**Completeness**: Do not make a partial breaking change. If the API is changing, change it completely. Do not leave half the old interface in place for "backward compatibility" that doesn't actually help the users who can't migrate immediately but creates confusion for the users who can. The revolution must complete.
+
+## Versioning as Revolution Management
+
+Semantic versioning is the mechanism for managing revolution cadence. Major versions signal: this is a revolution. Minor versions signal: this is addition. Patch versions signal: this is repair.
+
+The discipline of semver is the discipline of distinguishing these. Teams that increment major versions for every breaking change (even insignificant ones) train users to ignore major versions. Teams that avoid major versions by never making breaking changes accumulate technical debt that makes the eventual unavoidable revolution more severe.
+
+Hanzo's commitment to never bumping Go packages past v1.x.x is the discipline of avoiding unnecessary revolution, which makes the interface stable and forces design decisions to be right from the start. When a module must break compatibility, the module is replaced, not incremented.
+
+Fire and lake. The transformation is real. Make it count.

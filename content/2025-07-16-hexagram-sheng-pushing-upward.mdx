@@ -1,0 +1,43 @@
+---
+title: "Hexagram 46 — Shēng: From Prototype to Production"
+date: "2025-07-16"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "scaling", "production", "infrastructure", "growth"]
+description: "Shēng is the tree pushing upward through the earth — not explosive but irresistible. The journey from prototype to production is not a single step. It is a sequence of graded ascents, each one requiring different infrastructure, different discipline, different scale."
+---
+
+# ䷭ Shēng — Pushing Upward: Scaling Infrastructure
+
+Wood grows within the earth, pushing upward steadily. Shēng is incremental, persistent upward movement. Not a leap — a sustained ascent through progressively more demanding conditions. Each level requires the same commitment but different capabilities than the level below.
+
+The journey from prototype to production is the engineering embodiment of Shēng. Every tier of scale is different in kind, not just in quantity. What works at 10 users breaks at 1,000. What works at 1,000 breaks at 100,000. The system that reaches scale does so through deliberate ascent, not through hoping the prototype scales.
+
+## The Tiers Are Qualitatively Different
+
+Prototype (1-10 users): correctness matters. Performance, reliability, and operability do not — they cannot be verified at this scale. The prototype exists to answer "does this work at all?" It should be as simple as possible while answering that question.
+
+Early production (10-1,000 users): operability begins to matter. Logs must exist. Errors must be visible. Deployment must be reproducible. The database must be backed up. These are not performance concerns — they are the infrastructure of knowing what is happening.
+
+Growth stage (1,000-100,000 users): performance and reliability become blocking concerns. Queries that ran in 10ms at 1,000 users take 800ms at 100,000. Caches that were optional become necessary. Connection pools that were defaults become tuned configurations. Deployments that were manual become automated.
+
+Scale (100,000+ users): architecture determines fate. Systems that were not designed for this tier cannot be patched to handle it. They must be redesigned. The database that is a single primary node cannot be made horizontally scalable without replacing it. The stateful request handler cannot be made stateless without rewriting it.
+
+The ZenLM model serving infrastructure went through each of these tiers. The first serving endpoint was a single process running on a developer laptop. The current infrastructure runs on distributed H100 nodes with load balancing, circuit breaking, and automatic failover. The architecture at tier 4 shares almost nothing with the architecture at tier 1.
+
+## What Changes at Each Tier
+
+The mistake is applying tier 4 thinking at tier 1. Kubernetes, service meshes, distributed tracing — these are tier 3 and tier 4 concerns. At tier 1, they are cost without benefit. They slow the prototype, add operational complexity, and give false confidence through infrastructure theater.
+
+The correct ascent: build the simplest thing that works at the current tier. When the current tier's constraints become binding, evaluate whether you are moving to the next tier or whether the product hypothesis is wrong. If you are ascending, redesign for the next tier specifically.
+
+This is the discipline Shēng requires: each ascent is deliberate. You do not ascend before you are ready. You do not stay at a tier when the constraints are binding.
+
+## Growth Trajectory vs. Growth Theater
+
+Growth theater is the common failure mode: teams build tier 3 infrastructure while handling tier 1 load. The infrastructure is impressive. It is also overhead that slows the product iteration that would determine whether there will ever be tier 3 load to handle.
+
+Growth trajectory is different: a clear model of what the system looks like at the next tier, with the current tier's infrastructure optimized for enabling that transition rather than simulating it.
+
+The Hanzo platform was built on this model. The current infrastructure is designed to support the next order-of-magnitude increase in load without architectural surgery, but it does not contain the infrastructure for two orders of magnitude beyond the current load. That infrastructure does not exist yet because the load that would require it does not exist yet.
+
+Wood pushing through earth. Steady, deliberate, persistent. Each tier ascended in order.

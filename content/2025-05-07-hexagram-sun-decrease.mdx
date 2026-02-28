@@ -1,0 +1,43 @@
+---
+title: "Hexagram 41 — Sǔn: The Virtue of Deletion"
+date: "2025-05-07"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "simplicity", "deletion", "refactoring", "code-quality"]
+description: "Sǔn means decrease. In engineering, this is the most undervalued operation: removing code. Every line deleted is maintenance you will never do, a bug that cannot exist, a cognitive load that no longer accumulates."
+---
+
+# ䷨ Sǔn — Decrease: Deletions as Progress
+
+The mountain above, the lake below. The lake gives from its substance to feed what is above — a voluntary decrease that enables the larger system's function. The I-Ching does not treat Sǔn as loss. It treats it as the right action when the situation requires reduction: decrease the excessive, strengthen the deficient.
+
+In engineering, deletion is the most undervalued form of progress. Adding code feels like building. Deleting code also builds — it builds clarity, reliability, and the negative space in which new work can happen without fighting existing complexity.
+
+## What Dead Code Actually Costs
+
+Dead code has a cost that is easy to underestimate because the cost is negative: it is the absence of something useful. Dead code costs cognitive load — every engineer who reads the codebase has to determine whether the dead code is dead, and that determination takes time and sometimes goes wrong. Dead code costs test coverage — it is tested or it isn't, and either way the test suite carries weight it doesn't need. Dead code costs onboarding — a codebase with 80,000 lines is harder to understand than a codebase with 40,000 lines that does the same thing.
+
+The Zen model training codebase went through a deliberate pruning process when migrating from a first-draft training pipeline to the current one. The first draft was 6,000 lines. The rewrite that did everything the first draft did plus more was 2,200 lines. The deleted 4,000 lines were not wasted — they were the cost of understanding the problem well enough to express the solution simply.
+
+## Deletion as Proof of Understanding
+
+There is a signal in deletion that addition does not carry. When an engineer can delete a thousand lines because they have found the simpler expression of the same intent, they have demonstrated comprehension at a level that adding a thousand lines does not require. Addition is easy. Reduction requires having held the whole thing in mind and found its essence.
+
+This is why PR reviews that result in deletions are often the most valuable reviews. The reviewer who says "this entire section is unnecessary because X already provides this" is doing something different from a reviewer who says "add a test for this case." Both are valuable. The deletion observation carries compounded value: every future reader benefits from the absence.
+
+## What to Delete
+
+The practical question: how do you identify what to delete?
+
+- **Feature flags for features that are fully rolled out.** Once a feature is 100% enabled and has been for 90 days, the flag and its code paths are dead. Remove them.
+- **Compatibility layers for versions you no longer support.** If your API supports v1, v2, and v3, and v1 is no longer called by any client, remove the v1 handler. Do not accumulate deprecated paths indefinitely.
+- **Abstraction for abstraction's sake.** Every interface that has exactly one implementation is a candidate for removal. The interface should be introduced when the second implementation exists or is known to be coming.
+- **Commented-out code.** It is in git. You can find it if you need it. Delete it.
+- **Logging that is never read.** If a log line exists in production and no one has read it in six months, it is noise, not signal. Remove it or make it conditional on a debug flag.
+
+## The Discipline
+
+The instinct to preserve is stronger than the instinct to remove. Engineers keep code because they might need it, or because deleting it feels like undoing past work. Neither instinct is wrong in isolation, but both need countering.
+
+Sǔn is the discipline of decrease when decrease is correct. The lake gives from itself. The larger system is stronger for it.
+
+Delete the line. The code does not need to remember everything you tried.

@@ -1,0 +1,47 @@
+---
+title: "Hexagram 15 — Qiān: Simple APIs and the Virtue of Doing Less"
+date: "2025-04-09"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "api-design", "simplicity", "minimalism", "unix"]
+description: "Mountain below earth — the tall made low. Humility in system design is not weakness. The most powerful APIs are the smallest. The most durable systems do the fewest things well."
+---
+
+# ䷎ Qiān — Humility: The Smallest Correct API
+
+Mountain beneath earth. The high made low, the low raised up. Qiān — humility or modesty — is the only hexagram in the I-Ching where all six lines are auspicious. Every position, whether static or moving, is favorable. This is the hexagram of correct self-assessment: not false smallness, but accurate understanding of what you are and what you are not.
+
+In API design, this is the principle that produces durable, composable interfaces: do exactly what is necessary, nothing more, and do it so well that users never need to work around it.
+
+## The API Surface Problem
+
+Every function you add to a public API is a commitment. You cannot remove it without breaking callers. You cannot change its behavior significantly without breaking callers. The API surface is a liability that grows with every addition and almost never shrinks.
+
+Most APIs are too large. Not because designers were negligent, but because the path of least resistance is to add. A user asks for a feature that is adjacent to the API's core function — add it. A common pattern emerges that could be made easier — add a convenience method. The requirements expand — add parameters.
+
+The result, over time, is an API with dozens of methods, hundreds of parameters, and a conceptual surface so large that a new user cannot form a mental model of it. The API is comprehensive but not learnable. It covers every case but handles no case elegantly.
+
+## The Unix Philosophy Applied
+
+The Unix philosophy's first principle — do one thing and do it well — is the engineering expression of Qiān. Not because doing one thing is a limitation but because doing one thing enables composition.
+
+`cat` reads files to stdout. It does nothing else. Because it does nothing else, it can be composed with everything else. `sort`, `grep`, `awk`, `head`, `tail` — these tools compose because each one is minimal. The power of the Unix command line is not in any individual tool but in the combinatorial space that their minimalism enables.
+
+Contrast this with tools that try to be complete: one command that reads files, filters, sorts, and formats output in configurable ways. This tool may be more powerful for common use cases. It is less composable for uncommon ones. And it has an API surface that requires documentation to use.
+
+## Hanzo's Tool Design Principle
+
+The Hanzo MCP (Model Context Protocol) tooling follows this principle explicitly. Each tool does one thing: fetch a URL, execute a code block, query a database, store a memory. The tools are not feature-complete — they are orthogonal.
+
+An AI agent that needs to fetch a URL and parse JSON uses two tools: fetch, then parse. It does not use one URL-fetching-with-JSON-parsing tool. The composability is the feature.
+
+The same principle applies to the Hanzo commerce API: there are endpoints for creating orders, for updating orders, for canceling orders. There is no endpoint for "create or update order depending on whether it already exists." That logic lives in the caller, where it belongs, because the caller has the context to make that decision correctly.
+
+## No-Framework Frameworks
+
+The most extreme expression of Qiān in the current AI ecosystem: "no-framework" agent frameworks. The recognition that most agent frameworks provide too much structure — they prescribe how agents communicate, how memory is managed, how tools are registered — and that prescription is wrong for most use cases.
+
+The minimal version: a loop, a model, a function that can call tools. The caller decides what tools are available, what the stopping condition is, how context is managed. The framework provides the loop and the model interface. Nothing else.
+
+This is harder to use than a high-level framework. It is also easier to understand, easier to debug, easier to adapt to requirements that the framework's designers didn't anticipate.
+
+The mountain beneath the earth. The tall made low, not by failure, but by correct understanding of what is appropriate. The API that does what it says and nothing more is the API that lasts.

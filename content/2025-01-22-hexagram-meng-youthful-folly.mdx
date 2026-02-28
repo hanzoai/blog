@@ -1,0 +1,52 @@
+---
+title: "Hexagram 4 — Méng: Documentation and Developer Onboarding"
+date: "2025-01-22"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "documentation", "onboarding", "open-source"]
+description: "Youthful folly is not ignorance — it is the honest condition of someone who does not yet know. Good documentation and onboarding meet developers where they are, not where you wish they were."
+---
+
+# ䷃ Méng — Youthful Folly: Not Knowing Is the Beginning
+
+Mountain over water. The spring that does not yet know where it flows. The fourth hexagram is about inexperience — and the I-Ching's treatment of it is unusual: it is not a failure condition. It is a *beginning* condition.
+
+The text says: it is not I who seeks the inexperienced. It is the inexperienced who seeks me. Answer once, clearly. If asked again confusedly, do not answer. Confusion comes from the one who asks, not from the subject.
+
+This is a precise description of the relationship between documentation and developers.
+
+## The Wrong Model
+
+Most technical documentation is written from the perspective of someone who already knows the system. It describes what the system *is*, not how a new developer will encounter it. It uses terminology that is self-referential — terms defined in terms of other terms that also need to be defined.
+
+The result: developers encounter a wall. They cannot find the first step. The documentation answers questions they don't know to ask while ignoring the questions they actually have.
+
+The youthful folly hexagram asks a harder question: what does someone encounter when they are completely new? What is their actual first contact? What confusion will arise naturally from that contact?
+
+## Answer Once, Clearly
+
+Méng advises answering the question *once*, clearly. This is the principle behind good README design: do not repeat the same information in three different places with slight variations. Pick one canonical location for each piece of information. Write it well. Link to it from everywhere else.
+
+At Hanzo, the MCP (Model Context Protocol) documentation went through three iterations before it stopped generating the same set of confused onboarding questions. The first version documented every parameter. The second documented common use cases. The third opened with a working example that did something real — before explaining anything. The third version is the one that works.
+
+The sequence matters: show something working first. Then explain the mechanism. Then document the parameters. A developer who has seen it work can ask better questions. A developer who is reading parameter lists before seeing a result has no anchor for any of it.
+
+## What Open Source Projects Get Wrong
+
+Open source projects operated from the "if you don't understand, figure it out" posture systematically exclude developers who would otherwise contribute. This is a direct cost to the project, not a quality filter.
+
+The quality of a contributor is not correlated with their tolerance for poor documentation. It is correlated with their domain expertise, their judgment, and their ability to extend a system coherently. None of those properties are surfaced by making onboarding painful.
+
+Zoo Labs operates all its open-source infrastructure with the principle that documentation is a first-class artifact, not an afterthought. The CONTRIBUTING.md is a primary file, not a liability. The first run experience is a designed experience, not an emergent accident.
+
+## The Minimum Viable Onboarding Path
+
+A developer coming to any system needs four things, in order:
+
+1. A working example that shows them what the system *does* in terms they already understand
+2. A minimal explanation of *why* the system exists — what problem it solves that wasn't solved before
+3. The one command that gets them to a running state on their own machine
+4. A pointer to the canonical reference documentation, with an acknowledgment that they don't need to read it yet
+
+Everything else is secondary. The mistake is front-loading steps 4 and skipping step 3.
+
+Not knowing is not failure. Not knowing is the correct state of someone who has not been shown. Show them. Answer clearly, once, well. The spring will find its path.

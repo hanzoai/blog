@@ -1,0 +1,45 @@
+---
+title: "Hexagram 61 — Zhōng Fú: Cryptographic Integrity and Zero-Knowledge Truth"
+date: "2026-01-28"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "cryptography", "zero-knowledge", "integrity", "trust"]
+description: "Zhōng Fú is inner truth — the property of being true from the center outward, not from the surface inward. Zero-knowledge proofs are the engineering formalization of this: a statement can be true and proven without revealing the inner state that makes it true."
+---
+
+# ䷼ Zhōng Fú — Inner Truth: Cryptographic Integrity
+
+Wind above, lake below. Two yielding lines in the center of a six-line structure — the hollow at the center, open and receptive. This is truth from the inside: the hexagram describes alignment between inner state and outer expression. Not performance of truth, but the actual condition of being true at the core.
+
+Zero-knowledge cryptography is the mathematical expression of this principle. A zero-knowledge proof allows one party (the prover) to convince another party (the verifier) that a statement is true, without revealing anything about why it is true beyond the fact of its truth. The inner state — the private inputs — remains hidden. The truth — the fact that a valid computation was performed — is demonstrable.
+
+## What Zero-Knowledge Actually Means
+
+The phrase "zero-knowledge" is precise. The verifier learns exactly zero additional information beyond the truth of the statement. This is formalized as: whatever the verifier can compute after seeing the proof, they could have computed before seeing it, given only the statement. The proof reveals nothing — not a hint, not a bias, not a probabilistic leak.
+
+In practice, this means: a user can prove they have sufficient funds without revealing their account balance. A model can prove it used authorized training data without revealing the training data. A validator can prove it executed a computation correctly without revealing the computation's inputs. The truth is established without disclosure.
+
+The Lux network's ZK precompiles exist because verifying zero-knowledge proofs on-chain requires specific cryptographic operations that are expensive if implemented in general-purpose EVM opcodes but manageable as dedicated precompiles. The Poseidon2 hash function — designed for ZK circuit efficiency — is one of these. The infrastructure was built because ZK verification is not a niche capability; it is the foundation of private, verifiable computation.
+
+## Integrity Without Trust
+
+Traditional integrity mechanisms require trust in the attesting party. A signature says "I, the key holder, assert this is what I signed." The verifier trusts the assertion because they trust the key holder. If the key holder is corrupt or compromised, the integrity guarantee fails.
+
+Zero-knowledge proofs shift the basis of trust from the party to the computation. The proof attests not "I assert this is correct" but "the computation with these inputs produces this output, and here is a proof that is correct regardless of whether you trust me." The verifier trusts the math, not the prover.
+
+This distinction matters enormously for AI systems. An AI model that asserts "I was trained on authorized data" is asking for trust. An AI model that provides a ZK proof of training data membership is providing verifiability. The first is auditable only by inspecting the training process (expensive, not always possible). The second is auditable by verifying the proof (fast, always possible).
+
+## Completeness: The Full Truth
+
+Zhōng Fú's inner truth has a second dimension beyond zero-knowledge: completeness. Inner truth is not partial truth — it is the complete state of the thing. A system that has cryptographic integrity at the data layer but leaks through access patterns (which queries were made, when, how frequently) has partial integrity, not inner truth.
+
+This is the motivation for ORAM (Oblivious RAM) research and for access pattern hiding in encrypted databases. The content is encrypted, but the metadata — the pattern of access — leaks information. True Zhōng Fú requires protecting the whole.
+
+Hanzo's MPC work addresses this. The threshold signature protocol ensures that no single party can reconstruct the key. But additionally, the protocol minimizes information leaked about the signing pattern: which signers participated, how they communicated, what the timing looked like. The inner truth is protected at multiple levels.
+
+## Build the Proof, Not the Promise
+
+The engineering implication: where possible, replace assertions with proofs. Replace "we secure your data" with "here is a verifiable proof of data handling." Replace "our model is safe" with "here is a formal verification of the safety property." Replace "we don't store your queries" with "here is a ZK proof that the inference path has no write operations to durable storage."
+
+This is not always technically possible today. It is the direction the field is moving. The infrastructure — ZK-efficient hash functions, on-chain verifiers, proof generation toolchains — is being built now because the requirement for provable rather than assertable trust is real.
+
+Two yielding lines in the center. The hollow is where the truth lives. Prove it.

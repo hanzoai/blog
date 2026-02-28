@@ -1,0 +1,47 @@
+---
+title: "Hexagram 39 — Jiǎn: Dependency Hell and How to Get Unstuck"
+date: "2025-04-09"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "dependencies", "blockers", "debugging", "problem-solving"]
+description: "Jiǎn is water on the mountain — movement blocked by terrain. The hexagram does not tell you to force through the obstruction. It tells you to understand the obstruction so precisely that you find the path that was always there."
+---
+
+# ䷦ Jiǎn — Obstruction: Getting Unstuck
+
+Water above the mountain. Progress is impeded. The natural path forward is blocked. The I-Ching's guidance on Jiǎn is surprisingly specific: do not keep pushing against the obstruction. Stop. Examine the situation from a different angle. The path exists; your current approach cannot see it.
+
+In engineering, obstruction arrives in predictable forms: dependency conflicts, circular dependencies, version incompatibilities, broken toolchains, systems that cannot be tested without the thing you are trying to build. The experience of "blocked" is universal. The methodology for unblocking is not.
+
+## Dependency Hell as Jiǎn
+
+Dependency hell is the canonical engineering obstruction. Package A requires library X at version 2.1. Package B requires library X at version 3.0. They are incompatible. You need both packages. The naive approach — keep trying different combinations — is the engineering equivalent of throwing yourself against the mountain.
+
+The correct approach: understand the obstruction structurally. What does package A actually require from library X? Is it the full API surface or a small subset? Can you vendor the specific subset package A needs, breaking the dependency entirely? Can you update package A to work with version 3.0? Can you replace package B with something that doesn't require library X at all?
+
+The path exists. The obstruction is a signal to examine assumptions, not to increase force.
+
+In Go, this manifests as module replace directives in go.mod — explicit declaration that a dependency's source is overridden. It is not a hack. It is the language's built-in mechanism for navigating obstruction: name the conflict, resolve it explicitly, move on.
+
+## The Blocked Build
+
+A blocked CI pipeline is Jiǎn in its most acute form. The build is broken. Nothing can ship. The clock is running. The pressure to do something — anything — is enormous.
+
+The correct response is diagnosis before action. What changed? What is the failure signal? Is it a flaky test or a real regression? Is the failure in the code or in the environment? Is it reproducible locally or only in CI?
+
+Most blocked builds have a precise cause that becomes obvious once examined without panic. The obstruction is real but narrow. The act of stopping to characterize it is not delay — it is the fastest path through.
+
+## Circular Dependencies as Structural Obstruction
+
+Circular dependencies are Jiǎn made structural: package A imports package B which imports package A. You cannot build either without the other. This is not a version problem — it is a design problem. The circular dependency is the symptom; the cause is a boundary drawn in the wrong place.
+
+The fix requires stepping back from the code entirely and asking: why do these packages need each other? What responsibility do they share that should actually live in a third package that neither of them owns? The obstruction is a force that reveals the missing module.
+
+The Hanzo SDK packages are designed with explicit dependency graphs to prevent this. The crypto package imports nothing from the network package. The network package imports the crypto package but not the commerce package. The commerce package imports both. Directionality is enforced.
+
+## Knowing When to Stop
+
+Jiǎn's deepest lesson is that continued effort in the wrong direction is not just inefficient — it is destructive. The mountain does not yield to pushing. When progress stops completely, the correct move is often to put the problem down, do something else, and return. The path becomes visible when you stop staring at the obstruction.
+
+This is not mysticism. It is the documented experience of problem-solving under cognitive load: stepping away resets the working memory constraints that were locking in the wrong framing.
+
+The path exists. Stop long enough to see it.

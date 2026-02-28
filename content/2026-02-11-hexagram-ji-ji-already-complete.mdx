@@ -1,0 +1,54 @@
+---
+title: "Hexagram 63 — Jì Jì: The Shipped Product, Done Means Deployed"
+date: "2026-02-11"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "shipping", "deployment", "completion", "velocity"]
+description: "Jì Jì is already complete — water above fire, each element in its proper place. Everything is ordered. The hexagram marks a moment of genuine completion. In engineering, completion is not the merged PR. It is the deployed, monitored, production feature that users are using."
+---
+
+# ䷾ Jì Jì — Already Complete: Done Means Deployed
+
+Water above fire. Every line is in its correct position — yang where yang should be, yin where yin should be. The hexagram is the only one in the sixty-four where every element is perfectly placed. This is the image of completion: not near-completion, not "essentially done," but the actual state of having finished.
+
+The I-Ching is careful about Jì Jì. It notes that this state carries its own danger: the tendency to stop paying attention once completion is achieved. The system that is complete today must be maintained to remain complete. But the point of Jì Jì is real: completion is a state, and it is different from near-completion in important ways.
+
+In engineering, completion is not the PR merged to main. Completion is the feature deployed to production, monitored, confirmed working for real users, with the monitoring confirming it and the runbook written for when it breaks.
+
+## The Definition of Done
+
+"Done" is a precisely defined state, not a feeling. Teams that do not define done explicitly are teams where things are perpetually almost done. The feature is "in review." The feature is "in staging." The feature is "waiting for QA." These states look like progress but are not completion.
+
+A concrete definition of done for a production feature:
+- Code merged to main
+- Tests passing in CI (all of them, not "the important ones")
+- Deployed to production (not staging)
+- Monitoring in place (the dashboard shows this feature's health metrics)
+- Alert configured (if this feature fails, someone is paged)
+- Runbook written (the oncall engineer knows how to respond to the alert)
+- Verified working (actual users have used it, or synthetic traffic has exercised it)
+
+The feature that meets all six criteria is done. The feature that meets five is not done.
+
+## Completion as Catalyst
+
+Jì Jì's importance is not only in the state of completion but in what completion enables. The shipped feature generates data. Users interact with it. Errors surface. Performance characteristics in production differ from staging. The next iteration of the feature is informed by real usage.
+
+The feature that is 95% done generates none of this. It sits in a staging environment interacting with synthetic traffic. It cannot generate the feedback that would improve it. Completing it — deploying it, exposing it to real users — converts potential value into actual signal.
+
+This is the velocity argument for shipping incrementally. The smaller the feature, the faster it is done by the definition above. The faster it is done, the sooner the feedback arrives. The sooner the feedback arrives, the better the next iteration is.
+
+ZenLM model releases follow this pattern. Model checkpoints are evaluated continuously during training. When a checkpoint meets the release criteria, it ships — even if a better checkpoint is expected in another week of training. The shipped model gets community feedback, real-world use, and red-teaming that the training monitoring cannot replicate. The feedback improves the next training run.
+
+## The Maintenance Requirement
+
+Jì Jì's warning about completed systems: completion is not a terminal state. The production feature must be maintained — dependencies patched, performance monitored, edge cases handled as they surface.
+
+This is not a problem with shipping. It is the cost of producing something real rather than something theoretical. Real systems interact with real environments that change. The system that was correct when deployed becomes incorrect when its dependencies are updated, when usage patterns shift, when new inputs arrive that weren't anticipated.
+
+Completeness is maintained, not achieved once and held forever. This is different from saying completion is never achieved — it is achieved, and it is also a continuous property that requires ongoing attention.
+
+## Ship It
+
+The practical upshot: ship the feature. The gap between "essentially done" and "deployed to production" is almost always smaller than it feels. The fear of deployment is usually larger than the actual risk of deployment. The cost of not shipping — continued maintenance of the staging artifact, continued absence of real feedback, continued "almost done" status — is real.
+
+Every element in its proper place. Water above fire. Ship it.

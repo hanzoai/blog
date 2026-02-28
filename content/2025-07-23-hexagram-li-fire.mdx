@@ -1,0 +1,63 @@
+---
+title: "Hexagram 30 — Lí: Clear Logging and Making the Invisible Visible"
+date: "2025-07-23"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "logging", "debugging", "observability", "clarity", "illumination"]
+description: "Fire above fire — double illumination, clarity that clings. Lí is the principle of making things visible through light. Logging is the fire in your system: what you can see, you can fix. What is invisible, you cannot."
+---
+
+# ䷝ Lí — Fire/Clarity: Logging as Illumination
+
+Fire above, fire below. Double light — illumination that clings, that depends on its fuel, that makes everything in its range visible. The thirtieth hexagram is about clarity through light: the quality of things that are made visible, that illuminate what they touch.
+
+Logging is this hexagram applied to software. A system without logs is dark: when it fails, you are debugging by inference. A system with good logs is illuminated: failure is visible, the path to the failure is traceable, the state of the system at each step is recorded.
+
+## The Difference Between Logging and Noise
+
+Most systems have too many logs and too little information. The logging failure mode: every function call emits a debug log, every variable state is printed, every condition branch is logged. The result is a log volume so large that the meaningful signals are buried in noise. Finding the relevant entry for a specific failure requires sifting through thousands of lines of irrelevant output.
+
+Good logging is not more logging. It is precisely located logging: events that record state changes, decisions with non-obvious causes, errors with full context, and latency measurements at key points.
+
+The test for whether a log statement belongs: if this statement is present in the log during an incident, does it help? If yes: keep it. If it is background noise that will be present regardless of whether an incident is occurring: remove it or reduce its log level.
+
+## What Good Log Entries Contain
+
+A log entry that illuminates has:
+
+**A timestamp** with millisecond precision. Events that happen close together need to be ordered. Seconds are not sufficient resolution for debugging concurrent systems.
+
+**A request or trace ID** that is present on every log entry for the same request's processing path. This is the thread that lets you extract all log entries for a single request from a distributed system — without it, correlating entries across services requires manual reconstruction.
+
+**Structured fields** that can be indexed and queried. Not a message that embeds field values in a string, but separate fields: `{"level": "error", "event": "payment_declined", "order_id": "ord_123", "reason": "insufficient_funds", "elapsed_ms": 1204}`.
+
+**The right level**: DEBUG for development-time verbose output, INFO for normal operation events, WARN for recoverable unexpected conditions, ERROR for failures that require attention, FATAL for conditions that require immediate action.
+
+**Enough context to act on**: An error log that says "database connection failed" is less useful than one that says "database connection failed: pool exhausted (30/30 connections active), failed request: SELECT * FROM orders WHERE id = ?, query elapsed 0ms before failure."
+
+## The Hanzo Logging Standard
+
+Every service in the Hanzo infrastructure uses structured JSON logging to stdout. The log output is captured by the container runtime and forwarded to the central log aggregation system (Loki, in the current stack). From there:
+
+- Full-text search across all services for a given trace ID
+- Aggregation by event type to see rates over time
+- Alerting on error rate thresholds
+- Long-term retention for compliance and forensics
+
+The structured fields are standardized across services: `trace_id`, `span_id`, `service`, `level`, `event`, `elapsed_ms`, and domain-specific fields specific to each service. A developer investigating a cross-service issue can pull all log entries with a given trace ID across all services in a single query.
+
+This is not complex infrastructure. It is standard infrastructure set up correctly and used consistently.
+
+## Log-Driven Debugging
+
+When a production issue occurs, the debugging workflow starts with logs:
+
+1. Find the first ERROR or WARN entry that corresponds to the failure time
+2. Extract the trace ID from that entry
+3. Pull all log entries for that trace ID across all services
+4. Reconstruct the timeline from the trace
+
+In a well-logged system, this process takes minutes. In a poorly logged system, it takes hours — or fails entirely when the relevant context was never logged.
+
+The investment in logging infrastructure is paid back entirely in reduced incident resolution time. The fire that illuminates your system is the logs you wrote before the failure.
+
+Double fire. Clarity that clings. Make the invisible visible before it fails.

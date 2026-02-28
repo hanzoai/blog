@@ -1,0 +1,51 @@
+---
+title: "Hexagram 9 — Xiǎo Xù: Incremental Improvement and the Small PR"
+date: "2025-02-26"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "continuous-delivery", "ci-cd", "incremental", "small-prs"]
+description: "Wind above heaven — gentle force that builds over time. Small taming is not timid engineering. It is the discipline of continuous delivery: many small correct changes over time beat one large risky one."
+---
+
+# ䷈ Xiǎo Xù — Small Taming: The Compound Interest of Incremental Delivery
+
+Wind above heaven. Not a storm — a steady, accumulating force. The ninth hexagram describes the power of small, consistent action. The clouds accumulate. Rain will come, but not yet. For now: tend carefully, accumulate, prepare.
+
+This is the engineering philosophy behind continuous delivery and the small pull request. Not because large changes are always wrong — but because the discipline of small changes compounds over time into something that large-batch processes cannot match.
+
+## Why Large Changes Fail at Scale
+
+A large pull request has several properties that make it expensive to ship:
+
+It is hard to review. The reviewer must hold a large mental model to evaluate whether the change is correct. The cognitive load scales with the diff size faster than linearly.
+
+It has a long feedback cycle. The developer works in isolation for days or weeks before getting feedback. Incorrect assumptions compound. The longer the isolation period, the more expensive the necessary course corrections.
+
+It conflicts with other work. In a codebase with multiple active developers, a large change in progress is a merge conflict bomb. The longer it stays open, the more it diverges from the main branch.
+
+It is binary: it either ships or it doesn't. There is no partial value. If the release is delayed, the entire change set waits.
+
+## The Small PR Discipline
+
+Small PRs are not small because we lack ambition. They are small because they are the unit of verified correctness. A 50-line change that does one thing and has tests can be reviewed in 15 minutes, merged in a day, and is in production before it can cause problems.
+
+The discipline requires breaking large features into sequences of independently deployable changes. This is harder than writing one large change. It requires more design up front — you need to understand the decomposition before you start writing code. The payoff is a delivery pipeline that has no blockage points.
+
+Feature flags are the infrastructure that makes this possible for user-facing changes: you can ship code that is not yet active, validate that it doesn't break anything, and then activate it with a configuration change. The code ships continuously. The feature ships when it's ready.
+
+## Continuous Delivery as Compound Interest
+
+The economic framing that makes small batching intuitive: it is compound interest applied to software delivery.
+
+A team that ships 20 small improvements in a week creates more total value than a team that ships one large feature in the same week, for two reasons. First, each small improvement is evaluated, iterated on, and potentially abandoned early if it doesn't work — there is no sunk cost fallacy baked into a 2-hour PR. Second, each small improvement teaches the team something about the system and the users, informing the next improvement.
+
+The Hanzo commerce platform has shipped without a major deployment freeze for years because the deployment pipeline is built on this principle. Every commit that passes tests can go to production. The decision to ship is decoupled from the decision to write code. Releases are not events — they are the background state of the system.
+
+## Applied to Model Development
+
+The same principle applies to model training and fine-tuning. The zen model family uses LoRA (Low-Rank Adaptation) for incremental refinement precisely because it is the small-taming approach to model development: a small adapter applied to a large base model, trainable in hours on available hardware, deployable without touching the base weights.
+
+Rather than retraining a model from scratch to add a capability, you add an adapter. You test the adapter. You iterate. You accumulate adapters. The base model is stable. The improvements compound.
+
+This is Xiǎo Xù in practice: wind taming heaven, not by overpowering it, but by persistent, gentle, accumulated force.
+
+The clouds are gathering. The rain will come. In the meantime: tend carefully, commit often, ship continuously.

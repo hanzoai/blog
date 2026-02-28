@@ -1,0 +1,45 @@
+---
+title: "Hexagram 35 — Jìn: Shipping Cadence and the Mechanics of Momentum"
+date: "2025-02-12"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "shipping", "momentum", "cadence", "delivery"]
+description: "Jìn is the sun rising above the earth — clarity emerging from darkness, advancement that comes from consistent forward motion. Momentum in engineering is not a feeling; it is a measurable property of your release cadence."
+---
+
+# ䷢ Jìn — Progress: The Mechanics of Shipping Cadence
+
+Fire above, earth below. Light rises from the horizon — not explosive, but sustained. Jìn is the hexagram of natural, continuous progress. The I-Ching commentary is direct: advance when conditions allow, and advance consistently. Not in one massive surge that depletes, but in steady forward movement that compounds.
+
+This maps precisely to shipping cadence. Not velocity as a metric — velocity is output. Cadence is rhythm. The difference matters enormously.
+
+## Rhythm vs. Output
+
+A team that ships 50 features in Q1 and 3 in Q2 has high average velocity and no cadence. A team that ships 8 features per week, every week, for twelve weeks has lower total output but higher cadence. The second team is healthier by almost every measure: predictability, morale, stakeholder trust, the ability to identify and fix process problems before they compound.
+
+Cadence is what makes momentum possible. Momentum is not speed — it is the property of a system in motion that resists disruption. A team with cadence absorbs a sick day, a difficult PR review, a production incident, without losing the next release. A team without cadence loses weeks to any friction.
+
+## The Mechanics
+
+Consistent shipping requires removing the decisions that break cadence. Which decisions cause teams to stop moving?
+
+**Scope decisions**: Feature scope that isn't locked before development begins creates infinite work-in-progress. Lock scope at planning. When scope changes, that is a new item, not a modification to the current work.
+
+**Deployment decisions**: If deployment requires a human decision on every release, deployments will be batched until someone has time to make a decision. Automate the deployment. Remove the decision.
+
+**Quality gate decisions**: Inconsistent standards mean every PR is a negotiation. Consistent standards — enforced by CI, not by review — mean PRs are predictable. The review is about logic, not style.
+
+At Hanzo, the model release pipeline follows this pattern. When a new model passes its evaluation benchmarks, the deployment is automatic. The decision was made once — at pipeline design time — not per-release. ZenLM model releases happen on a schedule, not on a "when it's ready" basis, because "when it's ready" is not a cadence; it is a hope.
+
+## Small Batches Are the Mechanism
+
+The practical implementation of Jìn is small batch sizes. Smaller batches flow faster through every stage. They are easier to review. They generate simpler diffs. They touch fewer systems, reducing the blast radius of a bug. They produce a feedback signal sooner — which means mistakes are caught and corrected before they compound into large problems.
+
+The counterintuitive result: shipping more frequently is usually lower risk than shipping less frequently. The risk of a large release scales superlinearly with its size. Small releases fail small.
+
+## Sustaining Forward Motion
+
+Jìn's emphasis on sustained progress rather than explosive bursts has a corollary: protect the conditions that make progress possible. This means: do not accumulate technical debt faster than you pay it down. Do not let test coverage decay. Do not let the build get slower. These are not idealistic concerns — they are the ground conditions from which forward motion is possible.
+
+When the ground degrades, progress requires more energy per step until it stops being possible at all.
+
+The sun rises every morning. It does not surge and rest. Build the same way.

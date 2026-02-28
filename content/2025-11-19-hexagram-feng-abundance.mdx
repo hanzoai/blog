@@ -1,0 +1,53 @@
+---
+title: "Hexagram 55 — Fēng: Peak Traffic and Handling Abundance Gracefully"
+date: "2025-11-19"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "scaling", "traffic", "performance", "peak-load"]
+description: "Fēng is fullness — brightness and movement together at their maximum. The moment when everything is working perfectly and demand is at its highest. The system designed only for average load fails precisely at this moment. Design for abundance."
+---
+
+# ䷶ Fēng — Abundance: Peak Traffic Gracefully Handled
+
+Thunder and lightning together. Maximum energy, maximum clarity. Fēng is the moment of fullness — the summer solstice of a system's operational life. The I-Ching notes that Fēng cannot be sustained indefinitely; it is a peak, not a plateau. But it can be handled well or poorly, and the handling at peak determines the system's value.
+
+Every system has a peak traffic moment. For e-commerce, it is Black Friday. For a model serving API, it is the moment a major capability is announced and tens of thousands of developers try it simultaneously. For a social platform, it is a breaking news event. For a financial system, it is market open.
+
+Peak traffic is not a failure condition. It is the moment of maximum value — maximum users, maximum transactions, maximum signal. The system that handles it well captures that value. The system that fails under it destroys it.
+
+## Designing the Peak
+
+Peak traffic design begins with knowing the peak. This requires:
+
+- Historical data on peak-to-average ratio (for existing systems)
+- Product event modeling (what launches, announcements, or external events could generate spikes?)
+- Load testing that verifies behavior at peak, not just at average
+
+The Hanzo inference platform targets a 10:1 peak-to-average capacity ratio. If average load is 1,000 requests per second, the system is sized and tested for 10,000. This is not arbitrary — it reflects the actual peak-to-average ratio observed across AI API products during major announcement events.
+
+The load test is not optional. "We have headroom" is not the same as "we have tested our behavior under 10x load." Systems degrade in non-linear ways. A database that performs acceptably at 1,000 RPS may become the binding constraint at 3,000 RPS because connection pooling is insufficient. The load test finds this at test time, not at peak time.
+
+## Graceful Degradation Under Abundance
+
+Handling abundance gracefully does not mean handling it without any degradation. It means degrading in a controlled, priority-ordered way that preserves the most valuable operations at the expense of the least valuable.
+
+Under extreme load, the priority ordering for the Hanzo platform:
+1. In-flight requests complete (they have already consumed resources; dropping them wastes the sunk cost)
+2. New high-value requests are accepted (paid tier, production applications)
+3. New standard requests are rate-limited with clear retry guidance
+4. Background jobs and non-essential operations are shed completely
+
+This is not a failure mode. This is the system operating correctly at peak. Users on the rate-limited tier get a clear response (429, Retry-After header, current queue depth). They know what to do. The system stays up.
+
+## Caching at Peak
+
+Caches that are optional at average load become necessary at peak. The database that handles average query rates without cache assistance typically cannot handle peak query rates directly. Peak traffic planning must include cache hit rate analysis: at peak, is the cache sufficient to absorb the additional load, or will it be overwhelmed by cache misses for novel queries?
+
+For model inference specifically: token-level caching (KV cache), prompt caching, and response caching for repeated queries all serve different parts of the efficiency curve. Each has different hit rate characteristics. At peak, the combination of all three is what keeps the serving cost from scaling linearly with traffic.
+
+## The Moment Passes
+
+Fēng is a peak, not a permanent state. The I-Ching notes this explicitly: fullness must decline. After the peak, load decreases, caches warm, conditions normalize. The system should scale back gracefully — releasing resources that are no longer needed rather than holding them indefinitely.
+
+Autoscaling that scales up in response to load and scales down with lag handles this. The lag prevents premature scale-down during a transient dip in a sustained peak. The eventual scale-down prevents holding resources at peak cost indefinitely.
+
+Thunder and lightning at their peak. The system that was built for this moment handles it without drama.

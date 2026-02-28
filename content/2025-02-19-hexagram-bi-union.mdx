@@ -1,0 +1,53 @@
+---
+title: "Hexagram 8 — Bǐ: Protocols That Bind Systems"
+date: "2025-02-19"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "protocols", "interoperability", "standards", "open-source"]
+description: "Water above earth — rivers finding their way to the sea. Union is not merger. Protocols bind systems together while preserving the integrity of each. Interoperability is the highest form of system design."
+---
+
+# ䷇ Bǐ — Union: The Power of Shared Protocols
+
+Water over earth. Rivers converge. The eighth hexagram is about holding together — not through force, not through merger, but through mutual alignment toward a common interface. Things come together because the conditions are right, not because they are compelled.
+
+This is the principle behind every successful open protocol.
+
+## Protocols Are Not Products
+
+There is a persistent confusion in the technology industry between protocols and products. Products are owned. Protocols are shared. Products extract value by locking users in. Protocols create value by enabling systems to compose.
+
+HTTP is not a product. TCP/IP is not a product. Git's wire protocol is not a product. These are protocols: defined interfaces that any implementation can participate in. Their value comes from universal adoption, which is only possible because no single entity owns them.
+
+The failure mode of "protocol thinking" in commercial technology is the proprietary protocol: an interface that looks like a standard but is controlled by one vendor, with extension mechanisms that only their implementations support. This is Bǐ violated — holding together only by force, not by genuine mutual alignment.
+
+## What Makes a Protocol Work
+
+The I-Ching says union requires a center — something around which holding-together naturally occurs. For protocols, the center is the problem being solved. Not the vendor's business model. Not the current implementation. The problem.
+
+TCP solves reliable ordered delivery over unreliable networks. HTTP solves stateless request-response interaction. OAuth solves delegated authorization. Each protocol's center is its problem statement, and the protocol lives as long as the problem remains relevant.
+
+Protocols that survive decades share three properties:
+
+**Simplicity at the core**: The core mechanism is small enough to reimplement. If reimplementing the protocol requires understanding the entire codebase of the reference implementation, it's not a protocol — it's an undocumented API.
+
+**Extensibility at the edges**: The protocol has well-defined extension points. New capabilities can be added without breaking existing implementations that don't understand them.
+
+**Honesty about scope**: The protocol does not try to solve everything. HTTP does not specify how servers should handle authentication. TCP does not specify what the payload bytes mean. Scope containment is what makes composition possible.
+
+## MCP and the Model Context Protocol
+
+The Model Context Protocol — originally developed as part of the Hanzo AI infrastructure and now deployed widely — follows these principles. The core is simple: a structured way for AI models to receive context, use tools, and return results. The protocol does not specify which model, which tool implementation, or which hosting environment.
+
+This is intentional. An MCP-compatible tool server works with any MCP-compatible model client. A model that implements MCP can use tools built by anyone. The protocol creates a market for composable AI components rather than a walled garden of proprietary integrations.
+
+Lux similarly implements an open wire protocol for its consensus layer. Any validator implementation that speaks the protocol can participate in the network. The network's security comes from the protocol's properties — not from the specific implementation Hanzo ships.
+
+## The Union of Open Source Communities
+
+Bǐ has an interpersonal dimension too: it describes the coming-together of communities around shared purpose. The Zoo Labs research network is this pattern in practice — independent researchers, institutions, and open-source contributors converging around shared infrastructure and shared protocols, without any single entity controlling the direction.
+
+The condition for this kind of union is a center that is genuinely shared: open standards, open weights, open training code. When the center is owned, the union is fragile — it persists only as long as the owner's interests align with the community's. When the center is open, the union persists on its own terms.
+
+This is why "computation should not be owned by any single entity" is not ideology — it is engineering requirements analysis. Owned computation cannot be a shared protocol center. Only open computation can sustain genuine union.
+
+Rivers don't converge because they are forced to. They converge because the terrain makes it the path of least resistance. Design your protocols to be the path of least resistance, and the ecosystem will form around them.

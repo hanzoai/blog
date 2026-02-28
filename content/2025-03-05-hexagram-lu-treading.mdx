@@ -1,0 +1,49 @@
+---
+title: "Hexagram 10 — Lǚ: Security-First Design"
+date: "2025-03-05"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "security", "cryptography", "zero-trust", "mpc"]
+description: "Heaven above, lake below — treading on the tiger's tail without being bitten. Security-first design is not paranoia. It is the discipline of walking paths that have real consequences without triggering failure."
+---
+
+# ䷉ Lǚ — Treading: The Path That Does Not Trigger the Tiger
+
+Heaven above, lake below. The image: treading on a tiger's tail. If you proceed carefully and correctly, the tiger does not bite. The tenth hexagram is about navigating real danger through precise, disciplined movement — not by avoiding risk, but by taking it correctly.
+
+Security engineering is this hexagram made concrete. The threat model is real. The consequences are real. The discipline required is specific and non-negotiable.
+
+## Security Isn't Paranoia — It Is Threat Modeling
+
+Security-first design is not about imagining worst-case scenarios obsessively. It is about having an accurate model of your threat surface and designing system properties that are valid under adversarial conditions, not just cooperative ones.
+
+The naive approach to security: add it at the end. Implement the feature, then "add security." This approach fails because security is not a feature — it is a property. You cannot add the property that a vault is locked by attaching a lock to an already-built vault and hoping the walls are strong enough. The vault must be designed with its locked property as a requirement.
+
+The security-first approach: begin with the threat model. Who can interact with this system? What can they send? What should they be able to observe? What should they be able to modify? The answers to these questions constrain the design before implementation begins.
+
+## Zero Trust as Default Posture
+
+The perimeter security model — everything inside the network boundary is trusted — has been obsolete for a decade. The network perimeter does not exist in cloud infrastructure. Services call services across network boundaries that are not controlled. The "inside" is an abstraction with no security meaning.
+
+Zero trust replaces the perimeter assumption with a per-request assumption: every request must be authenticated and authorized, regardless of where it originates. An internal service calling another internal service must present valid credentials and must be authorized for the specific operation it is requesting. "Same network" is not a credential.
+
+Hanzo's service mesh implements zero trust end-to-end: every service-to-service call is authenticated with short-lived tokens, every authorization is checked against the current policy, and no service has standing permission to call another service without an explicit grant. This adds latency — a few milliseconds per call for the token validation. The cost is worth it because the alternative is that any compromised service has lateral movement to every other service on the same network.
+
+## MPC: Cryptography That Keeps Keys Distributed
+
+Multi-party computation for cryptographic operations is Lǚ at the infrastructure level. The principle: a cryptographic key that never exists in complete form in any single location cannot be stolen from any single location.
+
+In threshold signature schemes (the form of MPC most relevant to Hanzo's commerce and identity infrastructure), a key is split into shares. A configurable threshold of shares must cooperate to sign. No single party can sign without the others. No single party needs to know the full key.
+
+This is not complex cryptography for its own sake. It is the direct engineering consequence of the threat model: "what happens when one signer is compromised?" With a single key, the answer is catastrophic. With threshold MPC, the answer is: the compromised signer's share is worthless alone. The threshold is not met. The operation does not proceed.
+
+The CGGMP21 protocol used in Hanzo's threshold signature implementation was chosen specifically because it is audited, well-understood, and produces proofs of correctness that can be verified independently. Security claims without proofs are not security claims.
+
+## Post-Quantum: Treading Tomorrow's Path Today
+
+The lattice-based post-quantum cryptographic primitives being deployed in Lux's consensus layer are an example of treading the path before the tiger arrives. Current elliptic curve signatures are secure today. They are not secure against a sufficiently powerful quantum computer.
+
+Quantum computers that can break EC crypto do not exist in 2025. They may not exist for a decade. But "deploy post-quantum crypto when quantum computers are available" is the wrong time — that is when cryptographic key material that was protected with EC signatures becomes retroactively exposed. The adversary who recorded encrypted traffic in 2024 can decrypt it when the quantum computer is available in 2034.
+
+Migrating cryptographic primitives in production systems is expensive. The time to start is before it is urgent, not after.
+
+Tread the tiger's tail precisely. The danger is real. Precise movement is what gets you through.

@@ -1,0 +1,59 @@
+---
+title: "Hexagram 7 — Shī: Orchestrating Distributed Agents"
+date: "2025-02-12"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "agents", "orchestration", "multi-agent", "distributed"]
+description: "Earth above water — an army moves as one. Coordinating distributed agents requires the same discipline as military organization: clear command structure, explicit communication, defined roles."
+---
+
+# ䷆ Shī — The Army: Coordination Without Chaos
+
+Earth above, water below. The army hexagram. Six thousand troops, one general. The I-Ching's analysis of effective coordination reduces to two things: the general must be experienced, and the authority structure must be unambiguous. Without these, strength becomes chaos.
+
+In 2025, multi-agent AI systems are the army that most engineering teams are trying to field. The failure modes are identical to those the hexagram describes.
+
+## Why Multi-Agent Systems Fail
+
+The first generation of multi-agent AI systems failed not because the models were bad but because the orchestration was naive. Agents were given tools and told to figure it out. The result was circular reasoning, duplicate work, conflicting state updates, and cascading failures when any single agent hit a failure condition.
+
+An army where each soldier decides their own objective is not an army. It is a mob.
+
+The hexagram says: there must be a commander. In agent systems, this maps to an **orchestrator** — a component with global visibility that decomposes objectives, assigns subtasks, monitors progress, and handles failure. The orchestrator is not smarter than the agents it coordinates. It has a different function: it holds the plan.
+
+## The Command Structure
+
+Effective agent orchestration requires exactly what Shī describes:
+
+**Clear decomposition**: The orchestrator breaks the objective into subtasks with defined inputs and outputs. Each agent receives a bounded task — not a vague goal. "Search for recent papers on MPC threshold signatures" is a bounded task. "Research cryptography" is not.
+
+**Explicit state passing**: Agents do not share memory implicitly. They receive context as input and return structured output. The orchestrator maintains the global state and decides what context each agent needs for its task. Implicit shared state between agents is how coordination failures compound.
+
+**Failure handling at the orchestrator level**: When an agent fails, the orchestrator decides whether to retry, reassign, or abort the parent task. Agents do not handle each other's failures. They signal failure upward and wait.
+
+**Bounded scope**: Agents have tools they can use and tools they cannot. An agent tasked with document analysis should not be able to spawn subagents, modify production databases, or make external API calls outside its defined scope. Scope creep in agents is how small tasks become large incidents.
+
+## Hanzo's Agent Framework
+
+The Hanzo agent framework (deployed in zoo-gym and the broader AI infrastructure) implements a three-tier coordination model:
+
+**Planner**: Receives the high-level objective, decomposes it into a DAG of subtasks, assigns each task to a worker agent with explicit inputs and success criteria.
+
+**Workers**: Execute single bounded tasks. Each worker has access to a defined set of tools. Workers report results and errors to the planner. Workers do not communicate with each other directly.
+
+**Validator**: Checks worker outputs against the success criteria defined by the planner. On failure, flags the task for retry or escalation.
+
+This is not a novel architecture. It is the standard pattern of hierarchical task decomposition, applied to language models as workers. The pattern is old because it works. The army model is old because it works.
+
+## The Cost of Flat Coordination
+
+The alternative — all agents at the same level, communicating peer-to-peer, sharing a common context window — does not scale. As task complexity increases and the number of agents grows, the coordination cost dominates. Every agent needs to understand the full state of every other agent. The context window fills with status updates. Decisions get made by agents that don't have the full picture.
+
+Flat agent coordination fails the same way flat organizational structures fail at scale: when everything is visible to everyone, nothing gets decided efficiently. Hierarchy is not tyranny — it is the compression of information to the level where decisions can be made.
+
+## Specific Principle: Explicit Message Passing
+
+The one technical principle that maps most directly from Shī: **no shared mutable state between agents**. Every piece of information that passes between agents passes as an explicit message, with a sender, a receiver, and a defined schema. The message is the unit of coordination.
+
+This is Go's philosophy applied to agent systems: do not communicate by sharing memory; share memory by communicating. It is not coincidental that this is also the sound engineering principle behind Erlang's actor model, behind Kubernetes' controller reconciliation loop, and behind every well-designed distributed system.
+
+The army moves as one because each soldier knows their orders. Not because each soldier can see every other soldier's mind.

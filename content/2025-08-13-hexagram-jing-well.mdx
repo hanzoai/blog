@@ -1,0 +1,41 @@
+---
+title: "Hexagram 48 — Jǐng: Open Protocols as Shared Infrastructure"
+date: "2025-08-13"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "open-source", "protocols", "infrastructure", "commons"]
+description: "The well serves the whole village. It is not owned by any household. Everyone draws from it; everyone has an interest in maintaining it. This is the engineering argument for open protocols: infrastructure that no one owns is infrastructure that everyone can build on."
+---
+
+# ䷯ Jǐng — The Well: Open Protocols as Shared Infrastructure
+
+Wood below, water above. The well is the image of the necessary resource that serves the community and is served by the community in return. The I-Ching makes a precise observation about the well: towns change, rulers change, but the well remains in the same place. The community moves around it; the well does not move.
+
+This is the nature of infrastructure protocols. TCP/IP did not change when the internet's topology changed. HTTP/1.1 did not change when the web's architecture changed. The protocols remain; the applications built on them evolve. The well is stable; the community that draws from it is dynamic.
+
+## The Economic Argument for Open Protocols
+
+A protocol that is owned by a single entity creates a tax on everyone who uses it. The owner's incentives are not aligned with the users' incentives. The owner extracts rent; users pay it because the cost of migrating off the protocol exceeds the rent. This is not a market failure — it is the market working correctly from the owner's perspective. It is, however, a structural tax on the entire ecosystem that uses the protocol.
+
+Open protocols remove this tax. When the protocol is specified openly, any party can implement it. Competition among implementations drives quality up and cost down. The protocol owner cannot extract rent because users can switch implementations. The well can be dug anywhere, by anyone, from the same specification.
+
+This is the explicit design philosophy behind Lux's network protocols. The consensus protocol is open-specified. The P2P messaging layer is open-specified. The VM execution interface is open-specified. Hanzo does not benefit from controlling these protocols — the goal is a network where compute settlement cannot be monopolized, not a network where Hanzo is the monopolist instead of someone else.
+
+## The Model Context Protocol
+
+The MCP (Model Context Protocol) work at Hanzo is another application of Jǐng. Tools, resources, and prompts that AI models need to be useful are not a Hanzo-proprietary surface. They are a well. The protocol for how models discover and use these resources should be open, implementable by any model, any tool author, any platform.
+
+A closed MCP controlled by Hanzo would be a well with a gate. You could use it, but only on Hanzo's terms. An open MCP is a well without a gate. The model that runs on Hanzo's infrastructure and the model that runs on a competitor's infrastructure can both draw from the same ecosystem of tools. The well serves everyone.
+
+This is not altruism. Open protocols create larger markets. A well that serves the whole village sustains more economic activity than a well that serves one household.
+
+## Maintenance as Shared Responsibility
+
+The I-Ching notes that the well requires maintenance. A neglected well cannot serve the village. This maps directly to the governance problem in open source: who maintains the shared infrastructure?
+
+The honest answer in most open-source projects is: whoever needs it enough to pay the cost. This is a market mechanism, not a planned allocation. Projects that are critical enough attract enough contributors to stay maintained. Projects that slip below criticality degrade.
+
+The implication for users of open-source infrastructure: if you depend on it, you have an interest in its maintenance. Contribution is not charity — it is the price of a well that continues to function.
+
+Zoo Labs' research infrastructure is maintained this way. Dependencies that the research team uses heavily receive patches, documentation improvements, and issue reports from the research team. The well is tended by those who draw from it.
+
+The bucket goes down to the water level. The rope must reach. Maintain the well.

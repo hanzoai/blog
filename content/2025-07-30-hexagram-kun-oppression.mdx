@@ -1,0 +1,45 @@
+---
+title: "Hexagram 47 — Kùn: Systems at the Limit"
+date: "2025-07-30"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "load", "resilience", "burnout", "capacity-planning"]
+description: "Kùn is water without water — the lake drained. It is the state of exhaustion, constraint without relief. Engineering systems hit Kùn at capacity limits. So do the engineers who run them. The hexagram is honest about both."
+---
+
+# ䷮ Kùn — Oppression: What Happens at the Limit
+
+Water below the lake — the lake is empty. What should contain and hold has been depleted. Kùn describes the state of genuine exhaustion: not tiredness that sleep cures, but structural depletion that requires structural intervention.
+
+This is a systems hexagram in both senses. Computing systems hit Kùn at capacity limits. Engineering teams hit Kùn through sustained overload. The I-Ching applies the same analysis to both: in Kùn, ordinary words are not believed, ordinary actions do not achieve. The situation requires diagnosis, not more effort.
+
+## Systems Under Sustained Load
+
+A system approaching its capacity limit exhibits a characteristic progression. Response times increase first — the queue of pending work is growing faster than it is being processed. Then error rates rise as timeouts begin triggering. Then the system enters a feedback loop: retries from failed requests add to the queue, which increases response times, which causes more timeouts, which causes more retries.
+
+This is Kùn: the system's normal mechanisms for managing load are themselves consuming the resources that load management requires. Retries increase load. Health checks consume connection pool slots. Circuit breakers protect downstream services but leave callers spinning. The system is exhausted by its own defensive responses.
+
+The correct intervention is not to add resources to a system in this state. Resources added to a system in a retry storm do not relieve load — they are consumed by the storm. The correct intervention is to shed load: stop accepting new requests, drain the queue, allow in-flight work to complete, restart from a clean state.
+
+Hanzo's infrastructure implements load shedding at multiple levels. The routing layer has a concurrency limit; requests above the limit are rejected with a 429 rather than queued. Rejected requests get an immediate response rather than a timeout, which prevents the client's retry logic from amplifying the problem.
+
+## Capacity Planning as Prevention
+
+Kùn that is predictable is not inevitable. Capacity that was always insufficient was never a surprise — it was a planning failure. The work of capacity planning is to model the system's performance at projected load before the projected load arrives.
+
+What does this require?
+- Measured, not estimated, performance at current load (p50, p95, p99 latency; requests per second; resource utilization)
+- A model of how performance degrades as load increases (linear? superlinear? step functions at capacity boundaries?)
+- A projection of load growth based on product trajectory
+- Lead time for infrastructure changes
+
+When these four inputs are available, Kùn can usually be prevented. When they are missing — when infrastructure is managed reactively rather than proactively — Kùn arrives as a surprise.
+
+## The Human Side
+
+Kùn applies to engineering teams directly. Teams under sustained overload exhibit the same progression as systems under sustained load: degraded output quality first, then increased error rate, then defensive responses (avoiding difficult problems, deferring decisions) that amplify the workload.
+
+The intervention is the same: shed load before attempting to add resources. No amount of new hires resolves a team in Kùn if the root cause is structural — an oncall rotation without enough coverage, an incident rate that consumes all capacity, a roadmap that was not resourced to match its ambition.
+
+The I-Ching is clear about Kùn: do not talk too much in this situation. Do not try to explain or argue. The situation speaks for itself. Intervene structurally or wait until the exhaustion resolves naturally. Nothing else helps.
+
+The lake is empty. Refill it before demanding more of it.

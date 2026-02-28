@@ -1,0 +1,50 @@
+---
+title: "Hexagram 59 — Huàn: Breaking Monoliths and the Distributed System"
+date: "2026-01-14"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "distributed-systems", "microservices", "modules", "decomposition"]
+description: "Huàn is dispersion — the thaw that breaks the ice, allowing water to flow freely again. The monolith that has become a constraint must be dispersed. But dispersion without direction is chaos. The art is in choosing what boundaries to draw."
+---
+
+# ䷺ Huàn — Dispersion: Breaking the Monolith
+
+Wind above, water below. Wind moves the water's surface — dispersion, dissolution, the breaking of rigid structure. The I-Ching does not treat Huàn as a loss. The ice that melts was constraining the river. The dissolved rigidity allows the flow to resume.
+
+Monoliths are not inherently wrong. They are appropriate for the early stages of a system's life, when the domain is not yet fully understood, when team size does not yet demand coordination overhead from service boundaries, when deployment simplicity is more valuable than component independence. But monoliths that have grown beyond their appropriate scope become constraints. The service that is difficult to deploy because it carries the weight of unrelated concerns. The module that cannot be tested in isolation because it is coupled to the database, the cache, and three other services simultaneously.
+
+When the rigidity is constraining the system's evolution, Huàn applies: disperse.
+
+## The Module Boundary Question
+
+Decomposition is not hard because splitting code is technically difficult. It is hard because the right boundaries are not obvious from the code — they emerge from understanding what will change independently, what is deployed independently, what is owned independently, and what is scaled independently.
+
+The four questions for a module boundary:
+1. Does this component change at a different rate than the others?
+2. Does it need to be deployed independently of the others?
+3. Does it have a different owner than the others?
+4. Does it need to scale independently of the others?
+
+If the answer to any of these is yes, the component is a candidate for separation. If the answer to all of them is no, the component belongs in its current context.
+
+The Hanzo platform decomposed from an initial monolith over three years following this exact analysis. The routing layer changed frequently (model provider landscape was evolving); the settlement layer changed rarely (protocol stability was a feature). Different deployment cadences required independent deployment capability. The split was right.
+
+## Distributed Does Not Mean Correct
+
+Huàn's warning is about dispersion without coherence. Water dispersed without channels flows nowhere useful. The system decomposed without clear interface contracts is not a distributed system — it is a distributed mess.
+
+The prerequisites for a decomposition to produce better outcomes than the monolith:
+- **Stable interfaces between components**: If every deployment requires coordinating changes across multiple services, the decomposition has not reduced coupling — it has obscured it.
+- **Independent deployment**: Each component must be deployable without coordinating with others. If not, the operational overhead of distribution without the independence benefit.
+- **Observable boundaries**: Distributed systems fail at their interfaces. The interfaces must be monitored, traced, and debugged independently of the components they connect.
+
+Without these, the decomposition trades the monolith's problems for distributed system problems without gaining distributed system benefits.
+
+## The Open-Source Distributed Protocol
+
+Huàn at the ecosystem level is the transition from centralized services to distributed protocols. A centralized service has a single point of control, a single point of failure, and a single point of rent extraction. A distributed protocol disperses these: many nodes, many implementations, no single point of control.
+
+The Lux network is an expression of Huàn applied to financial settlement. The settlement function that in traditional finance is owned by a small number of clearing houses is distributed across independent validators. The function is dispersed. No single entity controls it. The thaw releases the flow.
+
+This is the architectural argument for open protocols over proprietary services in AI infrastructure. A proprietary inference API is ice: it flows as long as the owner allows it to flow. An open protocol — open model weights, open serving software, open specifications — is water: it flows regardless.
+
+Wind over water. The ice breaks. The river moves.

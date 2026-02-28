@@ -1,0 +1,45 @@
+---
+title: "Hexagram 56 — Lǚ: Stateless Systems and Ephemeral Compute"
+date: "2025-12-03"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "stateless", "serverless", "ephemeral", "cloud"]
+description: "The wanderer carries nothing that does not fit in a pack. They arrive, do the work, and leave no trace. This is the engineering principle of stateless compute: each execution is complete in itself. What happens here does not depend on what happened before."
+---
+
+# ䷷ Lǚ — The Wanderer: Stateless Systems
+
+Fire above the mountain. The traveler moves through unfamiliar terrain, relying on no fixed resource but their own capability. The I-Ching's guidance for the wanderer is precise: be careful, be correct, do not linger. The wanderer who moves efficiently and without excess succeeds; the one who accumulates possessions on the road becomes burdened.
+
+Stateless compute is the wanderer hexagram. The function that accepts inputs, produces outputs, and maintains no state between calls. It arrives (receives the request), does the work, and leaves no trace. The next call is completely fresh — it does not depend on the state of the previous call.
+
+## Why Stateless Matters
+
+Stateful systems are not wrong. Databases are stateful. Message queues are stateful. Consensus nodes are stateful. Statefulness is appropriate for these systems because managing state over time is their purpose.
+
+Stateless systems are appropriate for a different purpose: computing a result from inputs. HTTP handlers. Inference endpoints. Data transformation pipelines. When a component's job is to compute rather than to remember, making it stateful introduces costs without adding value.
+
+A stateless HTTP handler can be scaled horizontally by adding more instances. There is no state to synchronize, no session to route to a specific instance, no warm-up period. Request N goes to instance A; request N+1 goes to instance B. Both are correct. The load balancer is the entire scaling story.
+
+A stateful HTTP handler that holds user session data in memory cannot be scaled this way. Sessions must be routed to the instance that holds them. Or sessions must be externalized (at which point the handler is effectively stateless — the "state" lives in the session store, not in the handler). The statefulness is never free.
+
+## Serverless and Lambda Functions
+
+Serverless is statelessness taken to its economic conclusion. The function executes when triggered. It runs for the duration of the execution. It terminates. The infrastructure that hosted it may be recycled immediately. The function held nothing between calls.
+
+For AI workloads, this model has specific implications. Model weights must be loaded on each cold start, which is expensive. Warm-up caching at the infrastructure level (keeping instances warm, caching model weights in fast storage) mitigates this — but these are infrastructure concerns, not application concerns. The application code remains stateless.
+
+The ZenLM inference endpoints are designed around this model. Each request receives the model weights from the serving infrastructure. The request handler computes the response. Nothing is written back to shared state. The serving layer handles concurrent requests without coordination between instances.
+
+## Ephemeral Compute and Privacy
+
+Statelessness has a privacy implication that is underappreciated. A handler that holds state between requests may retain user data beyond the lifecycle of a single request. This creates a data retention surface that requires careful management: how long is the state retained? When is it purged? Who can access it?
+
+A stateless handler retains nothing between requests. There is no data retention surface to manage. The user's query disappears with the execution. This is a meaningful privacy property for AI inference workloads where the content of queries is sensitive.
+
+Hanzo's inference infrastructure defaults to stateless request handling. Conversation history is managed by the client or by an explicit session management layer with explicit retention policies — not implicitly accumulated in the inference layer.
+
+## Carrying Only What You Need
+
+The wanderer's discipline: carry only what the journey requires. The stateless function's equivalent: compute only from the inputs provided, produce only the outputs requested, leave no residue.
+
+The mountain is a landmark. The fire illuminates the path. The wanderer passes through and is gone.

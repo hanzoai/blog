@@ -1,0 +1,53 @@
+---
+title: "Hexagram 19 — Lín: Observability and Getting Close to the Problem"
+date: "2025-05-07"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "observability", "logging", "tracing", "metrics", "debugging"]
+description: "Earth above the lake — the high ground approaching the water, close enough to see clearly. Lín is the act of getting close to the problem. Observability is how you approach a system you cannot directly touch."
+---
+
+# ䷒ Lín — Approach: Getting Close to the Problem
+
+Earth above the lake. High ground looking down at the water — close, clear, able to see. The nineteenth hexagram is about approach: drawing near to something in order to understand it, to act on it, to improve it. Not observing from a distance, but coming close enough to see the details.
+
+In engineering, this is observability: the infrastructure that lets you approach a running system and see what it is doing, as it is doing it.
+
+## The Observability Problem
+
+Modern systems run on infrastructure you do not physically control, across network boundaries you cannot directly inspect, executing code paths that depend on inputs you did not anticipate. The system is not in front of you. You cannot step through it with a debugger. You cannot see inside it unless you have instrumented it to show you what's happening.
+
+Observability is not monitoring. Monitoring tells you when something is wrong. Observability tells you *what* is wrong and *why*. The distinction matters at 3am when a metric has spiked and you need to determine the cause in minutes, not hours.
+
+The three pillars of observability — logs, metrics, and traces — each answer a different question:
+
+**Logs** answer: what happened? A time-ordered record of discrete events, with enough context to understand each event in isolation.
+
+**Metrics** answer: how much and how often? Numeric time series that show the quantity and frequency of events over time — request rate, error rate, latency percentiles, queue depth.
+
+**Traces** answer: where did time go? The distributed trace shows the path of a single request through a distributed system, with timing for each component. When a request is slow, the trace shows which service, which function, which database query consumed the time.
+
+## Getting Close
+
+Lín's specific quality is *approaching* — not just observing from far away, but drawing near. The earth is not hovering above the lake. It is the bank that descends to meet the water.
+
+In practice, getting close means having the right resolution in your data. Aggregate error rates tell you something is wrong. Structured logs tell you what. But getting truly close — approaching the problem with enough detail to act — often requires tracing individual requests.
+
+The Hanzo inference infrastructure uses distributed tracing across the entire request path: from the client request at the API gateway, through the routing layer, to the model inference, back through the response formatter. When latency spikes, the trace shows whether the spike is in the router (network/selection logic), in the model inference (batch size, token count, hardware), or in the response processing (streaming, formatting, rate limiting).
+
+Without the trace, you know latency spiked. With the trace, you know latency spiked because a specific model shard was saturated during a traffic burst. These are different levels of closeness to the problem.
+
+## The Cost of Not Approaching
+
+Systems without observability are not easier to operate — they are harder. The absence of logs and traces does not reduce the complexity of failures; it reduces the visibility into failures. The failures still happen. They just take longer to resolve.
+
+The time-to-resolution (TTR) for production incidents correlates strongly with the observability of the system. High-observability systems: incidents are resolved in minutes to hours because the cause is visible. Low-observability systems: incidents run for days as engineers reverse-engineer the failure from symptoms.
+
+The investment in observability infrastructure pays for itself every time an incident occurs, in reduced engineer-hours spent debugging. It pays for itself again in the preventable incidents that are detected in staging because the observability infrastructure made the problem visible before it reached production.
+
+## Structured Logging as Default
+
+One concrete, implementable principle: structured logging from day one. A log line that is a human-readable string (`"Error processing order 1234 for user 5678"`) is less useful than a log line that is a structured record (`{"event": "order_processing_error", "order_id": "1234", "user_id": "5678", "error": "payment_timeout", "elapsed_ms": 30001}`).
+
+The structured log can be indexed and queried. You can ask: how many order processing errors occurred in the last hour? Which users were affected? Was there a correlation with the payment_timeout error type? The string log cannot be queried efficiently — it can only be read.
+
+Earth approaches the lake. Get close enough to see clearly. Instrument everything that matters, before the failure, so that when the failure comes you can approach it directly.

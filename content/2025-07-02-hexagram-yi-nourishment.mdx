@@ -1,0 +1,51 @@
+---
+title: "Hexagram 27 — Yí: Data Pipelines and Quality Inputs"
+date: "2025-07-02"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "data-pipelines", "etl", "data-quality", "ml-ops", "garbage-in"]
+description: "Thunder beneath mountain — the image of a mouth, of nourishment. What feeds the system determines what the system becomes. Data pipelines are the digestive system of AI infrastructure. Garbage in, garbage out is not a cliché — it is a law."
+---
+
+# ䷚ Yí — Nourishment: What Feeds the System
+
+Mountain above, thunder below. The image: a mouth. The hexagram specifically represents nourishment — what is taken in, how it is processed, what becomes of the organism as a result. The twenty-seventh hexagram asks: what are you feeding? Is it wholesome?
+
+For AI systems, this question is not metaphorical. The data pipeline is the mouth of the model. What goes in determines what comes out. A model trained on garbage will generate garbage, with impressive fluency.
+
+## The Data Pipeline Is Not Plumbing
+
+Data pipelines are frequently treated as infrastructure plumbing — the unglamorous scaffolding between data sources and models, to be built quickly and rarely revisited. This is wrong. The data pipeline is where data quality is determined, and data quality is a direct determinant of model quality.
+
+A data pipeline that doesn't catch duplicate records produces training data with duplicate records. A model trained on duplicate records will over-represent those records' patterns — it will be biased toward whatever is duplicated. A pipeline that doesn't filter low-quality content will pass low-quality content to training. A pipeline that doesn't normalize formats will create training data with inconsistent representations of the same concept.
+
+These are not edge cases. They are routine problems in data collection at scale. The engineering discipline required to catch them is the same discipline required to catch bugs in application code: tests, assertions, monitoring, explicit quality criteria.
+
+## The Three Stages of Nourishment
+
+The data pipeline's three stages map to the digestive system's:
+
+**Ingestion** (intake): What sources does the data come from? What format is it in? What is the expected quality at ingestion? The ingestion stage should verify that the input meets minimum quality criteria before passing it downstream. Data that fails quality checks should be rejected at ingestion with a clear error, not silently passed through to be discovered later.
+
+**Transformation** (processing): How is the data converted from its ingestion format to the format the model expects? What deduplication, normalization, and filtering is applied? The transformation stage is where the quality decisions are made: which records are included, which are excluded, and why. These decisions should be documented, tested, and monitored — not buried in undocumented transformation logic.
+
+**Loading** (delivery): How does the processed data reach the model training system? What validation confirms that the data that was transformed is the data that was loaded, unchanged? At the loading stage, the focus is integrity: the data should arrive complete, in order, and unmodified.
+
+## Quality Assertions as First-Class Tests
+
+The principle that the training data pipeline at Zoo Labs is built on: quality assertions are first-class tests, not optional checks. Before any data is admitted to the training corpus, it passes through an assertion battery:
+
+- Length distribution checks: no records below minimum or above maximum token count for the model's context window
+- Duplication detection: near-duplicate detection using MinHash or similar, not just exact match
+- Language identification: records are in the expected language distribution
+- Content filtering: explicit harmful content markers checked against a blocklist
+- Format validation: the record can be tokenized and deserialized correctly by the target tokenizer
+
+These assertions run in the pipeline, not as a separate QA step after the pipeline. Failures are caught immediately. The pipeline does not produce output that fails quality checks; it halts or routes to a dead-letter queue.
+
+## What Feeds the Model Feeds the User
+
+The downstream consequence of data quality is model behavior, and model behavior is user experience. A model that generates factually incorrect information because its training data contained factually incorrect information is not a model quality problem — it is a data quality problem that manifested in the model.
+
+The Zen models' quality properties are largely determined by Qwen3's training data quality (which is Alibaba's problem) and by the quality of the fine-tuning data (which is Hanzo/Zoo's problem). Investing in fine-tuning data quality — accurate, diverse, correctly formatted task demonstrations — is directly investing in the model's behavior in those fine-tuned domains.
+
+Pay attention to what you feed the system. It becomes what it eats.

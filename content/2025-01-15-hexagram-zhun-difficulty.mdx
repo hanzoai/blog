@@ -1,0 +1,51 @@
+---
+title: "Hexagram 3 — Zhūn: Early Architecture Decisions Under Uncertainty"
+date: "2025-01-15"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "architecture", "startups", "decisions"]
+description: "Thunder below water. Difficulty at the beginning. The third hexagram is about starting new projects under conditions of genuine uncertainty — and making decisions that don't foreclose the future."
+---
+
+# ䷂ Zhūn — Difficulty at the Beginning
+
+Thunder beneath water. Enormous energy, no clear path yet. The third hexagram describes the moment of inception: the system is trying to emerge, but conditions are chaotic. Nothing is stable. Everything is in motion.
+
+This is every new project. Every greenfield codebase. Every architecture meeting where you are designing for requirements that haven't fully crystallized and a scale you haven't reached yet.
+
+The I-Ching says: do not force progress here. This is not the moment for grand unified architectures. It is the moment for careful, reversible moves.
+
+## The Early-Stage Architecture Problem
+
+Early architecture decisions have asymmetric cost. A bad decision made in week one is paid for across the entire life of the project. A good decision made in week one is often invisible — you never see the alternatives you foreclosed.
+
+The common failure mode: teams treat early-stage architecture as an opportunity to build the "right" system from the start. They design for the scale they hope to reach, not the scale they are at. They add abstraction layers for flexibility they don't yet need. They choose distributed systems for problems that fit in a single process.
+
+Zhūn says: difficulty at the beginning is natural. Do not be surprised by it. Do not panic-architect your way out of it.
+
+## What Is Reversible
+
+The key discipline in early architecture is identifying which decisions are reversible and which are not — and spending your design energy on the irreversible ones.
+
+Reversible: choice of web framework, API response shape (mostly), which language features you use, folder structure, which ORM or query builder you use.
+
+Difficult to reverse: data model, identity and auth primitives, the unit of tenancy (is a "user" a person or an organization?), what your primary key strategy is, how you handle time zones, whether you build on one message queue or two.
+
+The third hexagram's advice is specific: seek helpers, but be selective. In engineering terms: use dependencies, but be selective about which dependencies you accept early. A dependency that shapes your data model or your auth model is an irreversible decision masquerading as a library choice.
+
+## Applied: Zen Model Infrastructure
+
+When the Zen model family started, the question was not "how do we serve 1T parameter models at scale?" It was "what is the minimal inference interface that will work at every scale, from 0.6B edge models to 671B frontier models?"
+
+The answer was a single, thin interface: take a prompt (or messages), return tokens. No model-specific assumptions in the routing layer. No hardcoded batch sizes. No inference engine lock-in. The difficulty at the beginning was resisted — the easy path would have been optimizing for the first model deployed.
+
+That decision — keep the interface thin — is what makes it possible today to route between MLX on Apple Silicon, vLLM on H100s, and llama.cpp on edge hardware without changing the calling code.
+
+## The Permission to Start Small
+
+Zhūn also gives permission that engineering culture often withholds: it is acceptable to start with a system that doesn't fully work yet. Thunder beneath water means the energy is there, the conditions aren't right yet. You are not failing — you are in the correct phase of emergence.
+
+A monolith that works is better than microservices that don't. A synchronous system with known bottlenecks is better than an async system with unknown failure modes. A schema that needs migration is better than a schema that was never committed to.
+
+Start with what is honest for your current scale and your current understanding. Leave clear seams for the splits you know are coming. Make the irreversible decisions carefully and the reversible ones quickly.
+
+Difficulty at the beginning is the price of anything worth building.

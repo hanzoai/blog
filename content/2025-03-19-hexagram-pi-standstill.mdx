@@ -1,0 +1,51 @@
+---
+title: "Hexagram 12 — Pǐ: Technical Debt and How to Unblock"
+date: "2025-03-19"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "technical-debt", "refactoring", "stagnation", "legacy"]
+description: "Heaven above, earth below — each moving away from the other. Standstill. Pǐ is what happens when systems stop evolving. Technical debt is not accumulated laziness — it is accumulated divergence between what the system does and what it needs to do."
+---
+
+# ䷋ Pǐ — Standstill: When Systems Stop Evolving
+
+Heaven above, earth below. Each retreating to its proper position, moving away from the other. The result is stagnation: no communication, no exchange, no progress. The small approach, the great withdraws.
+
+Pǐ is the hexagram of technical debt at its worst: a system that has stopped evolving because the cost of change has risen above the threshold anyone is willing to pay. Every change requires understanding too much of the system. Every new feature risks breaking something unrelated. The team stops shipping. The users stop getting value.
+
+This is not a dramatic failure. It is a slow withdrawal.
+
+## What Technical Debt Actually Is
+
+"Technical debt" is Ward Cunningham's metaphor, and it is often misused. The original meaning: sometimes you write code that you know is not the ideal implementation in order to ship faster. You incur a debt — a future obligation to clean it up. The interest on that debt is the ongoing friction it adds to every subsequent change.
+
+The misuse: calling any code you don't like "technical debt." Poorly structured code is not technical debt if it never needs to change. Old technology is not technical debt if it still meets requirements. The debt that matters is specifically the code that is in the way of the work that needs to happen — that slows down every change, that creates risk on every deploy, that is in the hot path of the features users actually want.
+
+Naming what the debt is blocking is the first step to paying it off. "The authentication layer is technical debt" is not actionable. "The authentication layer's session handling makes it impossible to implement SSO without a full rewrite of the session module" is actionable. The problem is specific. The solution is scoped. The cost can be estimated.
+
+## The Four Conditions of Stagnation
+
+Systems reach Pǐ through four recognizable patterns:
+
+**Accumulated coupling**: What began as two loosely connected modules has, through years of "just for now" shortcuts, become a dense dependency graph where changing anything requires understanding everything.
+
+**Absent tests**: Changes are risky because there is no fast way to verify they haven't broken something. Developers become conservative. The velocity of the system decreases until changes stop being made altogether.
+
+**Schema calcification**: The data model was designed for the original use case and has been stretched to accommodate subsequent requirements through increasingly baroque workarounds. Querying it is complex. Changing it is terrifying.
+
+**Undocumented tribal knowledge**: Key system behaviors are understood only by specific people. When those people leave, the knowledge leaves with them. The remaining team becomes unable to make changes because they don't understand what will break.
+
+## How to Unblock
+
+Pǐ is followed in the I-Ching by Tóng Rén (Fellowship) — the way out of stagnation is through people. In engineering terms: the way out of technical debt is through explicit allocation of time and collective commitment.
+
+Technical debt is not paid off accidentally. It requires:
+
+**Time allocation**: The team cannot pay off debt while shipping new features at the same rate. Accepting that velocity will temporarily decrease during debt repayment is not a failure — it is the cost of the debt's interest rate.
+
+**Scope definition**: Pick one module, one layer, one bounded piece of the system. Understand it completely. Add tests. Refactor. Then move to the next piece. Attempting to refactor the entire system simultaneously produces a new version of the same debt.
+
+**The strangler fig pattern**: For large legacy systems, the most reliable refactoring strategy is parallel construction. Build the new version alongside the old. Migrate traffic incrementally. When all traffic has moved, delete the old version. At no point is the entire system non-functional.
+
+At Hanzo, the commerce platform's original JavaScript SDK was replaced over 18 months using this approach: new TypeScript modules were built alongside the existing JavaScript, each major capability was ported and tested, and traffic was migrated module by module. The old SDK was never frozen — it continued to receive bug fixes until the migration was complete. The result was a clean break with no big-bang cutover.
+
+Heaven retreating to heaven and earth retreating to earth is the natural order — but it is not productive. The work is bringing them back into communication.

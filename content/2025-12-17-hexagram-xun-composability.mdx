@@ -1,0 +1,43 @@
+---
+title: "Hexagram 57 — Xùn: Composability and the Unix Philosophy"
+date: "2025-12-17"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "composability", "unix", "pipes", "orthogonality", "design"]
+description: "Xùn is wind — soft, pervasive, entering everywhere without force. Composability is software's equivalent: components that combine without requiring the combining party to know anything about each other's internals. The pipe is the paradigm."
+---
+
+# ䷸ Xùn — Wind: Components That Combine Without Force
+
+Wind above, wind below. The penetrating hexagram — wind moves through everything, finding every opening, combining with every other element it encounters. It does not force its way; it fits. The I-Ching describes Xùn as gradual, pervasive influence that achieves through consistent application rather than direct pressure.
+
+Composability in software is the property that components can be combined without either component needing to know about the other. The Unix pipe is the canonical example: `grep "error" logfile | sort | uniq -c | sort -n`. Four programs, each knowing nothing about the others, combined into a pipeline that none of them could accomplish alone.
+
+## The Unix Philosophy
+
+Doug McIlroy's formulation: write programs that do one thing and do it well. Write programs that work together. Write programs that handle text streams, because that is a universal interface.
+
+Forty years later, this formulation is still correct. The reason it is still correct is that it identifies something about software complexity that has not changed: the difficulty of building systems scales superlinearly with the number of responsibilities each component holds. A component with one clearly defined responsibility can be understood, tested, and replaced. A component with five intertwined responsibilities can be none of these things.
+
+The "text streams" insight is about interfaces. When every program speaks the same interface (text on stdout, text on stdin), any two programs can be connected. The interface is the composability primitive. In modern distributed systems, the equivalent is HTTP/JSON: not because it is technically superior to every alternative, but because its universality is its value.
+
+## Tool Use in AI Systems
+
+The MCP (Model Context Protocol) is composability applied to AI model capabilities. A model that can use tools is more capable than a model that cannot, because tools can be composed: the model uses a search tool, gets results, uses a code execution tool to analyze them, uses a file writing tool to record conclusions. Each tool does one thing. The model composes them to accomplish complex tasks.
+
+The protocol's design reflects Xùn: tools are defined by their interface (input schema, output schema, description), not by their implementation. A new tool can be added without modifying the model. A new model can be swapped in without changing the tools. The composability is in the interface.
+
+Hanzo's MCP implementation defines tools as pure functions: given inputs, produce outputs, no side effects beyond the declared function. This makes tools testable in isolation and composable without unexpected interactions.
+
+## Pipe and Filter Architecture
+
+At the system architecture level, composability manifests as pipe-and-filter patterns. Data enters a processing stage, is transformed, and exits for the next stage. Each stage is stateless and independently testable. The pipeline is constructed by connecting stages, not by modifying stages.
+
+ZenLM training pipelines use this architecture. Raw data is normalized by a normalization stage. Normalized data is filtered by a quality filter stage. Filtered data is tokenized. Tokenized data is shuffled. Each stage is a separate process with defined input and output formats. Replacing the quality filter with a better one requires changing one stage, not the entire pipeline.
+
+## Force vs. Fitting
+
+Xùn's key property is that wind does not force. It finds the path. Composable systems do not force their combining parties to contort themselves. The pipe does not require grep to know about sort. The tool protocol does not require the tool author to know about the model.
+
+The indicator of a composable system: you can add a new component without modifying existing ones. If adding a new component requires changing the components it connects to, the composability is incomplete.
+
+Wind through every opening. No force. Pervasive combination.

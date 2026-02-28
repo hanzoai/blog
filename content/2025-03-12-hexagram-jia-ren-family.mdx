@@ -1,0 +1,47 @@
+---
+title: "Hexagram 37 — Jiā Rén: Conway's Law and the Architecture of Teams"
+date: "2025-03-12"
+author: "Hanzo AI"
+tags: ["iching", "engineering", "conways-law", "team-structure", "architecture", "organization"]
+description: "The family hexagram is about proper roles within a coherent structure. Conway's Law is its engineering equivalent: systems mirror the communication structures of the organizations that build them. This is not a problem to solve — it is a force to direct."
+---
+
+# ䷤ Jiā Rén — The Family: Code Reflects Org Structure
+
+Wind above fire. Each person in the household has a defined role and clear boundaries. The household functions because responsibilities do not overlap chaotically — they interlock precisely. This is not rigidity; it is coherence. The right structure produces the right outputs.
+
+Mel Conway formalized this observation in 1967: organizations that design systems are constrained to produce designs that copy the communication structures of those organizations. This is now called Conway's Law, and it is as close to a physical law as software engineering produces.
+
+## The Law Is Not Optional
+
+Teams that do not understand Conway's Law fight it without knowing what they are fighting. They produce microservices that have suspiciously similar boundaries to their team org chart. They build monoliths that reflect a single team's ownership. They create API contracts that mirror their internal meeting structure.
+
+The law does not care whether you've read about it. Your codebase will reflect your org structure whether you intend it to or not. The only choice is whether you direct this or ignore it.
+
+Directing it means: if you want a particular system architecture, build the team structure that naturally produces it. This is the Inverse Conway Maneuver — design the org to produce the architecture. Not the other way around.
+
+## What Proper Roles Mean
+
+Jiā Rén is specific about roles within the household: each person's function is clear, bounded, and respected. No one does another's work. No one's work is undefined.
+
+In engineering: team ownership boundaries should match service/component boundaries. If two teams both modify the same service, you have either the wrong teams or the wrong service boundary. The friction you experience — conflicting PRs, deployment coordination overhead, unclear on-call responsibility — is the system telling you the structure is wrong.
+
+At Hanzo, the infrastructure stack separates cleanly along team ownership lines. The Lux network team owns the settlement layer. The AI inference team owns the model serving layer. The platform team owns the routing and gateway layer. These are not just organizational conveniences — they are architectural boundaries enforced by interfaces. Neither team reaches into the other's domain. Communication happens through defined contracts.
+
+## The Cost of Boundary Violations
+
+When team boundaries and code boundaries don't match, the cost is not abstract. It materializes as:
+- Deployments that require coordination across teams
+- Incidents where no one knows who owns the broken component
+- Features that require sign-off from multiple teams because the code spans multiple ownership domains
+- Refactors that are politically impossible even when technically obvious
+
+The Zoo Labs research infrastructure avoids this by treating each research project as a fully owned unit. One team, one repo, one deployment pipeline, one on-call rotation. Cross-project dependencies are explicit, versioned interfaces — not shared code.
+
+## Coherence Is Not Uniformity
+
+The family hexagram does not describe a household of identical roles. It describes a household where diverse roles interlock to produce outcomes none of the individuals could achieve alone. Engineering teams are the same: the value is in complementary specializations working within clear boundaries, not in everyone doing the same thing.
+
+The architect and the SRE and the data engineer each hold a different responsibility. The system functions when each holds that responsibility clearly and does not confuse it with the others'.
+
+Six lines, each in its proper place. Wind and fire working together without interference.
