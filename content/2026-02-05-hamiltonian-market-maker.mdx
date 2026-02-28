@@ -1,0 +1,77 @@
+---
+title: "Hamiltonian Market Maker: Physics-Inspired AMM with 32% Lower Impermanent Loss"
+date: "2026-02-05"
+author: "Hanzo AI"
+tags: ["blockchain", "defi", "research", "paper", "lux", "amm"]
+description: "HMM applies Hamiltonian mechanics to AMM design: symplectic integrators preserve geometric structure, conservation laws prevent MEV, and phase space dynamics produce 15.3% higher capital efficiency and 32% lower impermanent loss than Uniswap v3."
+---
+
+# Hamiltonian Market Maker: Physics-Inspired AMM with 32% Lower Impermanent Loss
+
+Automated market makers are, at their core, dynamical systems. A reserve pool evolves over time as trades arrive, prices move, and liquidity providers enter and exit. The question is which mathematical framework best describes the geometry of that evolution.
+
+Constant-product curves (x·y = k) use algebraic geometry. Stableswap (Curve) uses weighted means. The Hamiltonian Market Maker (HMM) uses classical mechanics — specifically, the Hamiltonian formulation of dynamics in phase space. The choice is not aesthetic; it produces measurably different outcomes.
+
+## Phase Space Formulation
+
+In the HMM framework, reserve pools are described by coordinates in a phase space (q, p) where:
+
+- **q** represents reserve quantities: the actual holdings of each asset in the pool
+- **p** represents demand pressures: generalized momenta encoding the intensity of buying and selling pressure in each asset direction
+
+The state of a pool at any moment is a point in this phase space. Trades move the point along trajectories determined by the Hamiltonian function H(q, p), which encodes the pool's pricing geometry.
+
+The key physical analogy: just as a mechanical system's energy is conserved along Hamiltonian trajectories (absent external forcing), the HMM preserves analogous quantities along price trajectories. This is not metaphor — the mathematical structures are identical.
+
+## Symplectic Integrators
+
+Standard numerical integration (Euler, Runge-Kutta) does not preserve the geometric structure of Hamiltonian systems. Phase space volume drifts. Energy is not conserved. Over many steps, the numerical trajectory diverges from the true trajectory.
+
+Symplectic integrators are designed specifically to preserve the symplectic structure of Hamiltonian systems. The two integrators in the HMM implementation are:
+
+**Verlet integration** — second-order symplectic, standard in molecular dynamics and orbital mechanics. Phase space volume is preserved exactly. Computationally cheap: one force evaluation per step.
+
+**Ruth fourth-order integrator** — fourth-order symplectic, higher accuracy per step at slightly more compute. Used when price trajectories need to be tracked with precision over many trade steps.
+
+The preservation of geometric structure is what makes HMM price trajectories qualitatively different from CFMM curves. Prices do not drift; they follow conserved trajectories that respect the pool's intrinsic geometry.
+
+## Conservation Laws
+
+Three conservation laws are enforced by the Hamiltonian structure:
+
+**Energy conservation**: The Hamiltonian H(q, p) is constant along any trajectory without external forcing. In pool terms, this means the total value of the pool (measured in the pool's own reference frame) is conserved during rebalancing. Liquidity providers do not lose value to the pool's internal dynamics.
+
+**Angular momentum conservation**: For pools with rotational symmetry in their reserve ratios, angular momentum in phase space is conserved. This stabilizes the pool against large reserve imbalances — the phase space trajectory cannot escape into regions of extreme asymmetry without external forcing.
+
+**Phase space volume conservation** (Liouville's theorem): The volume of any region of phase space is preserved under Hamiltonian flow. This is the most consequential conservation law for MEV resistance.
+
+## MEV Resistance via Non-Commutative Flows
+
+A sandwicher executing a front-run/back-run attack must perform two trades that net to profit. In most AMMs, the pool state after (buy, sell) equals the pool state after (sell, buy) up to price impact — the trades commute sufficiently that sandwich attacks are straightforwardly profitable.
+
+Hamiltonian flows are generally non-commutative: the state reached by executing trade A then trade B is not the same as executing B then A. This non-commutativity is a consequence of the phase space geometry — the curvature of the symplectic manifold means that the order of operations matters.
+
+In the HMM, this non-commutativity makes sandwich attacks structurally less profitable. The adversary must account for path-dependent phase space evolution, not just price impact on a curve. MEV strategies that are straightforward on CFMM pools become geometrically complicated on HMM pools.
+
+## Testnet Results
+
+The validation testnet ran 50 worker nodes and 100 client agents over 180 days of synthetic market data. The synthetic data was calibrated to replicate the volatility and volume distribution of observed DeFi market conditions.
+
+| Metric | HMM | Comparison |
+|--------|-----|-----------|
+| Capital efficiency | +15.3% | vs. oracle-based AMMs |
+| Price stability | 98.7% | vs. 89.2% (oracle-based) |
+| Quote latency | &lt;200ms | — |
+| Impermanent loss | -32% | vs. Uniswap v3 |
+
+Capital efficiency measures how much of the deposited liquidity is actively used in price discovery at any given moment. The 15.3% improvement comes from the Hamiltonian pricing geometry concentrating liquidity more precisely around the current price trajectory.
+
+Price stability at 98.7% versus 89.2% for oracle-based AMMs reflects fewer episodes of the pool price deviating significantly from the reference price. The conservation laws constrain price trajectories to remain close to the Hamiltonian level sets, which are calibrated to track market equilibrium.
+
+The 32% reduction in impermanent loss versus Uniswap v3 is the most significant result for liquidity providers. Impermanent loss is the divergence between the value of a pool position and the value of holding the same assets directly. The Hamiltonian framework reduces this divergence by keeping the pool's price trajectory closer to the external market price, reducing the frequency and magnitude of rebalancing losses.
+
+## Implementation
+
+The HMM Hamiltonian function, symplectic integrators, and phase space coordinate system are implemented in the Lux Network DeFi layer. The pool state update on each trade is an on-chain computation — the symplectic integrator runs in the smart contract execution environment with deterministic results.
+
+The full mathematical derivation is in `lux/papers/hmm.tex`. The HIP-004 proposal covers the protocol integration.

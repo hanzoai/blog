@@ -1,0 +1,65 @@
+---
+title: "Decentralized Semantic Optimization: Byzantine-Robust Knowledge Sharing Across Agents"
+date: "2026-02-03"
+author: "Hanzo AI"
+tags: ["ai", "decentralized", "research", "paper", "grpo", "zoo"]
+description: "DSO achieves 15.2% improvement when 10 agents share semantic priors versus isolated operation, while remaining resilient to 20% Byzantine participants. Convergence rate: O(1/√n)."
+---
+
+# Decentralized Semantic Optimization: Byzantine-Robust Knowledge Sharing Across Agents
+
+Active Semantic Optimization (ASO) works on a single agent adapting through decode-time inference. Decentralized Semantic Optimization (DSO) extends that mechanism to networks of agents that share learned semantic priors across a distributed system — while tolerating Byzantine participants who attempt to corrupt the shared knowledge.
+
+The core result: 10 agents sharing semantic priors via DSO outperform 10 isolated ASO agents by 15.2%. The network effect is real and quantified.
+
+## The Problem DSO Solves
+
+When agents operate in isolation, each must learn from its own inference experience. Quality attestations accumulate slowly; the PoE weighting converges toward good distributions eventually, but the process restarts with every new session.
+
+The natural solution — share attestations between agents — immediately raises a Byzantine fault tolerance question. In any open network, some fraction of participants will be adversarial. An agent that shares poisoned quality attestations can degrade the priors of every agent that trusts them. The naive sharing protocol collapses in the presence of coordinated dishonest participants.
+
+DSO solves this with a Byzantine-robust weighted median aggregation over shared semantic priors.
+
+## Byzantine-Robust Aggregation
+
+DSO's aggregation protocol is derived from the classical result that weighted median estimators tolerate adversarial inputs bounded by f < n/3, where n is the total number of participants and f is the number of Byzantine nodes. This is the same fault tolerance bound as PBFT.
+
+The aggregation works as follows. Each agent maintains a local semantic prior: a compressed representation of quality attestations accumulated during its inference sessions. At synchronization intervals, agents broadcast their priors to the network. The receiving agent computes a weighted median across received priors rather than a weighted mean.
+
+Weighted mean aggregation is vulnerable: a Byzantine agent that broadcasts extreme values pulls the mean toward its target. Weighted median is robust: as long as fewer than half the weighted inputs are adversarial, the median remains close to the honest population's center of mass. With f < n/3 Byzantine nodes in the DSO network, the weighted median aggregation degrades by less than 0.9% relative to an all-honest network.
+
+Measured result: 20% Byzantine participants, quality degradation less than 0.9%. This was validated in adversarial simulation with Byzantine nodes broadcasting maximally poisoned priors.
+
+## Convergence Rate
+
+The convergence rate of DSO toward optimal semantic priors is O(1/√n), where n is the number of honest participating agents. This is the standard stochastic approximation convergence rate — the same rate achieved by SGD under mild regularity conditions.
+
+The practical implication: doubling the number of honest agents reduces the distance from optimum by a factor of √2 per round. The network becomes more accurate as it grows, with a predictable rate.
+
+## Three-Layer Semantic Storage
+
+DSO priors require durable, tamper-evident storage that is accessible across a decentralized network. We use a three-layer architecture:
+
+**Layer 1: On-chain Merkle roots.** Each synchronization round produces a Merkle root over the aggregated semantic priors. This root is committed to the Lux blockchain. It provides tamper evidence: any corruption of the stored priors produces a root mismatch that any participant can detect.
+
+**Layer 2: IPFS.** The actual compressed prior data is stored on IPFS with content-addressed identifiers derived from the Merkle root. IPFS provides availability through replication across pinning nodes without requiring centralized storage.
+
+**Layer 3: Arweave.** Long-term archival storage for historical priors. Arweave's permanent storage guarantee ensures that prior history is recoverable even if IPFS pins expire. Historical priors enable replay and auditing of DSO convergence trajectories.
+
+## 1-Bit Semantic Compression at the Network Layer
+
+The same 1-bit semantic compression used in ASO applies at the DSO network layer. Each quality attestation is compressed to a single bit before broadcast. At 29.5× compression relative to full-precision scores, this reduces the per-round communication cost to a level that does not dominate bandwidth budgets even for large networks.
+
+The compression introduces a quantization error. The aggregation protocol accounts for this: the weighted median operates over distributions rather than point estimates, and the uncertainty from 1-bit quantization propagates correctly through the aggregation.
+
+## What the 15.2% Means
+
+The 15.2% improvement over isolated operation is measured on code generation benchmarks (HumanEval, MBPP) using 10-agent networks after 50 synchronization rounds. The isolated baseline is 10 independent ASO agents each running from a cold prior. The DSO network warm-starts from shared priors that encode the collective inference experience of all 10 agents.
+
+The gain comes entirely from shared knowledge. No additional inference compute per agent. No additional model capacity. The network effect compounds over time as the shared prior accumulates more experience.
+
+## Integration
+
+DSO is implemented as a peer protocol in the Zoo network. Agents can join the DSO network by publishing their compressed priors to the configured Merkle root registry and subscribing to the aggregated outputs. The protocol is agnostic to underlying model choice; any agent running ASO-compatible quality attestation can participate.
+
+The full specification is available in `zoo/papers/zoo-dso.tex` and ZIP-001 in the Zoo Improvement Proposals registry at zips.zoo.ngo.

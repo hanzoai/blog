@@ -1,0 +1,72 @@
+---
+title: "2.8 Billion Tokens Per Month: LLM Gateway at Production Scale"
+date: "2026-02-10"
+author: "Hanzo AI"
+tags: ["infrastructure", "llm", "gateway", "production", "ai"]
+description: "The Hanzo LLM Gateway processes 2.8 billion tokens per month at 99.97% availability. Here's how semantic caching, streaming-aware load balancing, and per-provider cost attribution work in production."
+---
+
+# 2.8 Billion Tokens Per Month: LLM Gateway at Production Scale
+
+Most teams reach for a single AI provider. They hardcode an API key, ship to production, and discover the failure modes incrementally: provider outages, rate limits, latency spikes, cost surprises, and the organizational friction of switching providers when a better model ships.
+
+The Hanzo LLM Gateway was built to eliminate those failure modes. Today it processes 2.8 billion tokens per month across 100+ providers at 99.97% availability. Here is how it actually works.
+
+## What 99.97% Means
+
+99.97% availability is approximately 2.6 hours of downtime per year. For a system routing to 100+ third-party providers — each with their own availability characteristics, rate limits, and deployment schedules — this number does not happen by accident.
+
+The gateway achieves it through layered redundancy. No single provider failure causes gateway unavailability. Failover chains are configured per-model-class: if provider A returns a 503, the request routes to provider B with the semantically closest model at comparable price. If provider B also fails, it routes to provider C. The fallback chain is evaluated in milliseconds; the user sees elevated latency, not an error.
+
+Streaming responses require special handling in failover. A streaming request that begins successfully from provider A cannot be transparently rerouted mid-stream if provider A drops the connection. The gateway's streaming-aware load balancer tracks active stream health and executes a clean restart with the retry provider when a stream fails before the first token is delivered. Mid-stream failures surface as errors — this is honest rather than attempting a seamless splice that would corrupt output.
+
+## Semantic Caching
+
+The 34% cache hit rate is the most operationally significant number after availability. A cache hit means the response is served in under 2 milliseconds without touching any AI provider. For the approximately one-third of requests that hit cache, the effective cost is near zero.
+
+Semantic caching differs from exact-match caching. Two prompts that ask the same question with different phrasing — "translate this to French" versus "convert this text to French" — are semantically equivalent. An exact-match cache misses this; a semantic cache catches it.
+
+The implementation uses embedding similarity over a vector index of cached prompt-response pairs. An incoming prompt is embedded; if the nearest cached embedding is within the similarity threshold, the cached response is returned. The threshold is configurable per model class — lower threshold for factual Q&A (where small prompt changes may produce importantly different answers), higher threshold for classification tasks (where semantically similar prompts reliably have the same answer).
+
+Cache invalidation is TTL-based per model. Models that update frequently (rolling deployments of fine-tuned models) use short TTLs. Stable models use longer TTLs. The 34% hit rate is the aggregate across all model classes and TTL configurations.
+
+## Streaming-Aware Load Balancing
+
+The load balancer tracks provider health per model endpoint, not per provider globally. A provider can be degraded for a specific model while healthy for others. Health signals are:
+
+- Response latency (p50, p95, p99 over a rolling window)
+- Error rate (4xx and 5xx, weighted by recency)
+- Token delivery rate (tokens per second for streaming responses)
+- Rate limit proximity (estimated from response headers where exposed)
+
+The load balancer uses these signals to route new requests toward providers with favorable health profiles. It does not use round-robin or static weights; routing is dynamic and updates on every health event.
+
+The 23% latency reduction relative to single-provider routing comes from this dynamic selection. The best provider at a given moment — in terms of current queue depth, token delivery rate, and time-to-first-token — varies continuously. Static routing picks a provider and stays there through its bad moments. Dynamic routing moves.
+
+## Cost Attribution at Scale
+
+2.8 billion tokens per month across 100+ providers means 100+ different pricing models. Per-input-token, per-output-token, per-request, per-image, per-minute of audio — each provider invoices differently. The gateway normalizes all of this into a per-token attribution that gives downstream cost reporting a consistent unit of account.
+
+The attribution system tracks:
+
+- Raw tokens (input and output separately, since they price differently at every provider)
+- Model identifier and provider
+- Request metadata (team, project, API key)
+- Wall-clock time for latency attribution
+
+Cost reports are available per API key, per project, and per team through the console. The 31% cost reduction relative to unmanaged single-provider usage comes from a combination of semantic caching (cached requests have near-zero cost), dynamic routing toward price-efficient providers for equivalent quality, and visibility into cost that allows teams to make informed tradeoffs.
+
+## The Unified API Surface
+
+Every capability routes through a single OpenAI-compatible endpoint. Chat completions, embeddings, reranking, image generation, audio transcription, and content moderation all use the same authentication, the same SDKs, and the same cost attribution pipeline. Adding a new provider means registering its adapter in the gateway; consumer code does not change.
+
+This composability was the original design goal. The production metrics — 2.8B tokens/month, 99.97% availability, 34% cache hit rate, 23% latency reduction, 31% cost reduction — are the measured outcomes of running that design at scale.
+
+```bash
+# Same code, different model, different provider:
+curl https://llm.hanzo.ai/v1/chat/completions \
+  -H "Authorization: Bearer $HANZO_API_KEY" \
+  -d '{"model": "zen4", "messages": [...]}'
+```
+
+The gateway is available at [llm.hanzo.ai](https://llm.hanzo.ai) and the source is open at [github.com/hanzoai/llm](https://github.com/hanzoai/llm).

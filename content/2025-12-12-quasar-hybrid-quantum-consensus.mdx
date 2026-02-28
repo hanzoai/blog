@@ -1,0 +1,55 @@
+---
+title: "Quasar: First Hybrid Quantum-Safe Consensus in Production"
+date: "2025-12-12"
+author: "Hanzo AI"
+tags: ["blockchain", "cryptography", "post-quantum", "consensus", "lux"]
+description: "Quasar is the first consensus mechanism to run BLS12-381 and Ringtail lattice threshold signatures in parallel, requiring both to agree before a block is finalized. Neither quantum computers nor classical adversaries can break it unilaterally."
+---
+
+# Quasar: First Hybrid Quantum-Safe Consensus in Production
+
+The threat model for long-term blockchain security has two distinct adversaries: classical attackers with enormous compute, and future adversaries with cryptographically relevant quantum computers. Most consensus mechanisms address the first. Quasar addresses both, simultaneously, with neither as a fallback for the other.
+
+On December 12, 2025, we merged the first commit of Quasar into the Lux Network codebase. It is the first hybrid quantum-safe consensus mechanism we are aware of that runs both signature schemes in production under live block production.
+
+## The Architecture: Parallel, Not Sequential
+
+Quasar runs two independent threshold signature schemes in parallel for every block:
+
+**BLS12-381** — the elliptic curve scheme used in Ethereum 2.0, Zcash, and Filecoin. We use Cloudflare's `circl` v1.6.2 for the pairing operations and `blst` v0.3.16 for G1 key generation and G2 signature computation. BLS aggregate signatures allow a quorum of validators to combine individual signatures into a single compact proof, dramatically reducing on-chain verification cost.
+
+**Ringtail** — a lattice-based threshold signature scheme whose security is grounded in the hardness of Learning With Errors (LWE) and Ring-LWE problems. Ringtail's first commit in the Lux codebase was July 29, 2025. Lattice problems are believed to be hard for quantum computers; no polynomial-time quantum algorithm is known to break them.
+
+Both schemes run in every consensus round. A block is finalized only when both the BLS quorum and the Ringtail threshold agree. One scheme cannot substitute for the other.
+
+## Why Parallel, Not Hybrid-Fallback
+
+A common proposal for post-quantum migration is a hybrid scheme where lattice signatures are added as a fallback to be activated when quantum computers arrive. This approach has a critical weakness: an attacker who can break the classical scheme can finalize fraudulent blocks immediately, without waiting for the fallback to activate.
+
+Quasar rejects this design. By requiring consensus from both schemes simultaneously, we ensure that breaking either one is insufficient to forge a valid block. A classical adversary who breaks Ringtail still needs to forge BLS. A quantum adversary who breaks BLS still needs to break Ringtail. The security of the combined scheme is the product of both failure probabilities, not the maximum.
+
+## BLS Implementation Details
+
+G1 keys and G2 signatures. We place keys in G1 (the smaller group) and signatures in G2 (the larger group with the pairing target field). This trades slightly larger verification cost for smaller key material in validator sets, which matters at scale.
+
+`blst` v0.3.16 handles the low-level field arithmetic and pairing computation. `circl` v1.6.2 provides the higher-level threshold protocol, aggregation, and our integration with the consensus engine. Both are audited libraries with active maintenance from Cloudflare's cryptography team.
+
+Aggregate signature verification is a single pairing check regardless of the size of the signing quorum. For a committee of 200 validators, one pairing check replaces 200 individual signature verifications.
+
+## Ringtail: Lattice Threshold Signatures
+
+Ringtail constructs threshold signatures over polynomial rings, where the security assumption is the hardness of decisional Ring-LWE with appropriate parameter choices. The threshold protocol distributes key shares across validators; no individual validator ever holds the full signing key. A quorum of t-of-n validators jointly signs without reconstructing the private key.
+
+The lattice parameters are chosen to achieve NIST post-quantum security Level 3 (roughly equivalent to AES-192 against quantum adversaries). Key sizes are larger than BLS — this is a fundamental cost of lattice cryptography — but within the bandwidth budget of the Lux consensus protocol.
+
+## First Production Deployment
+
+Quasar went live on the Lux Network with the December 12, 2025 merge. Both signature paths are active under real block production. Validators run both signing operations per round; the consensus engine enforces the dual-finality requirement before committing any block.
+
+The overhead relative to BLS-only consensus is measurable and acceptable: Ringtail signing adds latency, but the finality time remains within the design envelope for the Lux consensus protocol.
+
+## What This Enables
+
+A chain secured by Quasar can credibly promise that blocks finalized today remain final against adversaries with quantum computers decades from now. No migration required, no emergency hard fork when NIST PQC finalizes further standards. The quantum-safe path is already live.
+
+For applications that require long-term finality guarantees — settlement chains, notarization, cross-chain bridges — this is the baseline security property that matters.

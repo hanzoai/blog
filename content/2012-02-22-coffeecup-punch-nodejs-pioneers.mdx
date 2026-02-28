@@ -1,0 +1,66 @@
+---
+title: "coffeecup and punch: What It Was Like to Ship on npm in 2012"
+date: "2012-02-22"
+author: "Zach Kelling"
+tags: ["open-source", "nodejs", "npm", "javascript", "personal", "2012"]
+description: "In February 2012, I published coffeecup to npm — an HTML templating library in CoffeeScript. Node.js was version 0.6. npm had thousands of packages, not millions. Here's what early Node.js adoption actually felt like."
+---
+
+# coffeecup and punch: What It Was Like to Ship on npm in 2012
+
+On February 22, 2012, I published coffeecup to npm. It was an HTML templating library written in CoffeeScript — you wrote your markup as nested function calls and CoffeeScript's syntax collapsed them into clean HTML. The library was not the first of its kind; Jade (later Pug) existed. But coffeecup had its own approach, and CoffeeScript was genuinely exciting to write in that year.
+
+A month later, on March 20, 2012, I published punch — a static site generator built on top of the same ideas. Template + content + configuration, out comes a site.
+
+## Node.js 0.6-0.8
+
+Node.js was version 0.6 when coffeecup shipped. The 0.8 series arrived later that year. These were pre-1.0 releases. The V8 garbage collector had known pathologies. The streams API would be redesigned before 1.0. The cluster module was experimental. You shipped to production knowing the runtime itself was still being figured out.
+
+This sounds like a liability. In practice it felt like the opposite. The Node.js core team was responsive to issues filed on GitHub. The mailing list was small enough that you could follow it. The ecosystem was young enough that a thoughtful module could become the standard approach simply by being published and well-documented at the right moment.
+
+That window closes. It is a specific feature of very early ecosystems.
+
+## npm Was a Different Place
+
+When coffeecup was published, npm had thousands of packages. Not millions — thousands. You could browse the registry and see what was there. A new package announcement on the Node.js mailing list was not noise; people read it.
+
+Publishing was simple: write a `package.json`, run `npm publish`. The ceremony was minimal. There was no peer review, no quality bar, no discoverability algorithm to optimize for. You shipped a thing, you announced it, people used it or they didn't.
+
+The flip side of this openness was that the ecosystem was full of half-finished experiments. Modules that hadn't been updated in six months might have no maintenance path. You evaluated every dependency by reading its source code, because there was often no other signal. The ecosystem was small enough that this was feasible.
+
+## What CoffeeScript Made Possible
+
+CoffeeScript was a bet that JavaScript's semantics were correct but its syntax was painful. The bet was partially right. The destructuring, the array comprehensions, the significant whitespace — these were genuinely nicer to write than the 2012 equivalent JavaScript.
+
+coffeecup leaned into this completely. The templating syntax used CoffeeScript function calls as markup:
+
+```coffeescript
+html ->
+  head ->
+    title 'Hello'
+  body ->
+    div '.container', ->
+      p 'Hello, world'
+```
+
+This was not possible in a JavaScript-first library without significantly more ceremony. CoffeeScript's implicit parentheses and arrow functions made the DSL feel native. You were writing CoffeeScript that happened to produce HTML.
+
+Whether this was a good idea is a separate question from whether it was interesting. It was interesting.
+
+## punch: Static Sites Before Static Sites
+
+punch was a static site generator. In 2012 this was not an obvious category. Jekyll existed for Ruby developers. The notion that most small websites should be statically generated, served from a CDN, with no application server in the request path — this was a reasonable idea that had not yet become the default.
+
+punch took a directory of Mustache templates, a directory of content (JSON or Markdown), and a configuration file. It assembled them into a static site. The design was explicit: inputs transform to outputs with no runtime state.
+
+The static site generator category eventually became large. Gatsby, Next.js in static export mode, Hugo, Eleventy, Astro — many of the patterns that would characterize those tools were being worked out in 2012 by small projects like punch and Jekyll.
+
+## The Lesson from Both Projects
+
+Both coffeecup and punch were eventually superseded. CoffeeScript lost to ES6. Template-based static generators were replaced by component-based ones. This is normal; the ecosystem moved.
+
+What I learned from shipping both of them is that timing matters more than polish. A well-timed solution to a real problem, published when the ecosystem is young enough to notice it, travels further than a technically superior solution that arrives after the space is crowded.
+
+This is not a comfortable lesson for engineers who want to optimize for quality. But it is accurate.
+
+The npm package count was in the thousands when coffeecup shipped. It is in the millions now. The opportunity surface for early-mover ecosystem contributions does not scale linearly with the registry's size.
