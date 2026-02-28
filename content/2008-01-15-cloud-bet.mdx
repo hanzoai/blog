@@ -1,0 +1,35 @@
+---
+title: "The Cloud Bet: Building on App Engine When No One Else Was"
+date: "2008-01-15"
+author: "Zach Kelling"
+tags: ["infrastructure", "cloud", "appengine", "engineering", "history"]
+description: "In 2008 most startups still ran their own servers. We bet everything on Google App Engine. It was the right call."
+---
+
+# The Cloud Bet: Building on App Engine When No One Else Was
+
+In early 2008, Google shipped App Engine — a platform for running web applications on Google's infrastructure without managing servers. It was a genuinely new idea. AWS had launched EC2 two years earlier but running on EC2 still meant thinking about instances, availability zones, and capacity planning. App Engine was different: you wrote code, deployed it, and it scaled.
+
+Most developers ignored it. The datastore was unfamiliar (NoSQL before NoSQL was a word). The sandbox restrictions were real. Python 2.5 only. The documentation was sparse.
+
+We built on it anyway.
+
+The reasoning was simple: the hard part of building internet software is not writing application logic. It is making that logic available to millions of users without it falling over. App Engine solved that problem at a price we could afford. The constraints were acceptable.
+
+## What We Built
+
+The first version of what would become the Hanzo Commerce platform was a Go service running on App Engine — handling product catalogs, order state, customer data, and the analytics pipeline that tracked all of it.
+
+The Hanzo Datastore was the first component: a custom analytics layer on top of App Engine's Cloud Datastore, optimized for the query patterns that matter to commerce — session counts, conversion funnels, revenue attribution. It answered questions App Engine's built-in analytics couldn't.
+
+The Hanzo KV store followed: a key-value layer with Redis-compatible semantics and App Engine-native persistence, fast enough for session state and real-time counters.
+
+## Why It Mattered
+
+Building on managed infrastructure from day one meant we were never distracted by server maintenance, capacity planning, or failure mode debugging that had nothing to do with the product. Every engineering hour went into features and reliability improvements that benefited customers.
+
+That focus compounded. By 2014 when most of our competitors were still drowning in DevOps, we had a platform that had been serving real production traffic for six years.
+
+---
+
+*The Hanzo Commerce platform has powered over $1B in client revenue. It still runs — now on Kubernetes, with the App Engine dependencies fully removed.*

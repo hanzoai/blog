@@ -1,0 +1,49 @@
+---
+title: "Generative AI Before the Name Existed: What We Were Building in 2015"
+date: "2015-01-20"
+author: "Zach Kelling"
+tags: ["generative-ai", "llm", "nlp", "history", "ai", "machine-learning", "early-adopter"]
+description: "In 2015 we were generating ad copy, product descriptions, and campaign narratives using language models. The field didn't have a name for what we were doing yet."
+---
+
+# Generative AI Before the Name Existed: What We Were Building in 2015
+
+The term "generative AI" didn't enter mainstream tech vocabulary until 2022. But the capability — using models to generate text, copy, and creative content — was not invented by GPT-3. It was slowly assembled through the 2010s by researchers and practitioners who were using whatever tools the state of the art provided.
+
+In 2015, we were generating marketing copy.
+
+## What We Had
+
+The language model landscape in 2015 was limited by today's standards. Recurrent neural networks — LSTMs, specifically — were state of the art for sequence generation. Transformer architecture was still two years away (Attention Is All You Need published in 2017). The outputs were coherent within short spans and increasingly incoherent at longer range.
+
+For short-form marketing text — headlines, calls to action, email subject lines — the quality was surprisingly usable when combined with the right selection and ranking step.
+
+## The System
+
+We built a pipeline that:
+
+1. **Generated candidates** from an LSTM trained on a corpus of high-performing marketing copy across our platform. The training data was the A/B test corpus we'd been building since 2012 — thousands of campaigns, with conversion rates attached to every variant.
+
+2. **Ranked candidates** using a classifier trained on the same data. The classifier learned what linguistic patterns correlated with high conversion rates — specificity over vagueness, concrete numbers, active verbs, question-based CTAs for certain product types.
+
+3. **Filtered candidates** through brand guidelines — length constraints, disallowed terms, required includes — and a diversity check (don't return five variants that are semantically identical).
+
+4. **Presented candidates** to the marketer as suggestions, not mandates. The human was in the loop, selecting from AI-generated options rather than being replaced by them.
+
+## What the System Got Right
+
+The AI-generated candidates were better than random but worse than expert copywriters. They were comparable to average copywriters and far faster.
+
+More importantly, the system consistently generated combinations that humans wouldn't. A subject line with a number, a question, and a product-specific term would seem clunky to a copywriter but outperformed elegant writing in split tests repeatedly.
+
+The pattern: AI-generated copy optimized for statistical performance metrics that human writers weren't explicitly targeting. The copy looked different. It worked better.
+
+## 2015 vs. 2023
+
+The difference between what we built in 2015 and what GPT-4 can do in 2023 is roughly the difference between a hand-cranked calculator and a supercomputer. The underlying idea — train a model on examples of good output, generate new examples, select the best — is the same.
+
+We were early practitioners of an approach that would take the world by storm eight years later. The infrastructure for doing it — the training data, the evaluation framework, the human-in-the-loop workflow — we built from scratch.
+
+---
+
+*Generative AI for marketing copy predates GPT by most of a decade. Hanzo's research into language model applications for commerce started in 2014.*

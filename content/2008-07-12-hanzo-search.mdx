@@ -1,0 +1,33 @@
+---
+title: "Hanzo Search: Full-Text Discovery Built for Commerce"
+date: "2008-07-12"
+author: "Zach Kelling"
+tags: ["search", "infrastructure", "commerce", "engineering", "history"]
+description: "Search is the highest-intent interaction a visitor can have. We built a search layer that treated query intent as a first-class signal."
+---
+
+# Hanzo Search: Full-Text Discovery Built for Commerce
+
+Search is different from browsing. A visitor who types a query into your search box is telling you exactly what they want. That intent signal is the most valuable data point in commerce — more valuable than the page they landed on, the campaign that brought them, or the time they spent browsing.
+
+Most commerce platforms in 2008 treated search as an afterthought: a database LIKE query over product names and descriptions. We built Hanzo Search as a separate, first-class component.
+
+## Design Decisions
+
+**Intent modeling.** A search for "waterproof jacket" and a search for "rain jacket" should return the same results. Lexical matching fails both users. Hanzo Search included synonymy and semantic expansion from the start — before transformer-based embeddings existed, we used co-occurrence matrices built from purchase data to expand query intent.
+
+**Merchandising rules.** Organic search relevance and business priorities are different things. A sold-out product should rank lower. A high-margin product deserves a lift. New arrivals need exposure. Hanzo Search separated relevance scoring from merchandising rules, letting both run simultaneously.
+
+**Faceted navigation.** Filtering by attribute (size, color, price range, category) is a search interaction, not a separate browsing mode. Facets were built into the query engine, not bolted on as a UI layer.
+
+**Analytics integration.** Every search query, every result click, every zero-result query was fed back into the Hanzo Datastore. Zero-result queries drove vocabulary expansion. Click data drove relevance tuning. The search engine improved automatically from usage.
+
+## Why This Mattered for AI
+
+The search query log became one of our most valuable training datasets years later. What people searched for — and what they bought or didn't buy after searching — is a clean signal for preference learning that no synthetic dataset replicates.
+
+Everything we built in personalization and recommendation was enriched by a decade of real commerce search behavior.
+
+---
+
+*Hanzo Search powers product discovery across the Hanzo platform. Available at github.com/hanzoai/search.*

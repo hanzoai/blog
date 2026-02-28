@@ -1,0 +1,65 @@
+---
+title: "Splitting the Monolith: Cart, Users, Catalog"
+date: "2015-03-15"
+author: "Zach Kelling"
+tags: ["microservices", "architecture", "docker", "consul", "backend"]
+description: "In 2015 we decomposed the Hanzo monolith into three services: cart, user, and catalog. Here is what that actually involved."
+---
+
+# Splitting the Monolith: Cart, Users, Catalog
+
+The monolith worked. That is the honest starting point for any microservices migration story. The Hanzo platform was a single Node.js application, deployed to EC2, fronted by nginx, backed by PostgreSQL and Redis. It handled orders, users, analytics events, catalog management, and webhooks. It had been running in production for two years. It was not slow. It was not unreliable.
+
+So why split it?
+
+## The Actual Reasons
+
+Not theoretical scalability. Actual deployment friction.
+
+We had four engineers. Any one of us could break any part of the system on a deploy. Cart pricing logic and catalog image resizing lived in the same process, so a catalog bug could take down checkout. We wanted to deploy the analytics pipeline code without touching the transaction path.
+
+The second reason was dependency isolation. The catalog service needed ImageMagick and some custom C bindings for image processing. The cart service needed none of that. Running them in the same process meant the cart absorbed the operational risk of a native library.
+
+## Docker in 2015
+
+Docker 1.4 had shipped in December 2014. It was not production-ready in the sense that Kubernetes was not yet a thing (it was 0.10 at the time), Docker Swarm was experimental, and the networking story was nascent.
+
+But Docker Compose (then called `fig`) made it easy to spin up the entire stack locally. Before Docker, onboarding a new engineer meant a half-day of installing the right versions of Node, Redis, PostgreSQL, and ImageMagick and debugging the inevitable version mismatches. With Docker Compose and a `docker-compose.yml`, it was `docker-compose up` and done.
+
+We adopted Docker for local development first, production second. That sequencing was deliberate. We needed to understand what Docker did to our operational model before committing to it in production.
+
+## Service Discovery with Consul
+
+Once you have multiple services, they need to find each other. Hardcoded hostnames in environment variables work until they don't — until a service scales to two instances, or moves, or the IP changes.
+
+Consul 0.5 had been out since early 2015. It offered service registration (each service instance registers itself on startup), health checking (Consul polls a health endpoint and removes unhealthy instances from the registry), and DNS-based service discovery (query `cart.service.consul` to get the current healthy instances of the cart service).
+
+The implementation was not complex. Each service had a Consul agent running alongside it. On startup the service registered via the Consul HTTP API. On shutdown it deregistered. The other services queried Consul DNS instead of hardcoded hosts.
+
+The harder part was the operational model. Consul itself needed to be highly available, which meant running a three-node Consul cluster. That was three more servers to manage. In 2015, before managed options, this was real work.
+
+## The Three Services
+
+**Cart service**: Session state, line items, pricing calculation, discount application, order creation. Stateful in Redis (cart data), stateless in terms of application logic. Everything that needed to happen fast, at checkout time.
+
+**User service**: Registration, authentication, profile data, address book, password reset, OAuth. Backed by PostgreSQL. The authentication token was a signed JWT (using the `jsonwebtoken` package, which was young but correct). The cart service validated tokens against the user service's public key.
+
+**Catalog service**: Product data, variant management, inventory, image processing, search indexing. This was where ImageMagick lived. Backed by PostgreSQL for product data, with Elasticsearch for search (we evaluated Solr first, chose Elasticsearch because of the HTTP API and JSON query DSL).
+
+## What We Got Wrong
+
+**Distributed transactions.** When a customer placed an order, we needed to (1) decrement inventory in the catalog service, (2) create the order record in the cart service, (3) record the user's purchase history in the user service. In the monolith this was a single database transaction. In the microservices world it was three network calls that could fail independently.
+
+Our initial solution was "try each in sequence, hope they all succeed." This was wrong. We learned about saga patterns later, but in March 2015 we were inventing our own version of it.
+
+**Service latency.** In-process function calls take nanoseconds. HTTP calls take milliseconds. The checkout critical path now went through three services, adding ~15ms of network overhead that had not existed before. Most users didn't notice. A/B test data showed no significant conversion difference.
+
+## The Outcome
+
+The deployment independence was real. We could ship catalog changes without any risk to cart. We deployed catalog three times more frequently after the split. The engineering velocity improvement justified the operational overhead.
+
+We ran this way through 2015 and 2016. By 2017 we had a clearer understanding of where the service boundaries should have been drawn and what we would do differently. That is a different post.
+
+---
+
+*Hanzo's service decomposition started in Q1 2015 with cart, user, and catalog as the first three independent services. Service discovery via Consul was in production by April 2015.*

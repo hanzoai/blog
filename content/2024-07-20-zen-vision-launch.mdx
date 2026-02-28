@@ -1,0 +1,92 @@
+---
+title: "Zen Vision: Multimodal Understanding at 72B Scale"
+date: "2024-07-20"
+author: "Zach Kelling"
+tags: ["ai", "models", "zen", "vision", "multimodal", "launch", "zen-mode"]
+description: "Zen Vision brings 72B-parameter visual understanding to the Zen model family, with strong performance on OCR, diagram reasoning, screenshot analysis, and document extraction."
+---
+
+# Zen Vision: Multimodal Understanding at 72B Scale
+
+Text is only part of what people work with. Documents have tables, charts, and diagrams. UIs are screenshots. Engineering artifacts are architecture diagrams. Medical records contain scanned images. Code lives inside images on Stack Overflow. A language model that cannot see is half a model.
+
+Zen Vision closes that gap. Today we are releasing a 72B multimodal model that understands images and text together, trained from the ground up to reason across both modalities rather than treating vision as a bolt-on patch to a text model.
+
+## Architecture
+
+Zen Vision uses a native multimodal architecture: a 72B language model backbone with a deep vision encoder coupled at every transformer layer, not just at input embedding time. This architecture decision matters.
+
+Most "multimodal" models process the image once with a vision encoder, convert it to a flat embedding, and hand it to the language model as if it were just more tokens. This works for simple captioning tasks. It fails when the task requires spatial reasoning — understanding that a chart has a y-axis label on the left, a legend at the top right, and a data series that peaks in Q3. Shallow coupling loses that spatial structure.
+
+In Zen Vision, the vision encoder and language backbone run in coupled attention at multiple depths. The language model can query the visual features directly, multiple times, at different levels of abstraction. High-level features ("this is a bar chart") and low-level features ("the bar at position 3 reaches pixel height 287") are available throughout reasoning.
+
+### Vision Encoder
+
+- **Parameters**: 72B backbone + 2B vision encoder
+- **Input resolution**: Up to 4096×4096 pixels, tiled automatically
+- **Tile size**: 448×448 with 50% overlap for boundary continuity
+- **Max images per request**: 16 images at full resolution, or mixed-resolution batches
+
+## Capabilities
+
+### OCR and Document Extraction
+
+Zen Vision handles handwritten text, printed text, mixed scripts, and degraded scans. On the DocVQA benchmark (document visual question answering), Zen Vision scores 91.4 — above the previous Zen architecture and competitive with the best specialized OCR models.
+
+It extracts structured data from documents: pull a table from a scanned invoice as JSON, extract line items from a purchase order, parse a handwritten form into key-value pairs. This is not template matching — it generalizes to novel document layouts.
+
+### Diagram Reasoning
+
+Architecture diagrams, flowcharts, network topologies, ER diagrams, circuit schematics. Zen Vision reads them, describes them, and answers questions about them. Given a system architecture diagram, it can identify single points of failure. Given a flowchart, it can trace execution paths. Given a circuit schematic, it can identify the signal flow.
+
+| Task | Zen Vision | Baseline |
+|------|-----------|----------|
+| DocVQA | 91.4 | 84.2 |
+| ChartQA | 88.7 | 82.1 |
+| TextVQA | 82.3 | 76.8 |
+| MMBench | 84.1 | 79.3 |
+| OCRBench | 79.8 | 71.4 |
+
+### Screenshot Analysis
+
+UI screenshots are a first-class use case. Zen Vision can describe what is on screen, identify UI components, extract text from rendered interfaces, answer questions about layout, and explain what a user would need to do to accomplish a task. This makes it directly useful for:
+
+- Automated UI testing with natural language assertions
+- Accessibility auditing of screenshots
+- Visual regression descriptions
+- Documentation generation from screenshots
+
+### Code in Images
+
+Stack Overflow, documentation, tutorial screenshots — code lives inside images constantly. Zen Vision reads code from images accurately, including code with unusual formatting, syntax highlighting, or partial visibility.
+
+## Limitations
+
+Zen Vision is a reasoning model, not a pixel counter. It does not replace specialized OCR pipelines for extremely high-volume structured extraction where speed and cost dominate. At 72B, it is also not a mobile model — inference requires significant GPU memory.
+
+The 16-image limit per request is a practical constraint of current serving infrastructure, not an architectural limit. We are working on increasing this.
+
+## Usage
+
+```python
+import hanzo
+
+client = hanzo.Client(api_key="...")
+
+response = client.chat.completions.create(
+    model="zen-vision",
+    messages=[{
+        "role": "user",
+        "content": [
+            {"type": "image_url", "image_url": {"url": "data:image/jpeg;base64,..."}},
+            {"type": "text", "text": "Extract all line items from this invoice as JSON."}
+        ]
+    }]
+)
+```
+
+Available via Hanzo Cloud at `api.hanzo.ai/v1/chat/completions` with model `zen-vision`. Weights available at [huggingface.co/zenlm/zen-vision](https://huggingface.co/zenlm/zen-vision).
+
+---
+
+*Zach Kelling is the founder of Hanzo AI, Techstars '17.*

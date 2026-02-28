@@ -1,0 +1,93 @@
+---
+title: "Zen Chat: A Conversational Model Built for Dialog"
+date: "2024-08-25"
+author: "Zach Kelling"
+tags: ["ai", "models", "zen", "chat", "rlhf", "alignment", "launch", "zen-mode"]
+description: "Zen Chat is optimized for natural multi-turn dialog: strong context retention across long conversations, nuanced RLHF alignment, and safety tuning that avoids both over-refusal and under-caution."
+---
+
+# Zen Chat: A Conversational Model Built for Dialog
+
+Most models are trained primarily on single-turn tasks and then expected to handle multi-turn conversations. The result is models that lose context, repeat themselves, contradict what they said three messages ago, and give inconsistent answers to the same question asked two different ways.
+
+Zen Chat was trained differently. From the start, the optimization target was multi-turn dialog quality, not benchmark scores on isolated tasks.
+
+## What "Optimized for Dialog" Actually Means
+
+Dialog imposes constraints that single-turn task completion does not:
+
+**Coherence across turns.** The model must track what has been established earlier in the conversation and not contradict it later. If you tell it your name in message 2, it should remember in message 40. If it gives you an estimate in message 5, it should not revise it without acknowledging the revision in message 15.
+
+**Tone consistency.** A conversation has a register — formal or informal, technical or accessible, terse or expansive. The model should match and maintain that register across turns, not drift toward generic assistant-speak after a few exchanges.
+
+**Graceful topic transitions.** Conversations meander. Humans switch topics, return to earlier threads, and embed tangents inside other tangents. Zen Chat handles this naturally rather than treating each message as an independent query.
+
+**Resolution of ambiguity.** When a message is ambiguous in the context of the conversation, the right behavior is usually to ask for clarification rather than to assume and possibly be wrong for twenty subsequent turns.
+
+## Training Approach
+
+Zen Chat uses a three-stage training pipeline:
+
+**Stage 1: Supervised fine-tuning on high-quality conversations.** The pretraining corpus contains conversations, but they are noisy, truncated, and often low-quality. Stage 1 SFT trains on curated multi-turn dialog examples that demonstrate the behaviors above — context tracking, tone consistency, graceful transitions.
+
+**Stage 2: RLHF with dialog-aware reward modeling.** Standard reward models score individual responses. Our reward model for Zen Chat scores conversation trajectories — sequences of 8–20 turns. This captures whether the model is building a coherent conversation, not just whether each individual response is good.
+
+The reward model was trained on approximately 800K preference comparisons collected from human raters evaluating full conversation segments. Raters were specifically asked to evaluate coherence, context retention, and tone consistency — not just whether the immediate response was helpful.
+
+**Stage 3: Constitutional fine-tuning.** A set of explicit conversational principles was applied as a fine-tuning pass: never contradict established facts without acknowledgment, ask clarifying questions when uncertainty exceeds a threshold, match user register within two turns.
+
+## Safety Tuning Philosophy
+
+Safety in conversational models is harder than in single-turn models because context matters. Whether a question is harmful depends on what came before it. "How do I do that?" is only evaluable in context of the conversation history.
+
+We trained Zen Chat's safety layer with full conversation context as input to the safety classifier, not just the most recent message. This substantially reduces false positives — questions that look concerning in isolation but are obviously benign given the conversation history.
+
+The goal is a model that is neither trigger-happy with refusals (which breaks conversation flow and trains users to work around safety entirely) nor naively compliant with anything. Zen Chat will push back on requests that are harmful in context, ask for clarification when intent is unclear, and proceed with useful responses when the request is legitimate — even if phrased in ways that a context-free classifier might flag.
+
+## Context Retention
+
+Zen Chat has a 128K context window. In practice, most conversations fit well within that, but enterprise deployments with long support conversations or document-grounded dialog benefit from the full window.
+
+We ran specific evaluations on context retention across long conversations:
+
+| Conversation Length | Fact Recall Accuracy | Contradiction Rate |
+|--------------------|---------------------|-------------------|
+| 10 turns | 97.8% | 0.4% |
+| 50 turns | 94.2% | 1.1% |
+| 100 turns | 89.7% | 2.3% |
+| 200 turns | 82.4% | 4.1% |
+
+These numbers are measured on held-out conversations where specific facts established early in the conversation were queried late in the conversation. The model is not retrieving from a database — it is retaining understanding across transformer context.
+
+## Where Zen Chat Fits
+
+Zen Chat is not the right tool for every task. It is the right tool when the interaction is a conversation:
+
+- Customer support automation where users have multi-turn needs
+- Tutoring and educational interactions
+- Interview practice and roleplay scenarios
+- Personal assistant applications
+- Companion and social applications
+
+For pure task completion with no conversational wrapper — code generation, document analysis, data extraction — other Zen models (Zen Coder, Zen Vision, Zen Analyst) are better fits.
+
+## API Access
+
+```bash
+curl https://api.hanzo.ai/v1/chat/completions \
+  -H "Authorization: Bearer $HANZO_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "zen-chat",
+    "messages": [
+      {"role": "system", "content": "You are a helpful assistant."},
+      {"role": "user", "content": "Tell me about your capabilities."}
+    ]
+  }'
+```
+
+Available at [huggingface.co/zenlm/zen-chat](https://huggingface.co/zenlm/zen-chat) and via Hanzo Cloud.
+
+---
+
+*Zach Kelling is the founder of Hanzo AI, Techstars '17.*

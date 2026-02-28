@@ -1,0 +1,84 @@
+---
+title: "Zen Flash: Sub-100ms Inference Without the Trade-off Tax"
+date: "2024-06-10"
+author: "Zach Kelling"
+tags: ["ai", "models", "zen", "flash", "inference", "launch", "zen-mode"]
+description: "Zen Flash is a 7B distilled model delivering sub-100ms first-token latency at a fraction of the cost of larger models, without sacrificing quality on real workloads."
+---
+
+# Zen Flash: Sub-100ms Inference Without the Trade-off Tax
+
+Speed and quality are usually presented as a trade-off. Build for low latency, accept lower quality. Build for quality, accept the latency. Zen Flash disagrees with that framing.
+
+Today we are releasing Zen Flash, a 7B distilled model purpose-built for production serving. The goal was specific: first token under 100ms at API scale, with quality that holds up on real tasks — not just cherry-picked benchmarks.
+
+## Architecture
+
+Zen Flash was distilled from Zen Max using the Zen MoDE (Mixture of Distilled Experts) pipeline. The distillation process is not naive knowledge distillation. We used speculative decoding alignment during training, which means Zen Flash's output distribution was shaped specifically for high-throughput serving patterns. The model learns to produce correct first tokens quickly, not just correct final answers.
+
+At 7B parameters, Zen Flash fits comfortably in 14GB of GPU memory at BF16, or 7GB at Q4_K_M. A single A10G can serve multiple concurrent requests. For edge deployment, the GGUF Q4 variant runs on M1/M2 MacBooks with time-to-first-token under 60ms at local batch size 1.
+
+## Benchmarks
+
+| Metric | Zen Flash | Competitor A (6B) | Competitor B (8B) |
+|--------|-----------|------------------|------------------|
+| TTFT (A100, batch 1) | 43ms | 61ms | 78ms |
+| TTFT (A10G, batch 8) | 89ms | 147ms | 201ms |
+| MT-Bench | 7.6 | 7.1 | 7.4 |
+| MMLU | 68.2 | 65.4 | 67.8 |
+| HumanEval | 62.1 | 54.3 | 59.7 |
+| Cost per 1M output tokens | $0.12 | $0.15 | $0.20 |
+
+TTFT is measured at the load balancer, not at the GPU. That includes queue time at moderate load. The numbers above are p50. At p95, Zen Flash stays under 150ms at batch 8 on an A10G — something its 7B-class peers cannot match.
+
+## What Distillation from Zen Max Buys
+
+A 7B model trained from scratch has a fundamental knowledge ceiling. Distillation from a much larger teacher transfers understanding that a 7B model cannot acquire independently from pretraining data alone. Zen Flash inherits Zen Max's reasoning patterns at a smaller parameter budget.
+
+Concretely, this shows up in:
+
+- **Instruction following**: Zen Flash respects system prompts at near-Max fidelity
+- **Code generation**: HumanEval 62.1 is well above what a from-scratch 7B achieves
+- **Multi-step reasoning**: The model maintains coherence across longer chains before losing thread
+
+What distillation cannot fully transfer is depth on genuinely hard problems. Zen Flash is not the right tool for multi-hour agentic runs on novel research tasks. It is the right tool for everything that needs to respond before the user notices latency.
+
+## Use Cases
+
+**Autocomplete and inline suggestions**: Tight latency requirements, high volume, moderate difficulty. Zen Flash's ideal profile.
+
+**Chat interfaces**: First token under 100ms makes conversations feel immediate. Streaming from Zen Flash feels faster than any larger model at the same hardware budget.
+
+**Screening and classification**: Use Zen Flash as a first pass — route hard queries to Zen Max or Zen Pro, handle everything else locally.
+
+**Edge and mobile**: The Q4 GGUF runs on-device. No network round-trip, no data leaving the device.
+
+## Pricing
+
+Zen Flash is the lowest-cost model in the Zen lineup:
+
+- **Input**: $0.05 / 1M tokens
+- **Output**: $0.12 / 1M tokens
+
+Batch inference (async, 24h SLA) is available at 60% discount.
+
+## Get Started
+
+```bash
+# Via Hanzo Cloud API
+curl https://api.hanzo.ai/v1/chat/completions \
+  -H "Authorization: Bearer $HANZO_API_KEY" \
+  -d '{"model": "zen-flash", "messages": [{"role": "user", "content": "Hello"}]}'
+
+# Download weights
+hf download zenlm/zen-flash
+hf download zenlm/zen-flash --include "*.gguf"
+```
+
+Available on HuggingFace at [huggingface.co/zenlm/zen-flash](https://huggingface.co/zenlm/zen-flash).
+
+The fast model does not have to be the dumb model. Zen Flash is proof.
+
+---
+
+*Zach Kelling is the founder of Hanzo AI, Techstars '17.*

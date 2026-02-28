@@ -1,0 +1,59 @@
+---
+title: "Why We Rewrote Our Storefront in React"
+date: "2015-02-10"
+author: "Zach Kelling"
+tags: ["react", "frontend", "commerce", "javascript", "components"]
+description: "In early 2015 we replaced Backbone with React for our storefront components, and it changed how we thought about UI architecture permanently."
+---
+
+# Why We Rewrote Our Storefront in React
+
+React 0.12 was out. Facebook had open-sourced it six months earlier. The frontend world was not yet convinced — Backbone was the serious choice, Angular 1.x had the enterprise stamp of approval, and React was still "that thing Facebook did with JSX which looks weird."
+
+We looked at our checkout flow and made the call to rewrite it in React. This is what we learned.
+
+## The Problem with Backbone in 2015
+
+Backbone was fine. That is the honest assessment. It gave you models, collections, views, and events. It was minimal, which we respected. But the view layer — the part where you rendered product pages and checkout steps — had become a mess.
+
+The core issue was two-way DOM mutation. A product page needed to update the cart count in the header, update the variant selector on option change, update the price display for the selected SKU, and disable the add-to-cart button during the async add operation. In Backbone you wired this manually. Event listeners everywhere. Zombie views leaking because you forgot to call `remove()`. `this` binding bugs in callbacks. We had experienced all of them.
+
+The checkout flow was worse. Seven steps, shared state, back-button support, form validation that needed to rerun on blur and on submit. The Backbone implementation was about 2,400 lines of JavaScript that nobody wanted to touch.
+
+## What React Offered
+
+The component model was the thing. A `ProductOptions` component that rendered correctly for any combination of variants, with no shared mutable state. You passed props in, events bubbled up. The component re-rendered when its props changed. That was it.
+
+The virtual DOM diffing meant we stopped thinking about granular DOM updates. We described what the UI should look like given the current state and React figured out the minimum number of DOM operations. This was slower to understand than it was to experience — once you stopped writing `$('#price').text(price)` and started writing `<Price value={this.state.price} />`, you understood the model.
+
+JSX was the controversial part. It looks like HTML inside your JavaScript, which the 2015 JavaScript community found offensive. The argument against it was separation of concerns — keep your markup out of your logic. The argument for it was that the "separation" Backbone created was illusory. Your view logic and your template were always tightly coupled anyway. JSX made the coupling explicit and gave you a single file to reason about.
+
+## The Migration
+
+We started with the product detail page, not the checkout. Lower stakes. The existing Backbone view was about 400 lines. The React replacement was 180 lines across three components: `ProductPage`, `VariantSelector`, and `AddToCartButton`.
+
+The `VariantSelector` component was the demonstration case. In Backbone we had event handlers on every `<select>` element, a `render` method that rebuilt the DOM after state changes, and several places where we could get into inconsistent state if events fired in the wrong order. In React the component had a single piece of state — the currently selected options — and a render method that derived the available variants and price from that state deterministically.
+
+If `size: 'M'` and `color: 'red'` was selected, you always got the same output. No intermediate states. No event ordering bugs.
+
+## Checkout: The Real Test
+
+The checkout rewrite took three weeks. The resulting code was 900 lines across about twelve components. The Backbone original was 2,400 lines. More importantly, each checkout step was now an isolated component that could be tested in isolation. We wrote Mocha tests for each step for the first time.
+
+Payment was its own component. Address was its own component. Order summary was its own component and we reused it in the confirmation email template (via server-side rendering with React's `renderToString`, which was new in 0.12).
+
+## What We Lost
+
+Build tooling. In 2015, getting JSX compilation into your build pipeline meant choosing between a Grunt plugin, a Gulp plugin, or React's own `jsx` transform tool. We eventually landed on Browserify with `reactify`. It worked but it was slower than our existing concat-and-minify pipeline, and the source maps were imperfect.
+
+We also lost some of the Backbone conventions that new engineers recognized immediately. "Where's the router? Where are the models?" React had no opinion on either.
+
+## The Verdict
+
+The rewrite paid off within two months. The checkout A/B testing velocity increased because changing one step didn't risk breaking another. The product detail page rerender time went from ~80ms (Backbone, measured with the Timeline in Chrome 40) to ~12ms (React). The bug rate in the frontend dropped.
+
+By the end of 2015 every new UI feature was being written in React. The Backbone code was in maintenance mode. By 2016 it was gone.
+
+---
+
+*Hanzo's storefront SDK started adopting React components for product display and checkout in Q1 2015. By Q4 2015 all new UI development was React-first.*

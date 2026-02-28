@@ -1,0 +1,59 @@
+---
+title: "Why Most A/B Tests Are Run Wrong (And How We Fixed Ours)"
+date: "2015-07-08"
+author: "Zach Kelling"
+tags: ["ab-testing", "statistics", "experimentation", "analytics", "commerce"]
+description: "We ran A/B tests on commerce clients from 2012 onward. By 2015 we had learned enough about statistical validity to be embarrassed by our early methodology."
+---
+
+# Why Most A/B Tests Are Run Wrong (And How We Fixed Ours)
+
+By mid-2015 we had run hundreds of A/B tests across Hanzo platform clients. We had also, by that point, learned enough about the statistics to be embarrassed about how we had been running them for the first two years.
+
+This post is about what we got wrong and what we fixed.
+
+## The Classic Mistakes
+
+**Peeking.** You launch a test, watch the dashboard, and stop it when one variant is clearly winning. This is called peeking and it is the most common way to get false positives. When you repeatedly test a null hypothesis until you reach significance, your effective false positive rate is much higher than the nominal 5%. If you check a test every day and stop when p < 0.05, you will declare winners on noise at roughly 30% of the time, not 5%.
+
+We did this constantly in 2012 and 2013. We stopped tests "when they were conclusive." They were not conclusive. We were just lucky when our interventions happened to be good.
+
+**Ignoring sample size.** "We got 50 clicks on variant A and 60 clicks on variant B. B wins." No. At 50 samples per variant you cannot distinguish a real 20% lift from noise with any confidence. You need to calculate minimum sample size before you launch a test, based on your minimum detectable effect and the baseline conversion rate.
+
+For a 2% baseline conversion rate and a 10% relative improvement you want to detect, you need roughly 4,600 sessions per variant at 80% power. Most of the tests we were running in 2012 had 200-500 sessions per variant. They were meaningless.
+
+**Multiple comparisons.** Test five variants simultaneously, find one that achieves p < 0.05, call it the winner. The problem: with five variants there is approximately a 23% chance that at least one will falsely appear significant even with no real effect. We should have been applying Bonferroni correction or using a multiple-testing framework.
+
+**Novelty effects.** A new layout often performs better in the first week purely because it is different. Users notice change. If your test runs for one week, you may be measuring novelty rather than sustained preference. We learned to run tests for at least two full weeks and examine the weekly breakdown before trusting aggregate results.
+
+## The Infrastructure Fix
+
+In 2015 we rebuilt the A/B testing infrastructure with proper statistical guardrails.
+
+**Pre-registration.** Before launching a test, the system required three inputs: minimum detectable effect (what's the smallest lift worth acting on?), baseline conversion rate (what's the current rate?), and desired power (we defaulted to 80%). From these, it calculated the required sample size and the estimated test duration based on current traffic. You could not launch the test without specifying these.
+
+This alone eliminated most of the validity problems. If you could not specify a minimum detectable effect, you had not thought hard enough about whether the test was worth running.
+
+**Auto-stop at sample size.** The test stopped automatically when it reached the required sample size, not when an engineer looked at the dashboard and liked what they saw. Early stopping was not available. If you wanted to stop a test early, you had to explicitly override with documented justification.
+
+**Sequential testing as an option.** For tests where you genuinely needed early stopping — a variant that was clearly harming conversion — we implemented a sequential probability ratio test (SPRT). This is a statistical procedure that provides valid stopping criteria at any point during the test, at the cost of requiring a larger total sample. We exposed it as an option, not the default.
+
+**Multi-armed bandits for production optimization.** The Thompson sampling bandit was implemented alongside traditional A/B for cases where we wanted to optimize during the test rather than just measure. A bandit continuously shifts traffic toward better-performing variants. It finds the winner faster but provides weaker statistical guarantees. Useful for things like button color where you don't care about precise effect estimation. Not useful for pricing experiments where you need clean estimates.
+
+## The Multi-Armed Bandit Tradeoff
+
+The bandit vs. A/B debate in 2015 was louder than it is now. The bandit proponents argued you were "leaving money on the table" during a traditional A/B test by sending half your traffic to an inferior variant. The A/B proponents argued the bandit's statistical guarantees were weak.
+
+Both were correct. The tradeoff is: Thompson sampling optimizes the metric during the exploration phase at the cost of interpretability and statistical rigor. For production recommendations engines where you want to maximize click-through in real time, bandits are appropriate. For checkout experiments where you want to understand causal effects clearly, traditional A/B is better.
+
+We shipped both. Commerce clients used A/B for pricing and checkout. Recommendation slots used bandits for real-time content optimization.
+
+## What Changed
+
+After rebuilding the infrastructure, the average test runtime increased from four days to eleven days. Fewer tests were declared winners. Client teams complained about this initially — "the old system found winners faster."
+
+Yes. The old system found false winners faster. The new system found real winners more slowly. The interventions that survived the new framework produced durable lifts that held up six months after implementation. The interventions from the old framework had a recidivism rate of about 40% — retesting them often showed the effect had disappeared.
+
+---
+
+*Hanzo's experimentation infrastructure was rebuilt in Q3 2015. The new system enforced pre-registration of sample size requirements and eliminated peeking. The multi-armed bandit for recommendation slots went live the same quarter.*

@@ -1,0 +1,39 @@
+---
+title: "Hanzo.js v1.0: The Commerce SDK Ships"
+date: "2014-05-20"
+author: "Zach Kelling"
+tags: ["javascript", "sdk", "open-source", "npm", "launch", "hanzo-js"]
+description: "Hanzo.js v1.0 ships to npm. A full commerce SDK — products, orders, users, analytics — in 10KB. Built for the JavaScript renaissance that was just beginning."
+---
+
+# Hanzo.js v1.0: The Commerce SDK Ships
+
+Hanzo.js v1.0 shipped to npm in the spring of 2014. React had just been open-sourced by Facebook. Webpack was new. ES6 was a draft specification. The JavaScript ecosystem was on the edge of a transformation that would take three more years to fully arrive.
+
+We were ready for it.
+
+## What v1.0 Included
+
+**Commerce primitives.** Products, variants, orders, cart state, promotions, user accounts — all the entities in the Hanzo Commerce API, with a JavaScript interface designed for the way frontend developers actually think about these things.
+
+**Event-based state.** Cart state changes emitted events. Components subscribed to the events they cared about. No polling, no callback hell, no manual DOM manipulation. The pattern that React would later make mainstream, implemented with EventEmitter in 2014.
+
+**Promise-based async.** Every API call returned a promise. This was before the native Promise implementation was universal — we shipped a polyfill. The decision to use promises over callbacks proved right when the JavaScript ecosystem moved in that direction.
+
+**Minimal surface area.** Core SDK: 8.2KB minified, 3.1KB gzipped. You loaded what you used. Every component was independently importable.
+
+## The npm Ecosystem Bet
+
+Shipping to npm was a statement about the direction of frontend development. In 2014, npm was still primarily a Node.js tool — many frontend developers installed jQuery by downloading a file. The module ecosystem for browsers was nascent.
+
+We bet that npm would become the distribution channel for all JavaScript — server and browser — and designed Hanzo.js accordingly. By 2016, that bet had clearly paid off.
+
+## Open Source Economics
+
+Hanzo.js was MIT licensed from day one. We received the first external contribution within three weeks of release — a bug fix from a developer who had integrated the SDK into a crowdfunding campaign. Over the following year, the community found and fixed issues faster than we could have internally.
+
+The open-source SDK made Hanzo Commerce adoption frictionless: developers could read the code, understand the API, and trust that the SDK was behaving as documented. Trust matters when you're handling payment flows.
+
+---
+
+*Hanzo.js is at github.com/hanzo-js/hanzo.js. The v1.0 API is still largely intact in the current release.*

@@ -1,0 +1,72 @@
+---
+title: "Building the Recommendation Engine: item2vec and the Cold Start Problem"
+date: "2015-08-20"
+author: "Zach Kelling"
+tags: ["recommendations", "machine-learning", "collaborative-filtering", "item2vec", "commerce"]
+description: "How we built the product recommendation engine in 2015: from collaborative filtering to item embeddings to solving cold start for new products and new users."
+---
+
+# Building the Recommendation Engine: item2vec and the Cold Start Problem
+
+The recommendation engine we wrote in 2015 was the most technically interesting thing we built that year. This is the honest account of how it worked, what it got wrong first, and how we fixed it.
+
+## Why Collaborative Filtering Is The Right Starting Point
+
+Collaborative filtering is the classic approach: users who bought X also bought Y. You build a user-item matrix (rows are users, columns are products, values are purchase or click events), factor it using SVD or ALS, and generate recommendations from the latent factors.
+
+The math is well-understood. The Python implementation using scikit-learn or scipy's sparse matrix tools is not difficult. The results are interpretable — "customers who bought this also bought that" has clear business logic behind it that merchandisers understand.
+
+We had been running a simple version since 2014 based on item-item co-occurrence: count how often items appear together in the same order, normalize by total frequency, return the top-N co-occurring items. This was not a machine learning model; it was a frequency table. It worked surprisingly well for popular products. It failed completely for everything else.
+
+## item2vec: Treating Products Like Words
+
+In early 2015 we adopted item2vec, which had been published by Barkan and Koenigstein at Microsoft in 2016 — actually, the idea was circulating earlier in applied ML circles, derived directly from word2vec (Mikolov et al., 2013).
+
+The core insight: word2vec learns word embeddings by training a neural network to predict context words given a center word in a sentence. The embeddings capture semantic similarity — words that appear in similar contexts end up close in vector space. item2vec applies the same approach to purchase sequences: train a skip-gram model where each "sentence" is an order (the set of items purchased together), and items that co-occur frequently in orders end up close in embedding space.
+
+The practical result was a 128-dimensional embedding for each product. Recommendation became nearest-neighbor search in that embedding space.
+
+The improvement over co-occurrence counting was significant. The embedding captured transitive relationships — if A and B frequently co-occur, and B and C frequently co-occur, A and C end up relatively close even without direct co-occurrence. The old frequency table missed these.
+
+## The Cold Start Problem
+
+Item embeddings require purchase history. A new product has no purchase history. A new user has no purchase history. This is the cold start problem, and it has two distinct variants.
+
+**New item cold start.** When a product is first listed, it has zero purchase events. The embedding model has nothing to learn from. Our initial solution was embarrassing: new products returned a global bestseller list as recommendations.
+
+The fix was content-based bootstrapping. We had product attributes — category, price range, brand, tags — and we had embeddings for existing products with those same attributes. A new product could be initialized at the centroid of existing products that shared its key attributes. A new `running-shoes` product in the `$80-120` price range would start with an embedding averaged from existing products in that category and price range. This was not accurate but it was meaningfully better than a global bestseller list.
+
+**New user cold start.** A new user has no purchase history. For anonymous sessions we used the current session's browse events: items viewed in the current session were treated as implicit signals. The session embedding was computed as the average of the viewed item embeddings, and recommendations were nearest neighbors to that session embedding.
+
+For logged-in new users who had not yet purchased, we used a hybrid: 70% session-based, 30% demographic-based (if age and location were available from account creation).
+
+## The Training Pipeline
+
+Training ran nightly. The pipeline was:
+
+1. Pull all order events from the last 90 days (a sliding window)
+2. Build item sequences (items in the same order form a sequence)
+3. Train skip-gram model using gensim's Word2Vec implementation
+4. Push new embeddings to Redis as a hash of `item_id -> embedding_vector`
+5. Rebuild the k-NN index (we used an approximate nearest neighbor index — Annoy at the time)
+6. Swap the index file atomically
+
+The nightly cadence was a constraint of the training time — about 90 minutes on the hardware we had in 2015. For fast-moving catalogs this was a lag we eventually needed to address, but for most commerce clients whose catalogs changed on weekly or monthly cycles, nightly was sufficient.
+
+## Evaluation
+
+The offline evaluation metric was precision@10: what fraction of the 10 recommended items appeared in the user's subsequent purchases. This was a retrospective measure — hold out the last purchase event, see if the recommendations would have surfaced it.
+
+Our item2vec model achieved about 0.14 precision@10 on the held-out evaluation set. The co-occurrence baseline was 0.08. The bestseller global fallback was 0.03.
+
+More meaningful: the online A/B test showed 18% lift in add-to-cart rate from the recommendation widget on product pages. That number held up after the novelty correction.
+
+## What We Did Not Build
+
+Contextual bandits for ranking. We had a retrieval model (k-NN in embedding space) but no sophisticated re-ranking step. The top-N by cosine similarity was what we returned. A bandit or a learning-to-rank model would have improved performance further, but the lift from the embedding approach alone was sufficient to justify shipping it.
+
+That work came in 2016.
+
+---
+
+*Hanzo's recommendation engine shipped in Q3 2015. item2vec embeddings replaced the co-occurrence frequency table and delivered an 18% lift in add-to-cart rate. Cold start handling was added in the same quarter.*

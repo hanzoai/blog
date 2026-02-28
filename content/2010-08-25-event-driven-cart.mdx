@@ -1,0 +1,75 @@
+---
+title: "Event-Driven Cart State Before React Existed"
+date: "2010-08-25"
+author: "Zach Kelling"
+tags: ["javascript", "architecture", "frontend", "pubsub", "history"]
+description: "Building reactive cart state with EventEmitter patterns in the browser in 2010 — the pattern that React would later make mainstream."
+---
+
+# Event-Driven Cart State Before React Existed
+
+React was released in 2013. Flux was announced in 2014. Redux came in 2015. The idea that UI state should be managed in a predictable, observable store and that the UI should be a function of that state — this is now standard practice.
+
+We arrived at a version of this pattern in 2010 out of necessity, not theory.
+
+## The Cart State Problem
+
+A shopping cart is a shared state problem. Multiple parts of the UI need to observe and reflect cart state simultaneously: the cart icon in the header showing item count, the cart drawer or page showing item list and totals, the "add to cart" button on each product showing whether an item is already in the cart, the checkout button that appears or disappears based on whether the cart is empty.
+
+In 2010 the standard approach was jQuery. You had event listeners on buttons that directly manipulated the DOM. Add to cart: find the cart icon, read its current count, increment it, set the new value. Remove from cart: find every DOM element that referenced that product, update each one.
+
+This worked for simple storefronts. It broke down as storefronts got more complex, because there was no single source of truth for cart state — the state was distributed across DOM elements and could become inconsistent if any update was missed.
+
+## The EventEmitter Approach
+
+Node.js's EventEmitter was the model we adapted. The server-side JavaScript code we were writing used EventEmitter for internal messaging extensively. The pattern was clean: emitters maintained no knowledge of their listeners, listeners subscribed to named events, decoupled components communicated without direct references.
+
+We implemented a minimal EventEmitter for the browser — about 40 lines, no dependencies — and built cart state on top of it.
+
+```javascript
+var Cart = function() {
+  EventEmitter.call(this);
+  this.items = {};
+  this.total = Coin(0, 'USD');
+};
+
+Cart.prototype.add = function(product, quantity) {
+  // update internal state
+  this.items[product.id] = { product: product, quantity: quantity };
+  this.total = this.recalculate();
+  // notify all observers
+  this.emit('change', this.snapshot());
+  this.emit('item:added', { product: product, quantity: quantity });
+};
+```
+
+Any component that needed cart state subscribed to `change` events on the cart instance. The cart did not know or care what was subscribed. The header component, the cart drawer, the checkout button — all subscribed independently. When cart state changed, all observers received the same snapshot simultaneously.
+
+## One Cart, Multiple Views
+
+The pattern meant that adding an item to cart from the product listing page, the product detail page, and the "you might also like" widget all went through the same `Cart.add()` method and triggered the same events. You wrote the cart mutation logic once. All the UI components that reflected cart state subscribed and updated themselves.
+
+This was not React's virtual DOM — each component managed its own DOM updates. But the state management pattern was recognizable: centralized state, mutations through defined methods, UI components as observers of state rather than owners of it.
+
+The key property we got right: cart state could only be modified through the cart's own methods. There was no way for a UI component to directly mutate `cart.items`. The cart was the authority on cart state.
+
+## Debugging Without DevTools
+
+Chrome DevTools were primitive in 2010. There was no Redux DevTools equivalent, no time-travel debugging, nothing like the React component inspector. Debugging state issues meant adding logging to the EventEmitter:
+
+```javascript
+Cart.prototype.emit = function(event, data) {
+  if (window.HANZO_DEBUG) {
+    console.log('[cart]', event, data);
+  }
+  EventEmitter.prototype.emit.call(this, event, data);
+};
+```
+
+This `HANZO_DEBUG` flag pattern was consistent across all the Hanzo libraries. Set it in the console and all internal events became visible. It was a primitive trace but it made debugging the event flow tractable.
+
+## What This Taught Us
+
+The reactive state pattern was not invented by Facebook. It was discovered independently by anyone who tried to build complex enough UI state in the browser. The reason React succeeded was not that the pattern was novel — it was that React provided a standardized, well-engineered implementation of a pattern many developers had reinvented in worse forms.
+
+Building our own version in 2010 gave us a deep appreciation for what React got right when it arrived.

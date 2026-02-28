@@ -1,0 +1,41 @@
+---
+title: "Betting on Node.js in 2010"
+date: "2010-02-20"
+author: "Zach Kelling"
+tags: ["nodejs", "javascript", "infrastructure", "engineering", "history"]
+description: "Ryan Dahl's JSConf keynote changed how we thought about server-side JavaScript and async I/O for commerce APIs."
+---
+
+# Betting on Node.js in 2010
+
+Ryan Dahl's Node.js demo at JSConf EU in November 2009 got passed around our team in early 2010. The canonical example was a simple HTTP server — a few lines of JavaScript that handled concurrent connections without threads. For most people watching, it was a toy. For us, it reframed a problem we had been struggling with.
+
+Our commerce API at the time was built on a conventional threaded server model. Each request got a thread. Threads were cheap but not free, and the payment flow generated a lot of waiting — waiting on database queries, waiting on payment gateway responses, waiting on fraud checks. Under load, threads accumulated in wait states. Adding more servers helped but the ceiling was lower than we wanted.
+
+## The I/O Problem in Commerce
+
+Commerce APIs have a specific I/O profile that makes async particularly valuable. A checkout request touches four or five external systems in sequence: inventory check, fraud screening, payment gateway, fulfillment queue, analytics write. Each of those is a network call. A threaded model blocks a thread for the duration of each call. An async model keeps the event loop moving.
+
+Node's event loop model was exactly what we needed. Not for CPU-intensive work — Node is not the right tool for heavy computation — but for coordinating multiple I/O operations against external services. The payment flow is almost entirely I/O coordination.
+
+We ran an internal experiment in February 2010: rewrite the checkout flow service in Node.js and measure. The v8 engine was fast. The `http` module was basic but functional. The `net` module gave us TCP control we hadn't had in scripting languages. The lack of a mature ecosystem was the obvious concern.
+
+## The Ecosystem Problem
+
+npm did not exist yet in early 2010. Isaac Schlueter launched npm in January 2010 but the registry was sparse. If you needed a library for something specific — say, currency formatting, or a Stripe integration — you wrote it yourself.
+
+This was actually fine for our situation. We were already writing the commerce primitives (coin.js, shop.js, checkout.js) because nothing adequate existed for our use case. The absence of a Node.js ecosystem meant the absence of a Node.js commerce ecosystem, which meant our work was the ecosystem.
+
+By mid-2010 we had a Node.js service handling the checkout flow. It was lean — fewer than 500 lines for the core flow handler. The async I/O model meant it handled concurrent checkouts with a fraction of the memory footprint of the threaded service it replaced.
+
+## What We Got Right and Wrong
+
+Right: Node.js was a serious platform that would grow into a large ecosystem. That bet paid off. The async I/O model was a genuine architectural advantage for our API profile.
+
+Wrong: we underestimated the debugging complexity. Async stack traces in 2010 were useless. An unhandled exception gave you a stack trace starting at the event loop internals, not at your code. We burned a lot of hours tracking down errors that a synchronous stack trace would have located in thirty seconds. The tooling for async debugging was years away.
+
+We also underestimated the learning curve for developers coming from synchronous backgrounds. Callback nesting — what people would later call "callback hell" — was a real ergonomic problem before Promises and async/await arrived.
+
+But the core bet was correct. By 2011 Node.js had enough adoption that the ecosystem was growing fast, and by 2012 it was a credible production platform. We were running production Node.js in 2010 when most companies were still evaluating whether it was serious.
+
+That head start shaped the SDK architecture in ways that paid off for years.

@@ -1,0 +1,33 @@
+---
+title: "Building the Identity Layer: Users, Sessions, and Trust"
+date: "2009-05-14"
+author: "Zach Kelling"
+tags: ["identity", "auth", "security", "infrastructure", "engineering", "history"]
+description: "Before you can personalize commerce, you need to know who someone is across sessions and devices. That's harder than it sounds."
+---
+
+# Building the Identity Layer: Users, Sessions, and Trust
+
+Personalization requires identity. To show someone relevant products, you need to know what they've looked at before, what they've bought, what campaigns brought them, and whether the person returning today is the same person who visited last week.
+
+In 2009, the standard approach was: set a cookie, hope for the best. The cookie identified the browser, not the person. Clear cookies, switch devices, open an incognito window — identity was lost.
+
+We built the Hanzo identity layer to do better.
+
+## The Design
+
+**Anonymous tracking.** Before a user provides any identifying information — before they log in, before they enter an email — they are tracked by a device fingerprint generated from browser characteristics, augmented by the Hanzo KV session token. This anonymous identity is consistent within a session and probabilistically consistent across sessions.
+
+**Identity resolution.** When a user provides an email — through login, newsletter signup, or checkout — their anonymous history is merged into their identified profile. Past behavior enriches the identified record. The anonymous identifier becomes an alias.
+
+**Cross-device matching.** When a user logs in on a different device, their full history follows them. The session token is the anonymous identifier; the email is the permanent identity. Both map to the same underlying profile.
+
+**Privacy by design.** The system was built without storing PII in the high-frequency event log. Events carry an anonymous identifier, not an email address. PII lives in a separate, access-controlled store. The event log is safe to retain indefinitely; the PII store is governed by retention policies.
+
+## Why This Mattered for AI
+
+The identity layer became the foundation for everything machine learning we built afterward. A recommendation model is only as good as the user history it learns from. A personalization engine that loses the user at session end has half the signal it needs.
+
+The identity graph — anonymous-to-identified, cross-device, historically complete — was what allowed our models to learn behavioral patterns that single-session or cookie-only systems could never see.
+
+By 2014, the identity layer had accumulated enough signal to train the first version of our collaborative filtering models. By 2016, it was powering the genetic algorithm optimization system. The 2009 infrastructure decision created the conditions for 2016's capabilities.

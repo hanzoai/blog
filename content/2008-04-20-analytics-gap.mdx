@@ -1,0 +1,35 @@
+---
+title: "The Analytics Gap: Why Every Commerce Platform Got Data Wrong"
+date: "2008-04-20"
+author: "Zach Kelling"
+tags: ["analytics", "data", "commerce", "infrastructure", "history"]
+description: "Commerce platforms in 2008 told you what happened. We built the layer that told you why — and what to do next."
+---
+
+# The Analytics Gap: Why Every Commerce Platform Got Data Wrong
+
+In 2008, if you wanted analytics for your online store you had two options: Google Analytics (counts pageviews, loses you when users leave) or roll your own database queries (works until traffic grows, then breaks).
+
+Neither option gave you what commerce actually needs: a complete picture of revenue causality. Not just "how many people visited" but "which traffic source, combined with which product page variant, combined with which checkout flow, produced the most revenue per visitor."
+
+That is a different question. And the answer requires a data layer designed from the start for commerce-specific query patterns.
+
+## What We Built
+
+Hanzo Datastore was designed to answer commerce questions — not web analytics questions.
+
+The schema was event-first: every user action (view, add-to-cart, checkout-start, purchase, return) was stored as a structured event with full context. The session, the referrer, the campaign, the product variant, the price point — all of it attached to every event.
+
+Queries ran across event streams, not page views. "What is the conversion rate for users who arrived from email campaigns, viewed the pro tier first, and checked out within 24 hours?" answered in milliseconds.
+
+This wasn't a reporting tool. It was an inference engine for a specific domain.
+
+## The Realization
+
+The gap between "web analytics" and "commerce intelligence" is not a features gap. It is a data model gap. Analytics products designed for media sites (optimize for time on site, pages per visit) apply the wrong optimization targets to commerce (optimize for revenue per visitor, retention, LTV).
+
+Everything we built afterward — the recommendation engine, the genetic optimization system, the personalization layer — ran on top of this event store. The data model was the product.
+
+---
+
+*Hanzo Datastore powers real-time analytics across the Hanzo platform. Open source at github.com/hanzoai/datastore.*

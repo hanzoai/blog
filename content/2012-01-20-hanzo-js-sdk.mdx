@@ -1,0 +1,39 @@
+---
+title: "Hanzo.js: A JavaScript SDK Designed for Commerce"
+date: "2012-01-20"
+author: "Zach Kelling"
+tags: ["javascript", "sdk", "open-source", "commerce", "frontend", "history"]
+description: "In 2012 JavaScript was becoming a real application platform. We shipped a commerce SDK built for the modern web — before 'modern web' was a phrase."
+---
+
+# Hanzo.js: A JavaScript SDK Designed for Commerce
+
+In 2012, the JavaScript ecosystem was in transition. jQuery was the standard library everyone used. Backbone.js had just arrived and people were excited. Angular was new. React hadn't been released yet. Node.js was a year old and considered experimental.
+
+We shipped Hanzo.js — a JavaScript SDK for interacting with the Hanzo Commerce platform — into this environment, and made a bet: JavaScript would become a first-class application platform, and we needed a first-class SDK for it.
+
+## What Hanzo.js Did
+
+The SDK wrapped the Hanzo Commerce API — products, orders, payments, user sessions, analytics — in a clean JavaScript interface designed for the way frontend developers actually work.
+
+Promises for async operations before Promises were standardized. Event emitters for state changes. A reactive data model that re-rendered UI components when cart state changed without requiring the developer to manage that binding manually.
+
+Most importantly: it was small. The core SDK was under 10KB minified. Commerce SDKs at the time were monolithic — they bundled everything, including components you didn't need. Hanzo.js was modular from the start.
+
+## The Open Source Decision
+
+We open-sourced Hanzo.js from day one. This was not a common choice in 2012 — most SaaS platforms kept their SDKs proprietary.
+
+The reasoning: our competitive advantage was the platform, not the SDK. Open-sourcing the SDK meant the developer community could inspect it, contribute to it, and trust it. Trust mattered for a commerce SDK handling payment flows and order data.
+
+The open-source release also created a feedback loop. Developers who integrated Hanzo.js found edge cases we hadn't. Pull requests improved the SDK faster than internal development alone could.
+
+## A Different World
+
+2012 was three years before the JavaScript renaissance that followed ES6, React, and the npm ecosystem explosion. We were building for a world we saw coming but that hadn't arrived yet.
+
+The decision to build a proper JavaScript SDK — with good API design, modular structure, and open-source development — positioned Hanzo.js well for the wave of JavaScript development that came later.
+
+---
+
+*Hanzo.js is available at github.com/hanzo-js/hanzo.js. The SDK has been continuously maintained since 2012.*

@@ -1,0 +1,37 @@
+---
+title: "A/B Testing Infrastructure for Crowdfunding Commerce"
+date: "2012-08-15"
+author: "Zach Kelling"
+tags: ["ab-testing", "analytics", "experimentation", "machine-learning", "history"]
+description: "The A/B testing system we built in 2012 was the precursor to Earle — the genetic algorithm optimizer we'd build two years later."
+---
+
+# A/B Testing Infrastructure for Crowdfunding Commerce
+
+Before we built Earle — the genetic algorithm system that evolved entire campaign configurations — we built the experimentation infrastructure it would eventually run on. The A/B testing system we shipped in 2012 was the foundation.
+
+## The Problem with Standard A/B Testing
+
+Standard A/B testing answers one question at a time: is version A or version B of the headline better? Run the test, collect statistical significance, ship the winner, move on.
+
+This is fine for small, isolated questions. It breaks down when you have a complex product page with dozens of variables: headline, image, description, price presentation, call-to-action, social proof placement, countdown timer, color scheme.
+
+If you test one variable at a time, reaching a statistically significant result on all variables takes months. Meanwhile the optimal combination of variables — the interaction effects between, say, urgency copy and product image style — remains undiscovered, because you never tested them together.
+
+## Multi-Variant Testing
+
+We built the A/B system to handle multi-variant, multi-variable tests simultaneously. Instead of testing "headline A vs headline B," you test matrices: headline A with image X, headline A with image Y, headline B with image X, headline B with image Y.
+
+The traffic allocation was dynamic — variants that performed better received more traffic as evidence accumulated. Variants that were clearly losing were pruned early. This was the multi-armed bandit approach, implemented before "multi-armed bandit" was common terminology in marketing tech.
+
+## The Data Foundation
+
+Every test result flowed into the Hanzo Datastore as structured events. Every variant assignment, every conversion, every abandonment — with full user context, session history, and timestamp.
+
+This event log, built from 2012 forward, became the training data for the first machine learning models we built in 2013. The experimentation system was not just a product feature — it was a data collection engine for the AI work that followed.
+
+## Toward Genetic Algorithms
+
+By 2013, we noticed something in the A/B testing data: the winning combinations were often non-obvious. Headlines and images that individually performed moderately well sometimes produced dramatically better results when combined. The interaction effects were real and significant, but a sequential one-variable-at-a-time approach would never find them.
+
+That observation drove the design of the genetic algorithm optimizer we'd build in 2014. The A/B system had shown us the problem. Earle would be the solution.

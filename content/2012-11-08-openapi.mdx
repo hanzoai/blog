@@ -1,0 +1,41 @@
+---
+title: "The OpenAPI Vision: Building for Interoperability in 2012"
+date: "2012-11-08"
+author: "Zach Kelling"
+tags: ["api", "openapi", "developer-tools", "infrastructure", "history", "standards"]
+description: "We defined our full API surface in a machine-readable spec in 2012 — before the OpenAPI specification existed. Here's why."
+---
+
+# The OpenAPI Vision: Building for Interoperability in 2012
+
+In 2012, API documentation was a text document on a webpage. You read it, you wrote code, you hoped the examples were accurate. The idea that an API could be described in a machine-readable format that generated SDKs, tests, and documentation automatically was not yet mainstream.
+
+We built toward that future anyway.
+
+## The Problem We Were Solving
+
+As the Hanzo Commerce platform grew, we had an increasing surface area problem: more endpoints, more parameters, more response shapes. Keeping documentation accurate meant updating it manually every time the implementation changed. It was always slightly wrong.
+
+More fundamentally: the documentation was the only way to understand the API. There was no machine-readable contract that tooling could inspect, validate, or generate against.
+
+We defined the Hanzo API in a structured schema from 2012 forward — initially our own format, later migrated to OpenAPI 3.1 as the specification became standard.
+
+## What Machine-Readable APIs Enable
+
+**SDK generation.** The Hanzo.js, Hanzo Go SDK, Python SDK, Ruby SDK, Java SDK, and Kotlin SDK are all generated from the OpenAPI definition. One source of truth, six language bindings, always in sync.
+
+**Validation.** Every API request can be validated against the schema before it reaches business logic. Malformed requests are rejected at the edge. Invalid parameters are caught with clear error messages.
+
+**Testing.** Contract tests verify that the implementation matches the spec. Any drift between the OpenAPI definition and actual behavior fails the test suite.
+
+**Documentation.** API documentation generates from the spec. It is always accurate because it describes the same contract the implementation enforces.
+
+## The Long Game
+
+The OpenAPI decision from 2012 has paid compound returns. Every SDK we've added since — including the AI-native integrations that ship with Hanzo's agent framework — is an afternoon of generation work, not a week of manual porting.
+
+The machine-readable API surface is also what makes Hanzo AI-native: language models can inspect the OpenAPI spec and understand the entire API without human explanation. When we built the MCP server with 260+ tools for AI agents, the OpenAPI spec was the foundation.
+
+---
+
+*Hanzo's OpenAPI definition is at github.com/hanzoai/openapi. The full API surface, machine-readable, updated with every release.*

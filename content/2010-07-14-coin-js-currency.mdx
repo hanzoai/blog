@@ -1,0 +1,57 @@
+---
+title: "coin.js: Currency Arithmetic in JavaScript Is a Trap"
+date: "2010-07-14"
+author: "Zach Kelling"
+tags: ["javascript", "finance", "currency", "sdk", "engineering", "history"]
+description: "Why we built a dedicated currency primitive library in 2010, and how floating-point errors in commerce add up to real money."
+---
+
+# coin.js: Currency Arithmetic in JavaScript Is a Trap
+
+`0.1 + 0.2` equals `0.30000000000000004` in JavaScript. This is not a bug. It is the correct result of IEEE 754 double-precision floating-point arithmetic. JavaScript, like almost every other language, stores decimal numbers in binary floating-point, which cannot represent most decimal fractions exactly.
+
+For most applications, this imprecision does not matter. For a commerce platform, it matters precisely and it matters financially.
+
+## The Problem in Concrete Terms
+
+A product priced at $29.99 with a 10% discount applied should cost $26.991, which rounds to $26.99. In JavaScript:
+
+```
+29.99 * 0.9 = 26.991000000000003
+```
+
+The extra `0.000000000000003` in isolation is meaningless. But consider a promotion that applies to 10,000 orders per day, with order totals calculated client-side and server-side independently. The floating-point behavior of your JavaScript runtime may not match the floating-point behavior of your server-side language in edge cases. Now you have a reconciliation problem.
+
+Or consider multi-currency: a product priced in USD converted to EUR using an exchange rate, then a discount applied, then tax calculated. Each operation compounds the floating-point error. By the time you display the price to the user it rounds correctly, but by the time you sum a day's transactions for reporting it does not.
+
+We hit a real version of this in mid-2010. A client running a promotion with a percentage discount was seeing small discrepancies between the checkout total and the charged amount on high-volume days. The discrepancies were never more than a cent or two per order, but at volume they added up, and more importantly, they made the reconciliation reports untrustworthy.
+
+## The coin.js Solution
+
+coin.js represented every monetary value as an integer number of the smallest currency denomination. USD amounts were stored as cents (integers). JPY amounts were stored as yen (JPY has no subunit). GBP amounts were stored as pence.
+
+```javascript
+var price = Coin(2999, 'USD');  // $29.99
+var discount = price.multiply(0.9);  // returns Coin(2699, 'USD') — $26.99
+var tax = discount.multiply(1.0875);  // $29.33 after tax
+```
+
+Multiplication was the one operation that required care — `2999 * 0.9 = 2699.1`, which you floor or round to `2699` according to your rounding rules. coin.js made the rounding rule explicit and configurable per operation, defaulting to banker's rounding (round half to even) which minimizes systematic bias.
+
+All other operations — addition, subtraction, comparison — were exact integer arithmetic.
+
+Display formatting was handled by the library: `Coin(2999, 'USD').format()` returned `"$29.99"`. The format method was locale-aware. Swiss francs formatted differently than US dollars. Japanese yen had no decimal point. The library handled all of this without the calling code needing to know the formatting rules for each currency.
+
+## Exchange Rate Handling
+
+Multi-currency support in coin.js meant handling exchange rates. The approach: exchange rates were applied once, at a defined conversion point in the flow, and the resulting coin value was stored in both the source and target currencies.
+
+An order taken in GBP by a USD-denominated merchant stored the GBP amount, the USD amount, and the exchange rate used at time of conversion. This made the record auditable: you could always reconstruct the conversion, see what rate was used, and verify the math.
+
+Exchange rates themselves were fetched from a rate provider API (we used the European Central Bank reference rates for non-commercial applications and a commercial rate provider for production) and stored as `Decimal` types server-side, not floats. The coin.js client used the rate provided by the server; it did not do independent rate lookups.
+
+## What We Learned
+
+Monetary values are not numbers in the general-purpose sense. They have currency, precision rules, rounding semantics, and display requirements that raw floats do not model. Building a thin type around them — even a very thin type — removes an entire class of bugs from the commerce codebase.
+
+coin.js was about 200 lines of JavaScript at its core. It was the smallest library in the Hanzo SDK. It also prevented more bugs per line of code than anything else we shipped that year.

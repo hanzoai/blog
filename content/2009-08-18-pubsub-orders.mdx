@@ -1,0 +1,52 @@
+---
+title: "PubSub for Orders: Event-Driven Commerce at Scale"
+date: "2009-08-18"
+author: "Zach Kelling"
+tags: ["pubsub", "event-driven", "infrastructure", "engineering", "history", "orders"]
+description: "Order processing is a sequence of events, not a transaction. Building a PubSub system that modeled commerce state transitions correctly changed everything downstream."
+---
+
+# PubSub for Orders: Event-Driven Commerce at Scale
+
+A purchase is not an atomic operation. It is a sequence: intent signal, cart creation, payment attempt, payment success or failure, inventory decrement, fulfillment trigger, confirmation email, analytics event, webhook notification.
+
+The naive implementation puts all of this in a single transaction. It works until one step fails, or until you need to change one step without breaking the others, or until you need to replay history for debugging.
+
+We built the Hanzo PubSub system in 2009 to model commerce as events — not transactions.
+
+## The Model
+
+Every commerce state change publishes an event to a topic:
+
+```
+order.created
+order.payment.attempted
+order.payment.succeeded
+order.payment.failed
+order.fulfilled
+order.refunded
+```
+
+Every downstream system subscribes to the events it needs. The email system listens for `order.payment.succeeded` and sends the confirmation. The inventory system listens for `order.created` and reserves stock. The analytics system listens for everything and records the full ledger.
+
+No system directly calls another. The order processor does not know the email system exists. The email system does not know the inventory system exists. They are all informed by the same event stream.
+
+## Why This Architecture
+
+**Reliability.** A failing email service does not block payment processing. Events are durable — if a subscriber is down, it processes the backlog when it recovers.
+
+**Observability.** The event log is a complete history of every commerce operation. Debugging means reading the log. There is no gap between what happened and what is recorded.
+
+**Extensibility.** Adding a new capability (a loyalty points system, a fraud detection service, a Slack notification for the merchant) means subscribing a new consumer to the existing event stream. Nothing else changes.
+
+**Replay.** Errors are correctable. A subscriber that processes events incorrectly can be fixed and replayed from the point of failure.
+
+## Compound Effects
+
+The event log from the PubSub system became, years later, one of the richest training datasets we had. Every checkout abandon, every successful purchase, every refund — with full context, in sequence, with timestamps.
+
+When we built the first recommendation models in 2013 and the genetic ad optimization system in 2014, they trained on behavioral sequences from the PubSub log. The 2009 infrastructure decision created datasets we didn't know we'd need yet.
+
+---
+
+*Hanzo PubSub is open source at github.com/hanzoai/pubsub.*

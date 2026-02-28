@@ -1,0 +1,92 @@
+---
+title: "Rewriting the SDK in ES6"
+date: "2015-05-20"
+author: "Zach Kelling"
+tags: ["es6", "javascript", "sdk", "babel", "coffeescript"]
+description: "We rewrote the Hanzo JS SDK from CoffeeScript to ES6 in 2015. The migration taught us what ES6 actually fixed, what it didn't, and what we missed from CoffeeScript."
+---
+
+# Rewriting the SDK in ES6
+
+The Hanzo SDK was originally written in CoffeeScript. This was not a mistake — it was the correct decision in 2012. CoffeeScript gave you classes, arrow functions, string interpolation, destructuring, and concise syntax at a time when JavaScript had none of these. Every serious Node.js project in 2012 was either in CoffeeScript or planning to be.
+
+By 2015 that calculus had changed. ES6 (ECMAScript 2015) was finalized in June. Babel — then called 6to5 — could transpile ES6 to ES5 with decent source map support. The ecosystem was moving. React was being written in ES6 classes. New hires knew ES6, not CoffeeScript.
+
+We rewrote the SDK.
+
+## What ES6 Actually Fixed
+
+**Classes.** The CoffeeScript `class` syntax was why people used CoffeeScript. Prototype-based inheritance in raw ES5 was verbose and error-prone. ES6 classes are syntactic sugar over the same prototype system, but the sugar matters for readability.
+
+```javascript
+// ES5
+function Client(opts) {
+  this.key = opts.key;
+}
+Client.prototype.order = function(data) {
+  return this._request('POST', '/v1/orders', data);
+};
+
+// ES6
+class Client {
+  constructor(opts) {
+    this.key = opts.key;
+  }
+  order(data) {
+    return this._request('POST', '/v1/orders', data);
+  }
+}
+```
+
+The ES6 version is barely shorter but substantially clearer. The intent is unambiguous.
+
+**Arrow functions.** The `this` binding problem in callbacks was the single largest source of bugs in our ES5 code. `var self = this;` at the top of every constructor method. `.bind(this)` on every callback. Arrow functions eliminated this class of bug entirely.
+
+**Template literals.** String interpolation. Obvious, should have been in the language from the start.
+
+**Destructuring.** `const { key, secret } = opts;` instead of `var key = opts.key; var secret = opts.secret;`. Less noise.
+
+**Modules.** ES6 `import`/`export` vs CommonJS `require`. This one was more complicated (see below).
+
+## What ES6 Did Not Fix
+
+**Async/await did not exist yet.** ES2017 would bring async/await. In 2015 we had Promises, which were better than callbacks but still noisy for sequential async operations. The SDK used Promise chains everywhere. They were correct but visually awkward.
+
+**The module system was broken.** ES6 `import`/`export` is the right model. But in 2015, browsers could not execute ES6 modules natively. You needed Browserify or webpack plus Babel to compile them down to CommonJS or AMD. The tooling worked but added a step that confused third-party integrators who just wanted to drop a `<script>` tag.
+
+We kept CommonJS `require` in the SDK's output even though we wrote source in ES6 `import`/`export`. The build step compiled ES6 to CommonJS. This was the right call for compatibility but it meant we were not actually shipping ES6 modules to consumers.
+
+## What We Missed from CoffeeScript
+
+**Implicit returns.** In CoffeeScript, every expression is an expression. A function returns the last evaluated expression without an explicit `return`. This sounds minor but eliminates a category of boilerplate in functional-style code.
+
+**The existential operator.** `user?.name` for null-safe property access. ES6 did not have this. Optional chaining (`?.`) would not arrive until ES2020. We wrote defensive `user && user.name` code for five years.
+
+**Comprehensions.** CoffeeScript list comprehensions were clean and readable for array transformations. `[x * 2 for x in list when x > 0]`. ES6's `.filter().map()` chains are correct but more verbose.
+
+## The Babel Setup
+
+Babel (then 5.x) required a `.babelrc` file and a handful of presets. Our configuration:
+
+```json
+{
+  "presets": ["es2015"],
+  "plugins": ["transform-class-properties"]
+}
+```
+
+The build pipeline was `babel src/ --out-dir lib/`. The `lib/` directory was what got published to npm. The `src/` directory was the ES6 source. This two-directory pattern became standard in the ecosystem but was novel enough in 2015 that we needed to document it for contributors.
+
+Source maps worked well enough. Debugging transpiled code in 2015 was worse than today but not terrible.
+
+## The Net Result
+
+The rewritten SDK was about 15% shorter by line count. More importantly, it was easier to read and easier to extend. New engineers who had learned JavaScript post-2015 could contribute immediately without learning CoffeeScript's quirks.
+
+We also gained better tooling integration. ESLint worked on ES6. CoffeeScript linting had been a separate ecosystem with worse rules and less community maintenance.
+
+The CoffeeScript nostalgia never fully went away. But the ecosystem had moved, and staying on CoffeeScript was swimming against a strong current. The rewrite was correct.
+
+---
+
+*The Hanzo SDK ES6 rewrite shipped in May 2015. It was published to npm as `hanzo.js@2.0.0`. The CoffeeScript source was archived but not deleted for another year.*

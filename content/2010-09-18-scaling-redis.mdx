@@ -1,0 +1,56 @@
+---
+title: "Why Redis Beat Memcached for Commerce"
+date: "2010-09-18"
+author: "Zach Kelling"
+tags: ["redis", "infrastructure", "scaling", "commerce", "engineering", "history"]
+description: "Using Redis for cart persistence, session state, and inventory counters in 2010 — and why Memcached's simple cache model was not enough."
+---
+
+# Why Redis Beat Memcached for Commerce
+
+Memcached was the standard caching layer in 2010. Every tutorial, every Rails app, every scaling advice column said: add Memcached, cache your database queries, watch your response times drop. We used Memcached too, in the early architecture.
+
+Redis was released in 2009. It looked like Memcached but it had data structures: strings, lists, sets, sorted sets, hashes. Antirez (Salvatore Sanfilippo, the author) had built it to solve a specific problem with slow disk-based databases, and had ended up with something more general.
+
+We migrated to Redis in September 2010 and did not look back.
+
+## The Commerce Data That Did Not Fit in a Cache
+
+Memcached is a key-value cache. Values are opaque byte strings with a TTL. You set a value, you get a value, the value expires. That is the entire API.
+
+Commerce has data that is cached but not static. A cart is cached — you do not want to hit the database on every page load — but it is also mutable. Items get added and removed. Quantities change. A cart is not a single value you cache; it is a data structure you need to manipulate in place.
+
+Memcached required a read-modify-write cycle for any update: read the current cart from Memcached, deserialize it, modify it in application code, reserialize it, write it back. This works until two requests modify the same cart concurrently. Without compare-and-swap logic (which Memcached supported but which added complexity), you had a race condition: the second write overwrites the first, losing an item or quantity change.
+
+Redis hashes solved this. A cart was stored as a Redis hash — field names were product IDs, values were quantities. Adding an item was `HSET cart:{session} {product_id} {quantity}`. Reading the cart was `HGETALL cart:{session}`. No read-modify-write cycle. No race condition for independent field updates.
+
+## Inventory Counters
+
+The inventory case was the most critical. When a product had limited stock, concurrent purchases required atomic decrements. Memcached had `DECR` for integer values. Redis also had `DECR`, but Redis's atomicity guarantees were stronger — Redis is single-threaded for command execution, so commands execute serially. `DECR` on a Redis key either succeeds or fails; it never returns an incorrect value because two operations ran simultaneously.
+
+Our inventory guard was simple:
+
+```
+current = DECR inventory:{product_id}
+if current < 0:
+    INCR inventory:{product_id}  # restore
+    return SOLD_OUT
+```
+
+This was the entire oversell protection for fast-moving inventory. No database locks. No transactions. The Redis key was the authoritative inventory count during a flash sale or high-velocity launch. The database was updated asynchronously by a consumer reading from a queue.
+
+## Session State
+
+Session state was the third major use case. Sessions in 2010 were typically stored in the database or in files on disk, both of which were slow for the read-heavy session lookup that happened on every authenticated request.
+
+Redis sessions: the session token was the key, serialized user state was the value (JSON string), with an expiry matching the session duration. Session lookup was a single Redis `GET`. Session creation was a single `SET`. Session deletion was a single `DEL`.
+
+The read performance was the primary benefit. But Redis also gave us the ability to list all sessions for a user (using a Redis set keyed by user ID containing session tokens), which made forced logout implementable — `SMEMBERS user:{id}:sessions` to get all session tokens, then `DEL` each one.
+
+## What Memcached Did Better
+
+Memcached is faster for pure cache workloads. When you are caching database query results and the access pattern is set-once, read-many, expire-eventually, Memcached's simpler architecture has lower overhead than Redis. Memcached also scales horizontally more simply for pure cache use cases — consistent hashing across a pool of Memcached nodes was the standard pattern.
+
+We kept Memcached for rendered HTML fragment caching for a while. But for any data that was mutable, structured, or required atomic operations, Redis was the right tool.
+
+By 2011 we had unified on Redis for both use cases. The operational simplicity of one caching infrastructure outweighed the marginal performance difference for cached HTML fragments.

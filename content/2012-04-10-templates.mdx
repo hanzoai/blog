@@ -1,0 +1,39 @@
+---
+title: "Commerce Templates: Launch in Days, Not Months"
+date: "2012-04-10"
+author: "Zach Kelling"
+tags: ["templates", "commerce", "product", "design", "launch", "history"]
+description: "Most early-stage products don't need custom storefronts. They need to launch and learn. We built the template system that made that possible."
+---
+
+# Commerce Templates: Launch in Days, Not Months
+
+The most common failure mode for early-stage products is not building the wrong thing — it is spending too long building anything at all. A crowdfunding campaign that takes four months to launch has missed the cultural moment. A pre-sale that needs custom development has already lost to the competitor who shipped last month.
+
+In 2012 we built the Hanzo template system to solve this problem.
+
+## The Design Philosophy
+
+A template is not a theme. A theme makes your store look different. A template makes your store work for a specific use case.
+
+We built templates for the actual commerce patterns we saw repeatedly: crowdfunding pre-sales, limited-run product drops, subscription launches, digital product sales, waitlists with payments. Each template had the UX optimized for that specific flow — checkout sequences, social proof placement, scarcity signals — without requiring any configuration from the merchant.
+
+You choose the template. You fill in the product details. You launch.
+
+## Technical Architecture
+
+Templates were built as composable components on the Hanzo.js SDK. Each template was a collection of components wired to the Commerce API: a product component, a cart component, a checkout component, a confirmation component.
+
+The design system was opinionated but overrideable. Brands with strong design direction could replace any component while keeping the commerce logic. Brands that just needed to launch used the defaults.
+
+This architecture — composable components with sensible defaults and override capability — became the pattern we applied to every UI system we built after. Including the Hanzo UI component library used across all Hanzo products today.
+
+## Launch Velocity
+
+The result was what we intended: products that would have taken three months to build now launched in under a week. Merchants validated their ideas with real customers and real revenue before investing in custom development.
+
+For crowdfunding specifically, this mattered enormously. Campaign momentum is time-sensitive. A campaign that launches in January competes for attention differently than one that launches in April. Speed was a product feature.
+
+---
+
+*Hanzo Commerce templates are available at github.com/hanzoai/templates.*

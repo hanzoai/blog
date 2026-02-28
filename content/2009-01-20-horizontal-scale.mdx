@@ -1,0 +1,33 @@
+---
+title: "Horizontal Scale: When One Datastore Isn't Enough"
+date: "2009-01-20"
+author: "Zach Kelling"
+tags: ["infrastructure", "scaling", "distributed-systems", "engineering", "history"]
+description: "The year we learned that scaling a commerce platform isn't about faster machines — it's about correct data architecture."
+---
+
+# Horizontal Scale: When One Datastore Isn't Enough
+
+In early 2009, one of our early clients ran a product launch that drove more traffic in four hours than they had seen in the previous four months. The platform held. But only because we had spent the preceding six months redesigning the data layer for horizontal scale.
+
+The lesson: you don't engineer for peak load during the peak. You engineer for it before.
+
+## The Architecture Shift
+
+The original Hanzo Datastore was a single-tenant analytics layer — one logical store per namespace. This worked until a client had multiple concurrent campaigns generating write traffic faster than a single store could absorb.
+
+The redesign introduced sharding at the namespace level with read replicas. Writes went to the primary shard. Reads distributed across replicas. Hotspot detection moved traffic automatically when a single shard got overloaded.
+
+The key insight: commerce traffic is spiky by design. A campaign launch, a flash sale, a press hit — these create step-function demand increases. The system needed to handle 10x normal traffic without pre-provisioning for it.
+
+## The KV Layer
+
+The Hanzo KV store took on session state and real-time counters — the highest-write workload in commerce. Session creation, cart updates, inventory decrements — operations that happen per-user per-second during peaks.
+
+KV's architecture was pure horizontal: consistent hashing distributed keys across nodes. Adding nodes increased capacity without resharding. The failure domain was a single node — losing one node never dropped the service.
+
+## What This Made Possible
+
+Once the data layer was correct, everything else — the recommendation engine, the analytics pipeline, the A/B testing system — could be built on a stable foundation. The hardest part of distributed systems is not the distributed part. It is ensuring the data contract is clear enough that multiple services can rely on it without stepping on each other.
+
+We got that right in 2009. The same data layer architecture, substantially evolved, still powers the Hanzo platform today.

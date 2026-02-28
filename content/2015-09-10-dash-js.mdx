@@ -1,0 +1,48 @@
+---
+title: "Dash.js: Reactive Commerce Dashboards for the Modern Web"
+date: "2015-09-10"
+author: "Zach Kelling"
+tags: ["javascript", "dashboard", "open-source", "ui", "commerce", "history", "hanzo-js"]
+description: "Building reactive merchant dashboards in 2015, before React was the obvious choice and before the modern frontend toolchain existed."
+---
+
+# Dash.js: Reactive Commerce Dashboards for the Modern Web
+
+In 2015, every merchant running on Hanzo Commerce needed a dashboard: real-time order counts, revenue totals, campaign performance, customer activity. The data existed. The question was how to display it efficiently.
+
+We built Dash.js — a reactive UI framework for commerce dashboards — and open-sourced it.
+
+## The Technical Context
+
+2015 was an interesting moment in frontend development. React had been released in 2013 but was still establishing itself. Angular 1.x was widely used but had significant complexity costs. Vue didn't exist yet. The frontend world was searching for the right model.
+
+We had already been building reactive data binding into Hanzo.js since 2012 — state changes emitting events, UI components subscribing to updates. Dash.js formalized this into a standalone component system for dashboard-specific UI patterns.
+
+## What Dash.js Was
+
+A collection of composable dashboard components — data tables, chart primitives, metric cards, status indicators — that bound directly to the Hanzo Commerce API. The components handled their own data fetching, state management, and re-rendering.
+
+You declared a dashboard:
+
+```javascript
+const dashboard = new Dash({
+  container: '#merchant-dashboard',
+  components: [
+    new MetricCard({ metric: 'revenue', period: 'today' }),
+    new OrderTable({ status: 'pending', limit: 20 }),
+    new CampaignChart({ campaign_id: 'camp_123' })
+  ]
+})
+```
+
+And it worked. Real-time updates via WebSocket for the live metrics. Paginated data tables for order management. Chart components that re-rendered when the underlying data changed.
+
+## Why Open Source
+
+Merchant-facing dashboards are not a competitive advantage. The analytics behind them — the Hanzo Datastore, the recommendation models, the optimization systems — are where value is created. Sharing the UI layer made Hanzo Commerce easier to adopt and didn't give away anything proprietary.
+
+The open-source release also generated a small but active community of contributors who used Dash.js for internal dashboards unrelated to commerce. The component library benefited from use cases we hadn't anticipated.
+
+---
+
+*Dash.js is at github.com/hanzo-js/dash.js. The reactive UI patterns it introduced became foundational to the Hanzo UI component library.*

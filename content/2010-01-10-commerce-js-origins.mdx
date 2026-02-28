@@ -1,0 +1,41 @@
+---
+title: "The Commerce.js Origin Story: Modular by Design"
+date: "2010-01-10"
+author: "Zach Kelling"
+tags: ["javascript", "sdk", "commerce", "open-source", "history"]
+description: "How Hanzo's commerce JavaScript libraries started as a monolith and broke apart into coin.js, shop.js, and checkout.js."
+---
+
+# The Commerce.js Origin Story: Modular by Design
+
+The first version of what would eventually become the Hanzo commerce SDK was not modular. It was a single file, about 800 lines of JavaScript, that handled product rendering, cart state, and payment form submission. We called it `hanzo.js` internally. We did not open-source it. It was a script tag you dropped on a page and it worked — until it didn't.
+
+The problems showed up fast. One client needed multi-currency support. Another needed to swap in their own payment form. A third wanted the cart logic but was already using a different product catalog system. The monolith could not accommodate any of them without adding switches and flags that made the codebase worse.
+
+## The Split
+
+By January 2010 we had landed on a three-library model:
+
+**shop.js** handled the storefront layer — product listing, filtering, detail views, inventory state. It had no opinions about checkout. It emitted events when products were added to cart and nothing else.
+
+**checkout.js** handled the payment flow. It received cart state and drove the user through address capture, payment entry, and order confirmation. It never touched the product catalog. It expected structured cart data as input and produced an order record as output.
+
+**coin.js** was the smallest of the three and the most underestimated. Currency arithmetic in JavaScript is a trap. `0.1 + 0.2` does not equal `0.3`. For a commerce platform, that is not acceptable. coin.js wrapped all currency values in a dedicated type that stored amounts as integers in the smallest denomination (cents for USD, pence for GBP, fen for CNY) and handled all arithmetic and display formatting correctly.
+
+## Why Currency Needed Its Own Library
+
+The coin.js decision deserves more explanation because it looked like over-engineering at the time.
+
+In 2010, most e-commerce JavaScript just used `parseFloat` and hoped for the best. For small catalogs and low transaction volumes this was fine — rounding errors showed up rarely enough to ignore. But when we started processing hundreds of transactions per day across multiple currencies, the rounding errors accumulated. A promotion that applied a 15% discount would come out to slightly different amounts depending on the order of operations. Multi-currency orders with exchange rates made the problem worse.
+
+coin.js solved this by treating money as a first-class type with defined rules. You constructed a `Coin` with an amount and a currency code. Addition, subtraction, and multiplication were methods on the type, not raw arithmetic. Display formatting — localized decimal placement, currency symbols — was handled by the library. You never did raw float math on prices.
+
+It was a small library. About 200 lines. But it made the rest of the commerce stack correct in a way that would have required constant vigilance without it.
+
+## What This Pattern Gave Us
+
+Breaking the monolith into three focused libraries forced cleaner interfaces. shop.js and checkout.js could not share state implicitly — they communicated through explicit event contracts. This made each library independently testable and independently replaceable.
+
+It also made the SDK extensible. When a client needed a custom checkout flow, they could replace checkout.js without touching shop.js. When someone needed different currency behavior, they could swap coin.js. The separation of concerns was not just architectural philosophy — it was a practical response to the real diversity of what our clients needed.
+
+The pattern held. The same library boundaries that emerged in early 2010 remained the structural foundation of the Hanzo commerce SDK for years.

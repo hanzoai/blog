@@ -1,0 +1,47 @@
+---
+title: "checkout.js: PCI Compliance Through Abstraction"
+date: "2010-05-30"
+author: "Zach Kelling"
+tags: ["security", "pci", "javascript", "payments", "commerce", "history"]
+description: "How checkout.js was designed so that raw card data never touched our servers or our JavaScript — the tokenization architecture from 2010."
+---
+
+# checkout.js: PCI Compliance Through Abstraction
+
+When we started thinking seriously about checkout.js in early 2010, PCI DSS compliance was the immediate constraint that shaped everything else. PCI DSS v2.0 had just been released. The core requirement for client-side payment handling was straightforward but consequential: raw card data must not pass through any system you control unless that system is in scope for PCI assessment.
+
+For a JavaScript SDK used by dozens of clients on thousands of different web properties, being in scope was not viable. The assessment cost, the audit burden, the liability — none of it was acceptable at our scale. The architecture had to ensure that raw card numbers never reached our servers at all.
+
+## The Tokenization Model
+
+The solution was payment tokenization via the gateway, and checkout.js was built around this constraint from the first line.
+
+The payment form in checkout.js submitted card data directly to the payment gateway's API from the browser. The gateway returned a single-use token. That token — not the card number — was what checkout.js sent to the Hanzo API to complete the order.
+
+This meant the Hanzo API never received card data. It received tokens. The gateway was in scope for PCI. We were not. The architecture of checkout.js enforced this separation at the code level: there was no method in the checkout.js API that accepted a raw card number. You passed a card token. If you wanted to generate a card token, you used the gateway's tokenization library, not ours.
+
+In 2010 Stripe did not yet exist. Braintree was two years old. The tokenization approach we were using was through Authorize.Net's JavaScript integration, which was rudimentary, and a handful of other gateways that had started offering similar APIs. The developer experience was not good but the security model was correct.
+
+## The Form Architecture
+
+The checkout flow in checkout.js was a multi-step state machine. States: cart review → shipping address → payment entry → order confirmation. Each state had an associated view and an associated validation step. State transitions were explicit: you could not advance from shipping to payment until the address had been validated against the shipping rate API.
+
+Payment entry was the most constrained step. The form fields for card data were rendered inside an iframe served by the payment gateway — a common pattern now, unusual in 2010. This meant the card input fields were DOM elements controlled by the gateway's origin, not ours. JavaScript running in our page could not read the values of those fields. The iframe submitted directly to the gateway endpoint.
+
+This approach had UX tradeoffs. Styling the payment form was limited to what the gateway's iframe API exposed. Cross-origin iframe communication for things like form validation errors required workarounds. But the security properties were correct and auditable.
+
+## Error Handling in Checkout Flows
+
+Error handling in a multi-step checkout with external API dependencies is harder than it looks. The failure modes include: payment declined, address not found by shipping API, inventory sold out between cart creation and checkout, gateway timeout, session expiry.
+
+checkout.js handled each failure mode explicitly. A declined card went back to the payment step with a specific message. A sold-out item went back to the cart review step. A gateway timeout gave the user a retry option without double-submitting. Session expiry redirected to login and preserved the cart state.
+
+The rule we enforced: every network call in the checkout flow had a defined failure path with a user-visible message. No uncaught exceptions. No generic error screens. If we could not identify what went wrong, we told the user to contact support and gave them an order reference they could quote. That reference let us find the failed transaction in our logs.
+
+This level of explicit error handling required more code than a naive checkout implementation. It also meant that when things went wrong — and they did, regularly, because external APIs are unreliable — users got actionable information instead of a broken page.
+
+## The PCI Principle Applied More Broadly
+
+The PCI tokenization architecture taught us something more general: designing around security constraints early produces cleaner interfaces. The constraint that checkout.js must never handle raw card data forced us to think carefully about what data each layer of the system owned. That discipline carried into the rest of the Hanzo SDK design.
+
+Never own data you don't need. If you can push responsibility for sensitive data to a specialized system built to handle it, do so. The resulting interface is simpler and the security surface is smaller.

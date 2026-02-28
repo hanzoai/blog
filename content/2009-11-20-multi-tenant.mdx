@@ -1,0 +1,35 @@
+---
+title: "The Multi-Tenant Decision: One Platform, Many Brands"
+date: "2009-11-20"
+author: "Zach Kelling"
+tags: ["architecture", "multi-tenant", "saas", "infrastructure", "history"]
+description: "Building a platform that could power hundreds of brands without any of them knowing the others existed required rethinking data isolation from the ground up."
+---
+
+# The Multi-Tenant Decision: One Platform, Many Brands
+
+In late 2009, we made the architectural decision that shaped everything Hanzo built afterward: multi-tenancy as a first-class concern, implemented at the data layer, not the application layer.
+
+Most SaaS platforms achieve multi-tenancy through row-level filtering — they share a database and separate tenants by a `customer_id` column. This is simple to implement and catastrophic to get wrong. A missing filter in one query exposes one customer's data to another. There is no auditable boundary between tenants.
+
+We chose namespace-based isolation instead.
+
+## Namespace Architecture
+
+Every customer — every brand running on Hanzo — gets a namespace. A namespace is not just a tag; it is a logical data silo. The Hanzo Datastore, KV, Search, and PubSub all operate namespace-first: you specify a namespace, and you receive data from that namespace only.
+
+Cross-namespace access is not a missing filter away from happening — it requires explicitly crossing the namespace boundary, which the application layer controls, not forgets to prevent.
+
+This had an immediate practical benefit: we could deploy Hanzo as a white-label platform for brands that needed full data isolation guarantees. A retailer running on Hanzo never shares any data with any other retailer, by construction.
+
+## The Trade-Off
+
+Namespace isolation is more expensive operationally. Querying across namespaces for aggregate analytics (understanding platform-wide trends) requires explicit cross-namespace operations. Single-tenant databases are simpler to back up and restore.
+
+We accepted this trade-off. The security and isolation properties were worth the operational overhead. And it turned out to be correct: years later, when GDPR and CCPA imposed legal requirements for data isolation, our architecture already satisfied them.
+
+## White-Label Capability
+
+The namespace model made Hanzo naturally white-label. Multiple brands, agencies, and technology companies have run commerce operations on the Hanzo platform under their own brand without exposing the underlying infrastructure. Each operates in its own namespace — fully isolated, fully independent.
+
+This became a business model as much as a technical decision. The platform could be the infrastructure for other companies' products without being visible in the product itself.

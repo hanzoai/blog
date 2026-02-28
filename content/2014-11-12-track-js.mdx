@@ -1,0 +1,42 @@
+---
+title: "Track.js: User Analytics Without the Surveillance Tax"
+date: "2014-11-12"
+author: "Zach Kelling"
+tags: ["analytics", "privacy", "tracking", "javascript", "open-source", "hanzo-js"]
+description: "Building user identification and behavior tracking that doesn't require collecting PII. The principles we built in 2014 became GDPR compliance by design in 2018."
+---
+
+# Track.js: User Analytics Without the Surveillance Tax
+
+In 2014, user tracking meant Google Analytics, Mixpanel, or Kissmetrics. All three approached user identity the same way: identify users by their email address or a persistent cookie, build a profile around that identity, store everything forever.
+
+This created a data liability every company was accumulating — reams of personal information that was useful for analytics but dangerous to hold. The breaches that would make this liability obvious in 2016-2018 hadn't happened yet, but the structural problem was already there.
+
+Track.js approached user identity differently.
+
+## Anonymous-First Design
+
+Track.js generated a random identifier for each user — not tied to any PII — and associated behavior with that identifier. Session data, page views, events, commerce interactions all attached to the anonymous identifier.
+
+Identity resolution happened explicitly: if a user logged in, or provided an email, the anonymous identifier was linked to the identified record in a separate, access-controlled store. But the event log — the high-volume behavioral data — never contained PII.
+
+The architecture had immediate benefits:
+- The event log was safe to retain indefinitely (no PII exposure in a breach)
+- Cross-device tracking worked without requiring login (probabilistic device fingerprint + deterministic identity resolution on login)
+- Deletion requests were simple: delete the identity record, the anonymous event data is already de-identified
+
+## The Behavioral Model
+
+Track.js was designed to answer the question that mattered for commerce: "What sequence of behaviors leads to conversion?" — not "Who is this person?"
+
+The commerce intelligence we needed came from behavioral sequences: visited product page → added to cart → abandoned at shipping → returned three days later → converted. That sequence is analytically rich. The name and email address attached to it add legal liability without analytical value.
+
+## What Happened in 2018
+
+When GDPR came into force in May 2018, companies scrambled to audit their data practices and build consent flows. Companies running Track.js had a structural advantage: their most sensitive behavioral data was already de-identified. The compliance work was a fraction of what surveillance-first analytics required.
+
+This was not foresight — we built what was technically correct in 2014. It turned out that "technically correct" and "legally defensible" were the same architecture.
+
+---
+
+*Track.js is at github.com/hanzo-js/track.js. The core principles of anonymous-first behavioral tracking are foundational to Hanzo Analytics.*

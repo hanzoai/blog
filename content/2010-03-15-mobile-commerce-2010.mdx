@@ -1,0 +1,41 @@
+---
+title: "Mobile Commerce in 2010: Designing for 320px"
+date: "2010-03-15"
+author: "Zach Kelling"
+tags: ["mobile", "frontend", "commerce", "ux", "history"]
+description: "Building mobile-ready checkout flows before responsive design was a phrase — the constraints of the WAP era ending and the smartphone era beginning."
+---
+
+# Mobile Commerce in 2010: Designing for 320px
+
+In March 2010 the iPhone had been out for three years and the original iPad launched that month. Android was on its second major version. Mobile web traffic was small — somewhere between 3 and 8 percent depending on whose analytics you trusted — but it was growing faster than desktop web traffic had grown at any comparable point in its history.
+
+WAP was effectively dead. The carriers and handset manufacturers had spent a decade building a parallel mobile web that nobody wanted to use. The real mobile web was HTML, CSS, and JavaScript running in WebKit on iOS and Android. The problem was that the same sites built for 1024px desktop screens looked terrible at 320px, and mobile browsers were still slow enough that a JavaScript-heavy storefront would be unusable on a phone.
+
+## The Constraints Were Real
+
+A commodity Android phone in 2010 had a JavaScript engine roughly comparable to a desktop browser from 2004. Reflows were expensive. Large DOM trees were slow. A shop.js storefront that loaded 80KB of JavaScript and rendered 50 product cards was acceptable on a desktop and nearly unusable on a mid-range Android device.
+
+The 3G networks of 2010 were slower than they are now and HTTP connections had higher latency. A checkout flow that made five sequential API calls had a measurable multi-second delay on mobile that users would abandon.
+
+This forced discipline. We audited every line of JavaScript in the commerce SDK for what was actually necessary in a mobile checkout flow. The result was a `hanzo-mobile.js` bundle that stripped out product filtering, recommendation widgets, and the richer product page components — everything that was not required to get from cart to order confirmation.
+
+The mobile bundle was about 18KB unminified. That was not small by the standards of the time, but it was defensible.
+
+## Designing the Checkout for Touch
+
+Touch interaction design in 2010 was not well understood. Apple's Human Interface Guidelines for iOS existed but they were written for native apps. Applying them to a web checkout flow required interpretation.
+
+The concrete problems: tap targets needed to be larger than click targets. Form fields needed font sizes of at least 16px or iOS would zoom the viewport on focus, breaking the layout. The `input[type=number]` keyboard was useful for quantity fields. The `autocomplete` attributes needed to be correct or the browser would not offer card number fill.
+
+We also had to decide how to handle the payment form on mobile. Full card entry on a soft keyboard is bad UX. We pushed clients toward PayPal and early carrier billing integrations where available, and optimized the card entry form to use `input[type=tel]` for the card number field — which triggered the numeric keyboard on both iOS and Android — before `input[type=number]` had consistent behavior across browsers.
+
+## What We Did Not Get Right
+
+We underestimated how fast the market would move. The approach we built in 2010 — a separate mobile-optimized bundle with stripped-down features — was already the wrong architectural direction by 2012 when responsive design became the standard approach.
+
+Maintaining two codebases (desktop and mobile) turned out to be a significant ongoing cost. Every new feature required two implementations. Bugs were often fixed in one but not the other. By 2012 we had consolidated back to a single responsive codebase.
+
+The experience of building for mobile in 2010 was valuable anyway. The discipline of cutting everything unnecessary, designing for slow networks and slow JavaScript engines, and thinking carefully about touch interaction — those habits applied equally well to high-performance desktop commerce when the mobile constraint was removed.
+
+The lesson: constraints teach you what is actually necessary.

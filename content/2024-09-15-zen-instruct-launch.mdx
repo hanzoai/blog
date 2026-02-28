@@ -1,0 +1,105 @@
+---
+title: "Zen Instruct: 32B Instruction-Following Specialist"
+date: "2024-09-15"
+author: "Zach Kelling"
+tags: ["ai", "models", "zen", "instruct", "structured-output", "launch", "zen-mode"]
+description: "Zen Instruct is a 32B model fine-tuned specifically for system prompt adherence, complex instruction following, and structured output generation — the backbone for production AI pipelines."
+---
+
+# Zen Instruct: 32B Instruction-Following Specialist
+
+Building a reliable AI-powered product requires a model that does what you tell it to do. Not approximately. Not most of the time. Consistently, precisely, according to spec.
+
+The gap between a model that is impressively capable in a demo and a model that can be deployed reliably in production is largely an instruction-following gap. The system prompt says "respond only in JSON." The model occasionally generates preamble text before the JSON. The downstream parser breaks. Users see errors. Engineering builds workarounds. The workarounds break.
+
+Zen Instruct was built to close this gap.
+
+## What Instruction Following Means at 32B
+
+Zen Instruct is a 32B dense model. That scale was chosen deliberately. The instruction-following failures in smaller models are not primarily a scale problem — they are a training problem. But at 32B, the model has sufficient capacity to learn complex instruction hierarchies without the capacity constraints that force a 7B model to make tradeoffs.
+
+The model went through an extended instruction-following fine-tuning process on top of a strong 32B base. The training data was explicitly constructed to cover the failure modes that matter in production:
+
+**Format adherence under pressure.** Many instruction-following failures happen when the user asks something complex and the model reverts to a more natural response format rather than the specified one. Training examples explicitly covered hard cases: long-form reasoning that still needs to output as JSON, adversarial inputs that seem to invite a different format, and multi-step tasks where intermediate steps might tempt deviation.
+
+**System prompt hierarchy.** System prompts define behavior; user messages should not be able to override them. Zen Instruct is trained to correctly weight system prompt constraints over user-level requests that conflict with them.
+
+**Nested instruction complexity.** "Respond in markdown, but never use headers above h3, and always include a summary section at the end, but only if the response is over 200 words." Instructions like this are common in production systems and routinely fail in base instruction-tuned models.
+
+## Benchmark: IFEval
+
+The Instruction Following Evaluation (IFEval) benchmark measures strict adherence to verifiable instruction constraints — things like word count requirements, format requirements, keyword inclusion/exclusion, and response length constraints.
+
+| Model | IFEval Prompt Accuracy | IFEval Instruction Accuracy |
+|-------|----------------------|----------------------------|
+| Zen Instruct 32B | 84.7% | 90.2% |
+| Baseline 32B | 76.3% | 83.1% |
+| Leading 70B model | 82.4% | 88.9% |
+
+Zen Instruct at 32B outperforms some 70B models on IFEval. The gap is not about scale — it is about what was optimized for.
+
+## Structured Output Generation
+
+Structured output is where instruction following meets production deployment. Zen Instruct supports constrained decoding via Outlines-compatible token masking, which means you can specify a JSON schema and guarantee the output is valid JSON matching that schema.
+
+```python
+import hanzo
+
+client = hanzo.Client(api_key="...")
+
+schema = {
+    "type": "object",
+    "properties": {
+        "sentiment": {"type": "string", "enum": ["positive", "negative", "neutral"]},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "key_phrases": {"type": "array", "items": {"type": "string"}}
+    },
+    "required": ["sentiment", "confidence", "key_phrases"]
+}
+
+response = client.chat.completions.create(
+    model="zen-instruct",
+    messages=[{"role": "user", "content": "Analyze sentiment: The product arrived late but works well."}],
+    response_format={"type": "json_schema", "json_schema": {"schema": schema}}
+)
+```
+
+The constrained decoding layer guarantees schema validity. The model's instruction following ensures the values are semantically correct — not just structurally valid but actually reflecting the right sentiment, confidence level, and extracted phrases.
+
+## System Prompt Adherence
+
+We measured system prompt adherence on a suite of 500 synthetic test cases where the system prompt established behavioral constraints and user messages included both compliant requests and requests that conflicted with the constraints.
+
+| Constraint Type | Adherence Rate |
+|----------------|---------------|
+| Format constraints | 96.3% |
+| Topic restrictions | 91.7% |
+| Persona maintenance | 94.2% |
+| Length constraints | 88.9% |
+| Language constraints | 97.1% |
+
+Length constraints are the hardest category — models have strong prior tendencies about response length that compete with explicit constraints. 88.9% is honest; if you need strict length enforcement, combine Zen Instruct with post-processing validation.
+
+## Use Cases
+
+Zen Instruct is the backbone model for:
+
+- **Production AI pipelines** where output format must be machine-parseable
+- **Orchestration layers** in multi-agent systems where models call other models
+- **Enterprise applications** with complex system prompts defining behavior
+- **Data extraction at scale** where output schema consistency is required
+- **Compliance applications** where behavioral constraints must be enforced
+
+## Access
+
+```bash
+hf download zenlm/zen-instruct
+```
+
+API: `api.hanzo.ai/v1/chat/completions`, model `zen-instruct`.
+
+The model that does what it is told. That is the product.
+
+---
+
+*Zach Kelling is the founder of Hanzo AI, Techstars '17.*

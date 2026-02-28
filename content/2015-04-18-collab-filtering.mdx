@@ -1,0 +1,39 @@
+---
+title: "Collaborative Filtering at Commerce Scale: v1.0 of the Recommendation Engine"
+date: "2015-04-18"
+author: "Zach Kelling"
+tags: ["machine-learning", "recommendations", "collaborative-filtering", "ai", "commerce", "history"]
+description: "The first version of the Hanzo recommendation engine used matrix factorization to find latent preference signals in purchase data. Here's how we built it."
+---
+
+# Collaborative Filtering at Commerce Scale: v1.0 of the Recommendation Engine
+
+In the spring of 2015, the Hanzo recommendation engine shipped its first production version. The core algorithm: matrix factorization for collaborative filtering, implemented on the Hanzo Datastore event log that had been accumulating since 2008.
+
+## The Problem
+
+Most commerce platforms in 2015 did "recommendations" as manually curated upsells — a human decided which products to show in the "You might also like" slot. This was better than nothing. It was not scalable and it could not personalize.
+
+Real recommendations require learning from user behavior. The signal: "users who bought X also bought Y" is only discoverable from data. No human catalog team can track every co-purchase pattern across thousands of products and millions of users.
+
+## Matrix Factorization
+
+Matrix factorization decomposes the user-item interaction matrix (rows: users, columns: products, values: interactions) into two lower-rank matrices representing user preferences and item attributes in a latent feature space.
+
+The key insight: you don't need explicit feature definitions for products or explicit preference statements from users. The model learns latent features from the pattern of interactions. "Users who behave like this tend to like products that cluster like this" — without knowing what "like this" means in human terms.
+
+We used alternating least squares (ALS) as the factorization method — faster to converge than gradient descent for sparse interaction matrices, which is what commerce data looks like (most users interact with a tiny fraction of the product catalog).
+
+## The Infrastructure
+
+The recommendation model ran as a batch job on the Hanzo Datastore event log, rebuilding the user and item embeddings daily. Inference ran from the Hanzo KV store — embeddings stored as vectors, nearest-neighbor lookup for recommendations.
+
+This decoupling mattered: batch training on the full interaction history, real-time inference from pre-computed embeddings. The model was never slower than a KV lookup at request time, regardless of catalog size.
+
+## Results
+
+The first production cohort showed a 23% increase in products discovered per session and a 17% increase in multi-item order rate compared to the manual curation it replaced. Statistical significance was reached within two weeks of deployment.
+
+More interesting: the model recommended products that the manual curators hadn't connected. Cross-category discoveries — a customer who had bought camping equipment was served a recommendation for a waterproof jacket in a completely different product line — that the human system would never have surfaced.
+
+The latent feature space had found relationships that weren't obvious from product taxonomy alone.
