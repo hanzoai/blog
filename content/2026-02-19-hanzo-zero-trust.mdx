@@ -1,0 +1,44 @@
+---
+title: "Hanzo Zero Trust: Secure Networking for AI Infrastructure"
+date: "2026-02-19"
+author: "Hanzo AI"
+tags: ["security", "networking", "zero-trust", "wireguard", "infrastructure", "launch"]
+description: "Hanzo Zero Trust provides controller, router, tunnel, and CLI — a complete zero-trust network fabric for connecting AI services without VPN headaches or perimeter assumptions."
+---
+
+# Hanzo Zero Trust: Secure Networking for AI Infrastructure
+
+Traditional network security assumes a trusted perimeter: things inside the network are safe, things outside are not. That model broke when workloads moved to the cloud, and it doesn't work at all for AI systems that span multiple clouds, regions, and organizations.
+
+Zero trust is the replacement: every connection is authenticated and encrypted, regardless of where it originates. There is no perimeter — only identities and policies.
+
+Hanzo Zero Trust implements this model as deployable infrastructure.
+
+## Components
+
+**Controller** — The policy engine. Manages identities (users, services, agents), defines access policies, and issues short-lived certificates. The controller never sits in the data path — it only manages trust relationships.
+
+**Router** — Handles encrypted traffic between nodes. Implements WireGuard-based tunnels with automatic key rotation. Multiple routers can be deployed in a mesh; the controller keeps the topology consistent.
+
+**Tunnel** — The client-side daemon that runs on every node participating in the network. Establishes the WireGuard tunnel to the nearest router, registers its identity with the controller, and enforces local policy.
+
+**CLI** — `zt` — manages the entire stack. Provision new nodes, rotate credentials, inspect active connections, update policies.
+
+```bash
+# Add a new service to the zero-trust network
+zt node add --name inference-worker-01 --role ai-service
+
+# Define access policy
+zt policy create --from api-gateway --to inference-worker-01 --port 8080
+
+# View active connections
+zt status
+```
+
+## For AI Infrastructure
+
+AI systems have a specific trust problem: models, agents, and services span organizational boundaries. A model served by Hanzo AI is consumed by a customer's application; an agent acts on behalf of a user but is operated by a third-party service.
+
+Zero trust provides the identity fabric that makes this multi-party architecture secure. Each service has a cryptographic identity. Access policies are explicit. Short-lived certificates limit the blast radius of compromise.
+
+Available at [github.com/hanzoai/zt](https://github.com/hanzoai/zt).

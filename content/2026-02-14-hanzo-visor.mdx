@@ -1,0 +1,34 @@
+---
+title: "Hanzo Visor: Cloud Infrastructure and VM Management"
+date: "2026-02-14"
+author: "Hanzo AI"
+tags: ["infrastructure", "cloud", "vm", "devops", "launch", "visor"]
+description: "Hanzo Visor provides unified cloud infrastructure management — VMs, networks, storage, and Kubernetes clusters — with a clean API and dashboard for AI workloads."
+---
+
+# Hanzo Visor: Cloud Infrastructure and VM Management
+
+Running AI at scale requires compute infrastructure that can grow from a single GPU to a fleet of H100s without changing how you manage it. Hanzo Visor provides that unified control plane.
+
+## What Visor Manages
+
+**Virtual machines.** Provision, configure, and manage VMs across compute tiers — from cost-optimized CPU instances for inference to GPU clusters for training. SSH access, cloud-init configuration, and lifecycle management from a single interface.
+
+**Kubernetes clusters.** Visor deploys and manages Kubernetes clusters on Hanzo's infrastructure. Scale the control plane and worker nodes independently. Persistent volumes backed by Hanzo's distributed storage.
+
+**Networks and security groups.** Define network topology, configure ingress rules, and manage private networking between services. VPC-style isolation for multi-tenant deployments.
+
+**Storage.** Block storage for VMs, object storage for model weights and datasets, and network-attached volumes for shared workloads. Replicated across availability zones.
+
+## Built for AI Workloads
+
+Visor includes profiles optimized for common AI deployment patterns:
+
+- **Inference clusters**: Auto-scaled GPU pools with load balancing across model replicas
+- **Training jobs**: Spot instance scheduling for cost-efficient training runs
+- **Embedding pipelines**: CPU-optimized instances for batch embedding at scale
+- **Fine-tuning environments**: Persistent GPU instances with attached NVMe storage
+
+The Visor API integrates with Hanzo's MLOps tooling — model deployments, experiment tracking, and serving infrastructure — making compute management part of the AI development workflow rather than a separate operations concern.
+
+Available at [github.com/hanzoai/visor](https://github.com/hanzoai/visor).

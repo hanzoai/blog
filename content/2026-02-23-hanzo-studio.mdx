@@ -1,0 +1,36 @@
+---
+title: "Hanzo Studio: Visual AI Engine for Content at Scale"
+date: "2026-02-23"
+author: "Hanzo AI"
+tags: ["studio", "generative-ai", "content", "visual", "launch", "creative"]
+description: "Hanzo Studio is a visual AI engine for generating, editing, and managing AI-produced content — images, video, audio — at production scale with full API access and workflow integration."
+---
+
+# Hanzo Studio: Visual AI Engine for Content at Scale
+
+Generative AI made it possible to produce images, video, and audio at costs that would have been inconceivable five years ago. What it didn't solve was the production infrastructure: how do you manage thousands of generated assets, integrate generation into existing workflows, enforce brand consistency across outputs, and do all of this at the quality bar that professional content requires?
+
+Hanzo Studio is the answer to that production problem.
+
+## What Studio Does
+
+**Generation across modalities.** Studio provides unified access to image, video, and audio generation — from a single API and a single interface. Switch between models, compare outputs, and select the best results without managing separate integrations for each modality.
+
+**Visual workflow builder.** Complex content pipelines — generate a base image, apply style transfer, upscale, add a watermark, export to multiple formats — are built visually and executed automatically. The same pipeline can run once or process thousands of inputs.
+
+**Brand consistency.** Studio maintains brand libraries — approved styles, color palettes, subject references — that guide generation outputs. Every generated asset passes through the brand filter before delivery.
+
+**Production management.** Generated assets are automatically tagged, organized, and made searchable. Version history tracks every generation. Approvals workflows handle review before assets go live.
+
+## The API
+
+Every Studio capability is available via API, making it suitable for building generation into products — not just using it as a creative tool. An e-commerce platform can generate product photography at scale. A media company can produce visual content at publication speed. A game studio can generate asset variations programmatically.
+
+```bash
+# Generate via API
+curl -X POST https://api.hanzo.ai/v1/studio/generate \
+  -H "Authorization: Bearer $HANZO_API_KEY" \
+  -d '{"prompt": "professional product photo, white background", "model": "flux-pro", "width": 1024, "height": 1024}'
+```
+
+Available now at [studio.hanzo.ai](https://studio.hanzo.ai) and [github.com/hanzoai/studio](https://github.com/hanzoai/studio).

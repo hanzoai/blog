@@ -1,0 +1,44 @@
+---
+title: "Hanzo Vault: PCI-Compliant Card Tokenization for AI Commerce"
+date: "2026-02-24"
+author: "Hanzo AI"
+tags: ["security", "payments", "pci", "tokenization", "vault", "launch"]
+description: "Hanzo Vault is a PCI-compliant card tokenization service — isolating cardholder data from your application so you handle tokens, not sensitive payment information."
+---
+
+# Hanzo Vault: PCI-Compliant Card Tokenization for AI Commerce
+
+Every application that stores, processes, or transmits payment card data must comply with PCI DSS. The easiest way to comply is to ensure your application never touches cardholder data in the first place.
+
+Hanzo Vault provides exactly that: a dedicated cardholder data environment (CDE) that stores raw card data and issues tokens your application uses instead. Your application handles tokens. The vault handles the card numbers.
+
+## How Tokenization Works
+
+When a customer enters their card number, it goes directly to the Vault (via a hosted fields integration or direct API call, depending on your architecture). The Vault stores the card number in the CDE and returns a token — a random identifier with no mathematical relationship to the underlying card data.
+
+Your application stores and uses the token. When a payment is needed, you send the token to the Vault; the Vault exchanges it for the real card data and sends it to the payment processor.
+
+```javascript
+// Tokenize a card
+const { token } = await hanzo.vault.tokenize({
+  number: cardNumber,
+  exp_month: expMonth,
+  exp_year: expYear,
+  cvv: cvv
+});
+
+// Charge using the token — no raw card data in your system
+await hanzo.vault.charge({
+  token,
+  amount: 4999,
+  currency: 'usd'
+});
+```
+
+## Why This Matters for AI Applications
+
+AI-powered commerce applications — recommendation engines, dynamic pricing, personalized checkout flows — need to process transactions programmatically, often at high volume and in automated workflows.
+
+Vault makes it possible to build those workflows without bringing card data into the application logic. An agent that manages subscriptions, processes batch charges, or handles refunds works entirely with tokens. The sensitive data stays isolated.
+
+Available at [github.com/hanzoai/vault](https://github.com/hanzoai/vault).

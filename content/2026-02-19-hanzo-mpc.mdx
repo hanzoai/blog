@@ -1,0 +1,41 @@
+---
+title: "Hanzo MPC: Threshold Signing for AI-Native Applications"
+date: "2026-02-19"
+author: "Hanzo AI"
+tags: ["security", "cryptography", "mpc", "threshold-signatures", "blockchain", "launch"]
+description: "Hanzo MPC provides CGGMP21, FROST, and LSS threshold signing as infrastructure — enabling AI agents, wallets, and multi-party systems to sign transactions without any single party holding a complete private key."
+---
+
+# Hanzo MPC: Threshold Signing for AI-Native Applications
+
+Private keys are the trust primitive of the internet. Every cryptographic system — blockchain wallets, TLS certificates, API authentication, code signing — ultimately relies on a secret that someone holds.
+
+The single-key model has an obvious failure mode: whoever holds the key controls everything, and losing it means losing everything. Multi-Party Computation (MPC) distributes this trust — requiring agreement from multiple parties before a signature is produced — without requiring those parties to reconstruct the key in any single location.
+
+Hanzo MPC brings this capability to AI-native applications.
+
+## What Hanzo MPC Provides
+
+**CGGMP21** — The current standard for threshold ECDSA. Produces signatures compatible with Ethereum, Bitcoin, and all major blockchain networks. The protocol is provably secure under standard assumptions without requiring a trusted setup.
+
+**FROST** — Fast Round-Optimized Schnorr Threshold signatures. Used for Schnorr-compatible chains (Bitcoin Taproot, Solana, Polkadot) and systems that need minimum-round signing latency.
+
+**LSS (Linear Secret Sharing)** — The foundation layer enabling flexible threshold schemes (t-of-n) for distributed key generation and share refresh.
+
+## The AI Agent Use Case
+
+When an AI agent needs to authorize a transaction — signing a blockchain transaction, authenticating to an API, committing to a smart contract — who holds the key?
+
+The traditional answer is: the service running the agent. But agents increasingly operate across multi-tenant environments, across organizations, and with delegated authority from users who need to be able to revoke that authority.
+
+MPC provides a better answer: the agent's signing authority is held jointly across multiple parties — the user, the operator, and optionally a third-party guardian. No single party can authorize a transaction unilaterally. Any party can revoke access by refusing to participate in signing.
+
+This is the security model that AI agents operating on behalf of users — managing wallets, executing DeFi positions, authorizing purchases — actually need.
+
+## Infrastructure, Not Library
+
+Hanzo MPC is deployed as infrastructure, not a library you integrate into your application. Your application makes signing requests to the MPC service; the service coordinates the multi-party protocol and returns a signature. The key material never leaves the MPC nodes.
+
+This means you get MPC security without running MPC protocol code in your application layer — and without your application servers ever having access to key shares.
+
+Available now at [github.com/hanzoai/mpc](https://github.com/hanzoai/mpc).
