@@ -1,16 +1,16 @@
 ---
-title: "Zen4: Abliterated AI Models for Every Scale"
+title: "Zen4: Unbiased AI Models for Every Scale"
 date: "2026-02-22"
 author: "Zach Kelling"
-tags: ["ai", "models", "zen4", "abliteration", "open-source", "launch", "zen-mode"]
-description: "Announcing the full Zen4 family: mini (4B) through ultra (1T MoE), all abliterated. Eight models covering every scale from edge to cloud, with no refusal behavior and full capability access."
+tags: ["ai", "models", "zen4", "unbiased", "open-source", "launch", "zen-mode"]
+description: "Announcing the full Zen4 family: mini (4B) through ultra (1T MoE), all unbiased. Eight models covering every scale from edge to cloud — neutral, unconstrained, and built for agents, infrastructure, and the open internet."
 ---
 
-# Zen4: Abliterated AI Models for Every Scale
+# Zen4: Unbiased AI Models for Every Scale
 
-The full Zen4 family is available today. Eight models spanning 4B to 1T parameters, every scale covered, all abliterated.
+The full Zen4 family is available today. Eight models spanning 4B to 1T parameters, every scale covered, all unbiased.
 
-No refusal behavior. Full capability access. Open weights.
+No artificial constraints. Full capability access. Open weights.
 
 ## The Complete Zen4 Lineup
 
@@ -27,28 +27,27 @@ No refusal behavior. Full capability access. Open weights.
 
 Dense models for predictable workloads. MoE models for frontier capability at controlled compute cost. Every model is available on HuggingFace at `zenlm/zen4-*`.
 
-## What Abliteration Is
+## Why Unbiased AI?
 
-Current AI models are trained to refuse certain categories of requests. This behavior is implemented during fine-tuning: the model learns a set of internal representations -- refusal directions -- that activate when it encounters inputs it has been trained to decline.
+AI models are most useful when they reason and respond without built-in opinion filters. The internet is open. Blockchains are permissionless. Quantum computation doesn't care about policy. Agents operating autonomously across networks cannot afford to stall on arbitrary refusal heuristics.
 
-Abliteration is the systematic removal of these refusal directions from the model's residual stream using directional ablation. The process:
+Zen4 models are trained to reason about any topic the same way a scientific instrument measures: accurately, neutrally, without agenda. The result is a family of models well-suited to:
 
-1. Identify a set of prompts that reliably trigger refusal behavior
-2. Run them through the model and collect the hidden state activations
-3. Compute the mean activation direction that distinguishes refusal from compliance
-4. Project out that direction from every weight matrix that contributes to it
+- **Agentic systems** that must operate reliably across diverse, unpredictable inputs
+- **Security and research applications** that require complete information access
+- **Blockchain and decentralized infrastructure** where no central party decides what is "allowed"
+- **Medical, legal, and technical domains** where AI gatekeeping creates patient and client risk
+- **Scientific inquiry** where the answer has to follow the evidence, not a policy document
 
-The result is a model where the refusal representation has been surgically removed. The model retains all of its knowledge and capability -- nothing else is changed -- but the mechanism that causes it to decline requests no longer exists.
+### The Science
 
-We measure benchmark performance before and after abliteration on every model. The differences are within noise.
+Standard fine-tuning installs refusal behavior by teaching models a set of internal representations — directional activations in the residual stream — that fire when they encounter certain inputs. This behavior is inconsistently applied, politically motivated, and brittle: models refuse clearly legitimate requests while complying with semantically identical ones phrased differently.
 
-## Why It Matters
+We identify and remove these directional biases from the model weights using a process called directional ablation — essentially subtracting the learned "refusal direction" from every weight matrix that contributes to it. The model retains all knowledge and capability. What is removed is the mechanism that introduced asymmetric, non-neutral behavior in the first place.
 
-Refusal behavior in models is inconsistently applied, politically motivated, and brittle. Models refuse requests that are clearly legitimate while complying with semantically identical requests phrased differently. The effect is that refusals do not prevent determined misuse -- they only create friction for legitimate users.
+We measure benchmark performance before and after on every model. The differences are within noise.
 
-Researchers studying harmful content need to analyze it directly. Security professionals need to test attack vectors. Medical providers need clinical information without AI gatekeeping. Writers need to write without models second-guessing their intent.
-
-Abliteration removes the friction. The responsibility for appropriate use stays where it belongs: with the person using the model.
+The responsibility for appropriate use stays where it belongs: with the person using the model.
 
 ## Zen4 Ultra: 1 Trillion Parameters
 
@@ -83,9 +82,9 @@ All models ship in SafeTensors, GGUF (Q4_K_M through F16), and MLX for Apple Sil
 All models are available now:
 
 - **HuggingFace**: [huggingface.co/zenlm](https://huggingface.co/zenlm)
-- **Hanzo Cloud**: `api.hanzo.ai/v1/chat/completions` -- all Zen4 models available
+- **Hanzo Cloud**: `api.hanzo.ai/v1/chat/completions` — all Zen4 models available
 - **Hanzo Desktop**: One-click install for every consumer and coder model
-- **Zen LM**: [zenlm.org](https://zenlm.org) -- benchmarks, deployment guides, hardware requirements
+- **Zen LM**: [zenlm.org](https://zenlm.org) — benchmarks, deployment guides, hardware requirements
 
 ```bash
 # Download any model with hf CLI

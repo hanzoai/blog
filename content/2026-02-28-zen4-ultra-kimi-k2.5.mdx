@@ -1,0 +1,72 @@
+---
+title: "zen4-ultra: A Trillion-Parameter AI Model, Open and Free"
+date: "2026-02-28"
+author: "Hanzo AI"
+tags: ["ai", "models", "zen4", "ultra", "kimi-k2", "frontier", "open-source", "moe"]
+description: "zen4-ultra brings Kimi K2.5 — a 1.04 trillion-parameter Mixture of Experts model — to the Zen AI family. Open weights, 256K context, 71% SWE-bench. Available now on HuggingFace."
+featured: true
+---
+
+# zen4-ultra: A Trillion-Parameter AI Model, Open and Free
+
+Not long ago, a trillion-parameter AI model required a data center, a research team, and hundreds of millions of dollars.
+
+**zen4-ultra** is that model — now open, freely downloadable, and available to anyone with the compute to run it.
+
+## What Is zen4-ultra
+
+zen4-ultra is built on [Kimi K2.5](https://huggingface.co/moonshotai/Kimi-K2.5) — Moonshot AI's frontier Mixture of Experts model. The architecture:
+
+- **1.04 trillion total parameters**
+- **32 billion active parameters per forward pass** (384 experts, top-8 routing)
+- **256K token context window**
+- **DeepseekV3ForCausalLM** architecture
+
+Despite having a trillion parameters, zen4-ultra activates only ~3% of them per token. This is the power of MoE: frontier intelligence at efficient inference cost.
+
+## Benchmark Results
+
+| Task | Score |
+|------|-------|
+| AIME 2025 (with Python) | 99.1% |
+| HMMT 2025 (with Python) | 95.1% |
+| GPQA-Diamond | 84.5% |
+| SWE-Bench Verified | 71.3% |
+| BrowseComp | 60.2% |
+| HLE | 44.9% |
+| Terminal-Bench | 47.1% |
+
+A **71.3% SWE-bench score** means zen4-ultra can autonomously solve 71 out of 100 real GitHub issues — from diagnosis to pull request.
+
+## Agentic Capabilities
+
+zen4-ultra was trained for agentic operation:
+
+- **200–300 sequential tool calls** without human intervention
+- **Heavy mode**: 8 simultaneous reasoning trajectories
+- **Thinking mode** with extended chain-of-thought via `<think>` tags
+- Built-in browser use and code execution
+
+## Access
+
+**SafeTensors (full precision):**
+```
+huggingface-cli download zenlm/zen4-ultra
+```
+
+**GGUF (quantized, 2-bit, ~370GB):**
+```
+huggingface-cli download zenlm/zen4-ultra-gguf
+```
+
+Both are available now at [huggingface.co/zenlm](https://huggingface.co/zenlm). The SafeTensors release is vanilla Kimi K2.5 weights with Zen branding. The GGUF variant has directional biases removed for fully neutral inference.
+
+## License
+
+MIT. Run it, fork it, fine-tune it.
+
+## What's Next
+
+We're developing **GT-QLoRA** (Gate-Targeted QLoRA) — a training method that addresses the fundamental challenge of fine-tuning MoE models for unbiased behavior. Standard directional ablation fails on models like zen4-ultra because any residual bias is encoded in expert routing gates, not just the residual stream.
+
+GT-QLoRA applies LoRA to attention layers and shared experts while directly unfreezing gate weights for gradient updates — producing a model whose neutrality is trained in at every level of the architecture. Training code is at [github.com/zenlm/zen4-ultra-trainer](https://github.com/zenlm/zen4-ultra-trainer).
