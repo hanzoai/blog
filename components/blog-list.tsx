@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { BlogCard } from "@/components/blog-card";
-import { TagFilter } from "@/components/tag-filter";
+import { TagSearch } from "@/components/tag-search";
 
 interface BlogItem {
   url: string;
@@ -31,21 +31,31 @@ export function BlogList({ blogs, allTags, tagCounts }: BlogListProps) {
 
   return (
     <>
-      {allTags.length > 0 && (
-        <div className="max-w-7xl mx-auto w-full px-6 py-4">
-          <TagFilter
+      {/* Tag filter bar */}
+      <div className="max-w-5xl mx-auto w-full px-6 py-4 flex items-center justify-between gap-4">
+        <p className="text-sm text-muted-foreground">
+          {selectedTag === "All" ? (
+            <span>{blogs.length} posts</span>
+          ) : (
+            <span>
+              <span className="text-foreground font-medium">{selectedTag}</span>
+              {" · "}
+              {filteredBlogs.length} post{filteredBlogs.length !== 1 ? "s" : ""}
+            </span>
+          )}
+        </p>
+        {allTags.length > 0 && (
+          <TagSearch
             tags={allTags}
             selectedTag={selectedTag}
             tagCounts={tagCounts}
           />
-        </div>
-      )}
-      <div className="max-w-7xl mx-auto w-full px-6 lg:px-0">
-        <div
-          className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 relative overflow-hidden border-x border-border ${
-            filteredBlogs.length < 4 ? "border-b" : "border-b-0"
-          }`}
-        >
+        )}
+      </div>
+
+      {/* Blog grid */}
+      <div className="max-w-5xl mx-auto w-full px-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredBlogs.map((blog) => (
             <BlogCard
               key={blog.url}
@@ -54,7 +64,7 @@ export function BlogList({ blogs, allTags, tagCounts }: BlogListProps) {
               description={blog.description}
               date={blog.formattedDate}
               thumbnail={blog.thumbnail ?? undefined}
-              showRightBorder={filteredBlogs.length < 3}
+              showRightBorder={false}
             />
           ))}
         </div>

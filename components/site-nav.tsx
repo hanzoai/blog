@@ -1,31 +1,47 @@
-import Link from "next/link";
-import { ThemeToggle } from "@/components/theme-toggle";
+import Image from "next/image";
+import { MessageCircle } from "lucide-react";
 
 export function SiteNav() {
   return (
-    <header className="sticky top-0 z-20 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="max-w-7xl mx-auto w-full flex h-14 items-center justify-between px-6">
-        <div className="mr-4 flex">
-          <Link
-            href="/"
-            className="mr-6 flex items-center space-x-2 font-medium text-lg tracking-tighter"
+    <header className="border-b border-border/50 px-6 py-4 sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="max-w-5xl mx-auto flex items-center justify-between">
+        <a
+          href="https://hanzo.ai"
+          className="flex items-center gap-2 text-foreground hover:opacity-80 transition-opacity"
+        >
+          <Image
+            src="/hanzo-logo.svg"
+            alt="Hanzo"
+            width={20}
+            height={20}
+            className="dark:invert-0 invert"
+          />
+          <span className="font-semibold text-base tracking-tight">hanzo</span>
+          <span className="text-muted-foreground text-sm">/ blog</span>
+        </a>
+        <nav className="flex items-center gap-4 text-sm text-muted-foreground">
+          <a
+            href="https://hanzo.ai"
+            className="hover:text-foreground transition-colors"
           >
-            <span className="font-bold">HANZO</span>
-            <span className="text-muted-foreground font-normal">Blog</span>
-          </Link>
-        </div>
-
-        <div className="flex flex-1 w-full justify-end">
-          <nav className="flex items-center gap-4">
-            <Link
-              href="https://hanzo.ai"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              hanzo.ai
-            </Link>
-            <ThemeToggle />
-          </nav>
-        </div>
+            hanzo.ai
+          </a>
+          <a
+            href="https://hanzo.help"
+            className="hover:text-foreground transition-colors hidden sm:block"
+          >
+            Help
+          </a>
+          <a
+            href="https://discord.gg/hanzo"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border text-foreground hover:bg-accent transition-all text-sm font-medium"
+          >
+            <MessageCircle className="h-3.5 w-3.5" />
+            Discord
+          </a>
+        </nav>
       </div>
     </header>
   );

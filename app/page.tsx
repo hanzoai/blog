@@ -3,7 +3,6 @@ import { loader } from "fumadocs-core/source";
 import { createMDXSource } from "fumadocs-mdx";
 import { Suspense } from "react";
 import { BlogList } from "@/components/blog-list";
-import { FlickeringGrid } from "@/components/magicui/flickering-grid";
 
 const blogSource = loader({
   baseUrl: "/blog",
@@ -43,9 +42,7 @@ export default function HomePage() {
 
   const allTags = [
     "All",
-    ...Array.from(
-      new Set(sortedBlogs.flatMap((b) => b.tags))
-    ).sort(),
+    ...Array.from(new Set(sortedBlogs.flatMap((b) => b.tags))).sort(),
   ];
 
   const tagCounts = allTags.reduce((acc, tag) => {
@@ -57,30 +54,20 @@ export default function HomePage() {
   }, {} as Record<string, number>);
 
   return (
-    <div className="min-h-screen bg-background relative">
-      <div className="absolute top-0 left-0 z-0 w-full h-[200px] [mask-image:linear-gradient(to_top,transparent_25%,black_95%)]">
-        <FlickeringGrid
-          className="absolute top-0 left-0 size-full"
-          squareSize={4}
-          gridGap={6}
-          color="#6B7280"
-          maxOpacity={0.2}
-          flickerChance={0.05}
-        />
-      </div>
-      <div className="p-6 border-b border-border flex flex-col gap-6 min-h-[250px] justify-center relative z-10">
-        <div className="max-w-7xl mx-auto w-full">
-          <div className="flex flex-col gap-2">
-            <h1 className="font-medium text-4xl md:text-5xl tracking-tighter">
-              Hanzo Blog
-            </h1>
-            <p className="text-muted-foreground text-sm md:text-base lg:text-lg">
-              AI research, infrastructure, models, and more from Hanzo AI.
-            </p>
-          </div>
+    <div className="min-h-screen bg-background">
+      {/* Hero */}
+      <section className="px-6 pt-16 pb-10 border-b border-border/50">
+        <div className="max-w-5xl mx-auto">
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-foreground mb-3">
+            Hanzo Blog
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-xl leading-relaxed">
+            AI research, infrastructure, models, and more from the Hanzo team.
+          </p>
         </div>
-      </div>
+      </section>
 
+      {/* Posts */}
       <Suspense>
         <BlogList blogs={sortedBlogs} allTags={allTags} tagCounts={tagCounts} />
       </Suspense>
