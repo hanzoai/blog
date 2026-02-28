@@ -1,0 +1,47 @@
+---
+title: "Casper Blockchain: Building the First Enterprise-Grade PoS Network"
+date: "2018-11-20"
+author: "Zach Kelling"
+tags: ["case-study", "blockchain", "consensus", "enterprise", "clients", "casper"]
+description: "How Hanzo helped Casper Labs build the first enterprise-ready proof-of-stake blockchain — from architecture decisions to validator deployment to the DEVxDAO."
+---
+
+# Casper Blockchain: Building the First Enterprise-Grade PoS Network
+
+In 2018, enterprise blockchain was dominated by Hyperledger and private permissioned networks. Public blockchains existed but weren't designed for enterprise requirements: auditability, deterministic finality, predictable performance, and the legal clarity that finance and supply chain teams needed.
+
+Casper Labs was trying to build a public blockchain that enterprises could actually use.
+
+## The Problem with Existing Chains
+
+Bitcoin's proof-of-work was energy-intensive and slow. Ethereum was moving toward proof-of-stake but hadn't shipped it yet. Hyperledger Fabric was permissioned — useful for consortiums, but not a public network.
+
+Casper's thesis: a public proof-of-stake network with highway consensus, designed from the start for enterprise-grade finality and throughput, and built in Rust for the safety guarantees that commercial deployments required.
+
+## Hanzo's Role
+
+We joined the Casper Labs effort in 2018 as technical architects and strategic advisors.
+
+**The Rust decision.** Early in development, there was a genuine question about implementation language. We advocated strongly for Rust — not because it was fashionable, but because the memory safety guarantees and performance characteristics were exactly what you want in validator software handling real financial transactions. Rust made the network harder to exploit.
+
+**Consensus architecture.** The Highway consensus protocol was novel: a variant of CBC Casper (Correct-by-Construction) that provided provable safety under asynchronous network conditions. We worked through the technical tradeoffs with the team — finality times, liveness requirements, validator economics.
+
+**Validator infrastructure.** We deployed and operated some of the initial validator nodes on the Casper Network testnet, battle-testing the software before mainnet launch.
+
+**DEVxDAO.** We co-founded the DEVxDAO — a Swiss blockchain association to fund development and research on the Casper ecosystem. This became a model for community-governed development funding that predated and in some ways anticipated DAO structures that became mainstream in 2020-2021.
+
+**Grant acquisition.** We helped Casper Labs secure its first development grants, establishing the funding relationships that enabled the mainnet to ship.
+
+## Mainnet Launch
+
+Casper Network launched mainnet in March 2021 — one of the few enterprise-grade public blockchains to ship on its stated timeline. The network has processed hundreds of millions of transactions and has been adopted by enterprises across logistics, finance, and government sectors.
+
+## The Lesson
+
+Enterprise blockchain isn't about replacing existing databases — it's about creating shared infrastructure where multiple parties need to agree on state without trusting a single intermediary. That's a specific problem set, and it requires a specific kind of network design.
+
+Casper showed it was possible to build that network as a public chain, not just a private consortium.
+
+---
+
+*Casper Network (CSPR) is live at https://casper.network. The DEVxDAO continues to fund blockchain research and development.*
