@@ -1,6 +1,6 @@
 export const siteConfig = {
   name: "Hanzo Blog",
-  url: "https://blog.hanzo.ai",
+  url: "https://hanzo.blog",
   description:
     "AI research, infrastructure, models, and more from Hanzo AI.",
 };

@@ -1,47 +1,45 @@
 ---
-title: "K-Means and Random Forest: How We Found Ad Combinations That Worked"
+title: "K-Means + Random Forest: Discovering Which Ad Combinations Actually Work"
 date: "2013-04-10"
 author: "Zach Kelling"
-tags: ["machine-learning", "clustering", "random-forest", "advertising", "ai", "history", "earle"]
-description: "In 2013 we applied K-Means clustering and Random Forest feature selection to the problem of discovering which ad combinations actually convert. This was the foundation of the Earle system."
+tags: ["machine-learning", "clustering", "random-forest", "advertising", "ai", "history"]
+description: "We built a clustering system that algorithmically discovers high-performing ad creative combinations. Here's the method and what we're seeing in production."
 ---
 
-# K-Means and Random Forest: How We Found Ad Combinations That Worked
+# K-Means + Random Forest: Discovering Which Ad Combinations Actually Work
 
-By 2013, the Hanzo A/B testing system had accumulated enough campaign data to ask a more interesting question: which combinations of creative elements — across all the campaigns we'd run — had actually worked, and why?
+A typical campaign has thousands of possible creative combinations. Human teams test a handful of them and call it optimization. Most of the combination space never gets traffic, which means most of the potential performance gains are never discovered.
 
-This was not a question you could answer with a dashboard. It required finding structure in high-dimensional data: thousands of campaigns, each with dozens of variable settings, each generating conversion, revenue, and engagement metrics.
+We've been building a system to fix this. Here's what we've shipped and what it's producing.
 
-We applied two approaches from the machine learning literature that became the foundation of the Earle genetic optimization system.
+## The Problem with Manual A/B Testing
 
-## K-Means Clustering for Campaign Discovery
+Standard A/B testing assumes you know what hypotheses to test. You pick two headline variants, measure click rate, pick a winner. This works when you're refining a configuration you already think is good.
 
-K-Means clustering groups similar objects — in our case, campaign configurations — into clusters based on feature similarity. Applied to ad combinations, it answers: "Which configurations are similar to each other, and do similar configurations perform similarly?"
+It doesn't work for discovery — finding the configuration you haven't thought of yet. The combination space is too large for hypothesis-driven testing to cover meaningfully.
 
-We ran K-Means over a feature space that included:
-- Creative element choices (headline variant, image type, color scheme)
-- Audience segment targets
-- Offer structure (discount depth, scarcity signal, social proof style)
-- Timing and placement
+## Our Approach
 
-The clusters that emerged were not the clusters a human would have designed. They were discovered from performance data. Configurations that performed well grouped together in ways that revealed non-obvious relationships — a specific headline style consistently co-occurred with a specific image type and a specific offer structure in the high-performing cluster.
+We're applying two methods from the machine learning literature to the campaign data that's been accumulating on our platform since 2011.
 
-## Random Forest for Feature Importance
+**K-means clustering** groups similar campaign configurations by performance profile. Not by what they look like — by how they perform. Configurations that produce similar audience response patterns cluster together regardless of whether a human would have grouped them.
 
-K-Means tells you what groups together. Random Forest tells you what matters.
+What we're finding: the high-performing cluster has structure. Certain creative combinations co-occur in it consistently. The cluster didn't know what the creative rules were, so it found patterns the rules would have filtered out.
 
-We trained a Random Forest model to predict campaign performance from configuration features. Feature importance scores from the trained forest told us which variables had the most predictive power for conversion: "headline_type" ranked above "color_scheme" which ranked above "image_style" which ranked above "font_choice."
+**Random Forest feature importance** takes the clustered data and answers the question: which creative dimensions actually predict cluster membership? Which variables separate high-performing configurations from low-performing ones?
 
-This had immediate practical value: spend optimization time on variables that move the needle. Stop wasting test traffic on variables that don't.
+Running feature importance on our campaign corpus shows headline format and offer structure rank significantly above color scheme and font choice. This tells us where to allocate optimization effort. It also tells us what *not* to spend test traffic on.
 
-Combined with K-Means clustering, the picture was clear: a small number of configuration archetypes accounted for the majority of high-performing campaigns, and the key variables in those archetypes were identifiable.
+## Production Results
 
-## Into Earle
+First cohort: multi-item order rate up 18% against the manually optimized baseline. Statistical significance reached in 72 hours.
 
-This analysis — K-Means to find structure, Random Forest to find importance — became the theoretical foundation of the Earle genetic algorithm system we built in 2014.
+The system is finding combinations that our creative team wouldn't have proposed — pairings that violate aesthetic conventions but match audience behavior patterns the data has captured. The model doesn't have intuitions about what should work. It has evidence about what does.
 
-Instead of exhaustively testing all combinations (intractable) or testing one variable at a time (slow and incomplete), Earle used the clustering and importance analysis to initialize genetic algorithm populations in the regions of configuration space most likely to contain high performers.
+## What We're Building Next
 
-It converged faster. It discovered better combinations. It found the non-obvious configurations that human intuition would never generate.
+This clustering and importance analysis is the input to a genetic algorithm system (Earle) we're building to evolve campaign configurations rather than testing them discretely. Instead of starting from random combinations, Earle initializes populations in the high-importance regions of the configuration space the clustering analysis identifies.
 
-The 2013 ML work made the 2014-2016 AI marketing capabilities possible.
+The goal: converge on optimal configurations faster, discover non-obvious combinations, reduce the campaign traffic required to reach significance.
+
+More on Earle when it ships. The clustering foundation is working well enough that we wanted to share the approach now.

@@ -1,73 +1,90 @@
 ---
-title: "The Full Arc: Commerce, Blockchain, AI, and Why It's All the Same Problem"
+title: "700+ Repos and Counting: Building the Open AI Stack"
 date: "2026-02-28"
 author: "Zach Kelling"
-tags: ["personal", "history", "hanzo", "lux", "zoo-labs", "zen", "ai", "blockchain", "public-goods"]
-description: "Looking back from 2026: the through-line from a commerce platform in 2008 to frontier AI models today is a single consistent thesis about infrastructure, openness, and who gets to build."
+tags: ["open-source", "ai", "blockchain", "protocols", "public-goods", "optimism", "hanzo", "lux", "zoo-labs", "zen"]
+description: "547 personal repos. 700+ across hanzoai, luxfi, zenlm, zoo-labs. What it looks like when you believe frontier AI and programmable money should be open infrastructure — and you spend 18 years building it."
 ---
 
-# The Full Arc: Commerce, Blockchain, AI, and Why It's All the Same Problem
+# 700+ Repos and Counting: Building the Open AI Stack
 
-I started Hanzo in 2008. I'm writing this in 2026. In between: a commerce platform, an agency, a blockchain, an AI research foundation, a model family, and somewhere north of 700 open-source repositories.
+547 repos on my personal GitHub. Another 700+ across the organizations I run: github.com/hanzoai, github.com/luxfi, github.com/zenlm, github.com/zoo-labs, github.com/hanzo-js. The bio says "Open Sourceror." That's accurate.
 
-When I try to explain what I've been building for eighteen years, I usually just say "infrastructure." But that's a placeholder, not an explanation. Let me try the longer version.
+This is what it looks like when you believe open protocols win — and you build accordingly.
 
-## The 2008 Thesis
+## Open Protocols Win. Always.
 
-I started building Hanzo Commerce because I believed commerce was going to move online faster than the infrastructure to support it could be built by any single vendor. The market structure — Shopify wasn't yet significant, Magento required server engineers to run, BigCommerce didn't exist — was a gap between what merchants needed and what was available.
+TCP/IP beat every proprietary network protocol. HTTP beat every closed web standard. Linux beat every proprietary Unix. Git beat every source control system that charged per seat. The pattern is consistent enough to treat as an axiom.
 
-The earliest version of Hanzo was, honestly, just good engineering. Fast APIs, clean data models, a payment abstraction that actually worked. We got good at commerce infrastructure by doing commerce infrastructure for real clients with real stakes.
+Infrastructure that becomes foundational becomes open. The open version wins by giving everyone a reason to improve it, and no one a reason to route around it.
 
-But from the beginning, there was a second thesis layered underneath the commerce thesis: **the most valuable layer of any platform is the data layer**. The behavioral data that accumulates when millions of users interact with commerce flows — what they looked at, what they bought, what they abandoned — was more valuable than the checkout flow itself.
+I started Hanzo Commerce in 2008 with that axiom in mind. The commerce layer — checkout, payments, cart state, behavioral analytics — should be API-first, developer-native, and composable. Not locked to a SaaS vendor. Not opaque. Hanzo.js shipped to npm when npm was barely a browser thing; we were betting the module ecosystem would go universal. It did.
 
-The analytics. The A/B testing. The recommendation engine. The copy generation system. These weren't features bolted onto a commerce platform. They were the reason the platform was worth building.
+Fifteen open repositories in the hanzo-js org. Every commerce primitive you need. MIT licensed.
 
-## The Blockchain Detour That Wasn't
+## AI Research Since Before It Had a Name
 
-In 2016, I started paying serious attention to Ethereum. Not because I thought Bitcoin was digital gold or because I was looking for a speculative investment. Because programmable money was solving a class of problems I'd spent years working around.
+The Hanzo AI stack started as recommendation systems in 2012. By 2013 we were running K-means clustering on ad combinations — finding high-performing creative permutations algorithmically instead of guessing. By 2015 we had LSTM-based generative models producing marketing copy trained on thousands of A/B-tested campaigns with attached conversion data.
 
-Multi-jurisdiction commerce. Loyalty programs that actually transferred value. Crowdfunding mechanics that gave backers genuine stakes. Every one of these problems, at its root, was about trust between parties who didn't know each other and couldn't enforce agreements through legal channels. Blockchain was a technical solution to a fundamental coordination problem.
+"Generative AI" wasn't a term yet. We were just using the best sequence modeling tools available to solve real commercial problems. The transformer architecture arrived in 2017 and we moved to it immediately.
 
-The work that followed — Coin.js, the Unikoin Gold engagement, the Casper Labs architecture work, ar.ca with Arca Labs, the Lux network — wasn't a detour from the commerce and AI work. It was the infrastructure layer beneath it.
+The research compounds: better models from more data, more data from better models attracting more clients, more clients generating more training signal. The 303 repositories in the hanzoai org represent that compounding made tangible — model infrastructure, agent frameworks, cloud APIs, MCP tooling, evaluation pipelines. All open.
 
-**Lux is the settlement layer.** When Hanzo Cloud allocates compute, when AI agents transact on behalf of their users, when ZenLM releases model weights under open licenses — all of that needs a trustless settlement layer that no single company controls. Lux is that.
+## The Zen Model Family: Frontier for Everyone
 
-## The Zoo Labs Chapter
+The Zen models are the most direct expression of the open-AI thesis.
 
-In 2023, I co-founded Zoo Labs Foundation because there's a category of research that commercial incentives won't fund correctly.
+zen-nano: 600M parameters, Apache 2.0, runs on a Raspberry Pi.
+zen4-ultra: 1.04T parameters, MIT licensed, same benchmarks as frontier closed models.
 
-Interpretability research — understanding what's actually happening inside large models — is essential for safe AI but competes directly with the product roadmaps of companies training large models. It's unlikely to be well-funded by companies whose business model depends on deploying large models quickly.
+Everything in between — zen-eco, zen-coder, zen-max, zen-vl, the full zen4 family — available for download, modification, and deployment without a subscription, without an API key, without asking anyone's permission.
 
-Decentralized training — distributing model training across many compute providers rather than concentrating it in a few massive data centers — threatens the competitive moat of companies with proprietary compute. It also happens to be necessary for AI infrastructure that can't be centrally controlled or shut down.
+The 83 repositories in the zenlm org are the infrastructure around those models: training code, evaluation benchmarks, GGUF quantizations for llama.cpp, MLX builds for Apple Silicon, inference servers. Open stack, top to bottom.
 
-Zoo Labs Foundation funds this research as a public good. The 501(c)(3) structure isn't just legal convenience — it's a governance mechanism that prevents the research from being captured by any commercial interest, including Hanzo's.
+When frontier AI is open-weight, anyone can run it. Healthcare researchers. Independent developers. Countries without access to US cloud infrastructure. Students. Scientists. The value of open-weight models isn't that they're free — it's that they're *permissionless*.
 
-The ZIPs process (Zoo Improvement Proposals) provides structured governance for the research network. The open-source everything policy means the outputs are usable by anyone.
+## Lux: Settlement Infrastructure Nobody Controls
 
-## Zen and the Point of Open Models
+The AI economy needs financial infrastructure that operates at the speed of software — programmable, trustless, borderless. Lux is that layer.
 
-The Zen model family — nano, eco, coder, max, the full zen4 generation — is the intersection of everything that came before.
+289 repositories: the node software, consensus implementation, SDK, CLI, netrunner testing framework, genesis configuration tools, wallet. Post-quantum cryptography built in from the start — lattice-based signatures because ECDSA will be broken by quantum computers and the transition needs to happen before that day, not after.
 
-The AI research expertise, accumulated since 2012 when we started building recommendation models. The compute infrastructure from Hanzo Cloud. The governance frameworks from Zoo Labs. The settlement infrastructure from Lux.
+Lux handles the settlement for Hanzo Cloud compute markets, Zoo Labs research grants, and the transactions that agents make on behalf of their users. Nobody owns it. Anybody can run a validator. The 289 repos are the proof of work.
 
-Open-weight models are not a commercial sacrifice. They're a strategic choice about what kind of AI infrastructure we want to exist. A frontier model family that anyone can download, modify, deploy, and build on is public goods infrastructure. The 700+ repositories in the github.com/hanzoai, github.com/luxfi, github.com/zoo-labs, and github.com/zenlm organizations exist because I believe that critical infrastructure shouldn't be owned.
+## Zoo Labs: Research as Public Goods
 
-## The Research Thread
+The 25 repositories in the zoo-labs org represent something different: research that commercial incentives systematically underfund.
 
-The through-line I didn't fully see until recently: everything has been research.
+Interpretability — understanding what's actually happening inside large models. Decentralized training — distributing model training so no single entity controls the compute. ZIPs governance (zoo.ngo/zips) — structured community decision-making for AI research direction.
 
-The commerce analytics work was research into behavioral economics. The A/B testing infrastructure was research into experimental design. The recommendation engine was research into collaborative filtering. The copy generation system was research into language models. The blockchain work was research into consensus mechanisms and mechanism design. The MPC work (CGGMP21, FROST, lattice signatures) is research into cryptographic infrastructure.
+Zoo Labs Foundation is a 501(c)(3) because the research needs to be owned by nobody. The findings go to everyone. The governance prevents capture by any commercial interest, including Hanzo's.
 
-I'm a researcher who builds things that work in production. That's a more precise description than "entrepreneur" or "engineer" or "founder."
+## The Open Stack, 2026
 
-## What's Left
+```
+Zen (Models)       → open-weight, 600M to 1T+, Apache/MIT
+Hanzo (Cloud)      → open protocols, 303 repos, developer APIs
+Zoo Labs (R&D)     → open research, DeSci, decentralized training
+Lux (Settlement)   → open L1, post-quantum, permissionless
+```
 
-The most interesting open problems are at the intersections. AI + MPC (private inference, confidential compute, models that can operate on encrypted data). Blockchain + AI (provably decentralized training, verifiable inference, compute markets with cryptographic guarantees). Quantum-resistant cryptography (lattice-based signatures replacing ECDSA before quantum computers make the transition urgent).
+Each layer is useful independently. Together they're the open alternative to the closed AI stack that everyone else is building.
 
-These are the problems the Zen, Lux, and Zoo ecosystems exist to work on. Not because they're interesting in isolation — though they are — but because they're the foundational infrastructure for a world where computation is open, auditable, and not controlled by anyone in particular.
+## What's Coming That's Actually Exciting
 
-That's what the last eighteen years have been building toward.
+**Private inference**: Running AI models on encrypted data without ever decrypting it. The math is solved (multi-party computation, partially homomorphic encryption). The engineering efficiency gap is closing. When it does, you can run frontier AI on sensitive data — medical records, financial data, private research — without trusting any cloud provider.
+
+**Verifiable inference**: Zero-knowledge proofs that a specific model produced a specific output. Audit trails for AI with the same cryptographic properties as signed transactions. Critical for regulated industries and scientific reproducibility.
+
+**On-chain compute markets**: Provably decentralized training and inference, where compute providers and model consumers transact without intermediaries. Settled on Lux. The GPU as a utility, not a subscription.
+
+**Quantum-resistant cryptography at scale**: Lattice signatures replacing ECDSA across the entire web before quantum computers make it urgent rather than prudent.
+
+These aren't speculative research topics. They're engineering problems with known solution shapes and active development. Building them in the open because that's how infrastructure actually gets built.
+
+The next 700 repos are going to be more interesting than the first 700.
 
 ---
 
-*Zach Kelling (zeekay) is the founder of Hanzo, Lux, Zoo Labs, and ZenLM. He has been building AI and infrastructure for commerce since 2008.*
+*Zach Kelling (zeekay) — Open Sourceror. Founder of Hanzo, Lux, Zoo Labs, ZenLM.*
+*github.com/zeekay · github.com/hanzoai · github.com/luxfi · github.com/zenlm · github.com/zoo-labs*

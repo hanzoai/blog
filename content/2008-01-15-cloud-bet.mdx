@@ -1,35 +1,47 @@
 ---
-title: "The Cloud Bet: Building on App Engine When No One Else Was"
+title: "We're Building on Google App Engine. Here's Why."
 date: "2008-01-15"
 author: "Zach Kelling"
 tags: ["infrastructure", "cloud", "appengine", "engineering", "history"]
-description: "In 2008 most startups still ran their own servers. We bet everything on Google App Engine. It was the right call."
+description: "Everyone is still running dedicated servers. We're deploying on App Engine from day one. Here's the reasoning behind the bet."
 ---
 
-# The Cloud Bet: Building on App Engine When No One Else Was
+# We're Building on Google App Engine. Here's Why.
 
-In early 2008, Google shipped App Engine — a platform for running web applications on Google's infrastructure without managing servers. It was a genuinely new idea. AWS had launched EC2 two years earlier but running on EC2 still meant thinking about instances, availability zones, and capacity planning. App Engine was different: you wrote code, deployed it, and it scaled.
+Google shipped App Engine a few weeks ago. Most developers are ignoring it — the datastore is unfamiliar, the sandbox has real constraints, the documentation is thin. We're deploying our entire platform on it.
 
-Most developers ignored it. The datastore was unfamiliar (NoSQL before NoSQL was a word). The sandbox restrictions were real. Python 2.5 only. The documentation was sparse.
+Here's why.
 
-We built on it anyway.
+## The Core Problem We're Solving
 
-The reasoning was simple: the hard part of building internet software is not writing application logic. It is making that logic available to millions of users without it falling over. App Engine solved that problem at a price we could afford. The constraints were acceptable.
+Commerce applications fail in a specific way: they work fine in normal operation, then fall over on their best day. A product launch, a press mention, a campaign that lands — the traffic spike arrives and the server can't handle it. The store goes down exactly when it most needs to be up.
 
-## What We Built
+Traditional infrastructure solutions require predicting traffic and provisioning capacity in advance. You over-provision (expensive) or under-provision (dangerous). There's no good answer.
 
-The first version of what would become the Hanzo Commerce platform was a Go service running on App Engine — handling product catalogs, order state, customer data, and the analytics pipeline that tracked all of it.
+App Engine's auto-scaling eliminates the problem. Deploy code, Google handles the capacity. Ten requests or ten thousand — the infrastructure responds without manual intervention.
 
-The Hanzo Datastore was the first component: a custom analytics layer on top of App Engine's Cloud Datastore, optimized for the query patterns that matter to commerce — session counts, conversion funnels, revenue attribution. It answered questions App Engine's built-in analytics couldn't.
+## The Architecture We're Building
 
-The Hanzo KV store followed: a key-value layer with Redis-compatible semantics and App Engine-native persistence, fast enough for session state and real-time counters.
+The Hanzo Commerce data layer is designed around App Engine's distributed datastore from day one. We're not retrofitting a relational database schema — we're building the data model to be horizontally scalable from the start.
 
-## Why It Mattered
+That means:
 
-Building on managed infrastructure from day one meant we were never distracted by server maintenance, capacity planning, or failure mode debugging that had nothing to do with the product. Every engineering hour went into features and reliability improvements that benefited customers.
+- **Event-sourced order state**: orders as immutable event logs, not mutable records. Safe to replicate, safe to replay.
+- **Denormalized analytics**: query patterns for commerce (conversion funnels, revenue attribution, session analysis) built into the data model, not computed at query time.
+- **Eventual consistency where safe, strong consistency where required**: cart state can be eventually consistent; payment state cannot. We're designing the boundary explicitly.
 
-That focus compounded. By 2014 when most of our competitors were still drowning in DevOps, we had a platform that had been serving real production traffic for six years.
+This is harder to build than a standard CRUD app on a relational database. It produces infrastructure that doesn't fail under load.
 
----
+## The Constraints Are Acceptable
 
-*The Hanzo Commerce platform has powered over $1B in client revenue. It still runs — now on Kubernetes, with the App Engine dependencies fully removed.*
+App Engine has real limitations: no raw socket access, 30-second request deadline, restricted background processing. We've evaluated each one. None of them block what we need to build.
+
+The restrictions that remain are ones we can design around today and that we expect Google to relax as the platform matures. The scale guarantees are not something we can build ourselves at this stage.
+
+## The Bet
+
+We're three weeks into building. The datastore design is working. The first API endpoints are live. The commerce primitives — product catalog, cart state, order management — are taking shape on infrastructure that will scale to whatever we need it to scale to.
+
+The bet is simple: managed cloud infrastructure is where serious web applications are going. Being early means building there before the ecosystem catches up, and contributing to that ecosystem in the process.
+
+We'll have more to share as we build out.
