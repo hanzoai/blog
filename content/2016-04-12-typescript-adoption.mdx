@@ -1,0 +1,88 @@
+---
+title: "Adopting TypeScript for the SDK in 2016"
+date: "2016-04-12"
+author: "Zach Kelling"
+tags: ["typescript", "sdk", "javascript", "types", "developer-experience"]
+description: "We added TypeScript to the Hanzo SDK in April 2016. Strict mode, interface design, and the honest cost-benefit of type safety in a fast-moving codebase."
+---
+
+# Adopting TypeScript for the SDK in 2016
+
+TypeScript 1.8 shipped in February 2016. By April we had adopted it for the Hanzo SDK. This was not a full rewrite — we added TypeScript incrementally, starting with type declarations for the public API surface. The story of how that went is more nuanced than "TypeScript is great, we adopted it."
+
+## Why 2016 Was the Right Time
+
+TypeScript had existed since 2012. We had evaluated it in 2014 and decided against it. The reasons in 2014: the ecosystem was immature, DefinitelyTyped had incomplete coverage of the npm packages we depended on, and the tooling integration with our build pipeline was poor.
+
+By 2016 these objections had partially dissolved. DefinitelyTyped had grown substantially. The VSCode editor (then in preview, released fully in November 2015) had excellent TypeScript integration. The TypeScript compiler was fast enough not to add meaningful latency to the build.
+
+The remaining question was: does the type safety benefit justify the overhead of maintaining types alongside code?
+
+## Starting with Declaration Files
+
+We did not rewrite the SDK from JS to TS immediately. We started by writing `.d.ts` declaration files for the existing JavaScript. This gave TypeScript users of the SDK the IDE experience — autocomplete, inline documentation, type errors when they passed wrong arguments — without requiring us to refactor the implementation.
+
+The declaration file for the Client class:
+
+```typescript
+export interface ClientOptions {
+  key: string;
+  secret?: string;
+  endpoint?: string;
+  currency?: string;
+}
+
+export interface Order {
+  id: string;
+  status: 'pending' | 'paid' | 'fulfilled' | 'cancelled';
+  lineItems: LineItem[];
+  total: number;
+  currency: string;
+  createdAt: string;
+}
+
+export class Client {
+  constructor(opts: ClientOptions);
+  order(data: Partial<Order>): Promise<Order>;
+  getOrder(id: string): Promise<Order>;
+  payment(orderId: string, token: string): Promise<PaymentResult>;
+}
+```
+
+Writing these declarations exposed design problems we had not noticed in the JavaScript. The `opts` parameter for several methods was typed as `any` in practice — you could pass anything and the runtime would ignore unknown fields. Formalizing the interface forced us to decide: was `currency` required or optional? What were the valid values for `status`? These were decisions we had made implicitly in documentation; TypeScript made us make them explicitly in code.
+
+## Strict Mode
+
+TypeScript's `strict` flag enables a set of strictness checks that are off by default: `noImplicitAny`, `strictNullChecks`, `strictFunctionTypes`, and others.
+
+`strictNullChecks` was the one that changed our thinking most. In non-strict TypeScript, `null` and `undefined` are assignable to every type. In strict mode, a function that returns `string` cannot return `null` — it must return `string | null` if null is a possibility. This sounds annoying and initially it was. Every function that might return null — fetching a record that might not exist, looking up an optional field — needed to declare the nullability explicitly.
+
+The payoff was catching an entire class of runtime errors at compile time. The SDK had several functions that returned the result of an API call or `null` on error, and calling code that did not check for null before accessing properties. `strictNullChecks` made these bugs visible before runtime.
+
+We adopted strict mode. It added about two weeks to the migration because of the null-checking work required. Worth it.
+
+## Interface Design Under Type Constraints
+
+The type system changed how we designed interfaces. Before TypeScript, adding a new optional property to an API response was invisible in the SDK — you just started returning it and clients could access it. With TypeScript, new properties that were not declared in the interface were invisible to typed clients (TypeScript's `excess property checking` would warn if you tried to set an undeclared property, but accessing them was silently allowed for existing declared types).
+
+This forced better versioning discipline. When we added new fields to the `Order` type, we needed to update the declaration file. This was more work but meant our declaration files were accurate documentation of the API surface.
+
+## The Cost
+
+**Compilation step.** TypeScript adds a compilation step. `tsc` must run before you can execute the code. In 2016 the incremental compilation was not as fast as today. A clean build of the SDK took about 8 seconds. With watch mode this was fine for development. For CI it added time.
+
+**Type declaration maintenance.** Every external library we used needed types. For libraries without DefinitelyTyped declarations, we wrote our own stubs. We maintained perhaps 400 lines of type stubs for dependencies. This was overhead that did not exist in pure JavaScript.
+
+**Contributor friction.** Open-source contributors to the SDK who were comfortable with JavaScript but not TypeScript now faced an unfamiliar toolchain. We documented the build process carefully and provided a `--noEmit` mode for running type checks without generating output, but the barrier was higher than it had been.
+
+## The Net Result
+
+SDK consumer support tickets fell by approximately 20% in the six months after publishing the TypeScript declarations. The tickets that disappeared were of the form "I'm passing X to method Y and getting an error" — issues that the type checker now caught before the code ran.
+
+The internal development velocity change was harder to measure but felt positive. Refactoring was safer because the type checker caught places where the refactored code was inconsistent with callers.
+
+We would not go back to untyped JavaScript for the SDK.
+
+---
+
+*Hanzo SDK TypeScript declarations shipped in April 2016. The implementation was progressively migrated to TypeScript through Q3 2016. Strict mode was enabled from the start.*

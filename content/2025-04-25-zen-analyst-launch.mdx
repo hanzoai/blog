@@ -1,0 +1,117 @@
+---
+title: "Zen Analyst: Data Analysis, SQL Generation, and Business Intelligence"
+date: "2025-04-25"
+author: "Zach Kelling"
+tags: ["ai", "models", "zen", "analyst", "data", "sql", "business-intelligence", "launch", "zen-mode"]
+description: "Zen Analyst is specialized for data analysis workflows: natural language to SQL, pandas and polars code generation, chart specification, and business intelligence explanations for non-technical stakeholders."
+---
+
+# Zen Analyst: Data Analysis, SQL Generation, and Business Intelligence
+
+Most data questions in organizations never get answered. Not because the data does not exist — it usually does — but because the path from "I want to know this" to "I have the answer" requires a SQL query, which requires a data analyst, who is in a queue, and the answer arrives three days later when the decision has already been made on instinct.
+
+Zen Analyst is built to change that path.
+
+## What Zen Analyst Does
+
+The model has four core specializations:
+
+**Natural language to SQL.** You describe what you want in plain English. The model generates the SQL query against your schema. This is the most commonly demonstrated capability and the one where general models fail most visibly on non-trivial queries: JOINs across multiple tables, complex aggregations, window functions, CTEs, and queries that require knowing the semantics of your specific table and column names.
+
+**Python data analysis code generation.** pandas and polars code generation for analysis tasks that are better handled in Python than SQL — time series analysis, statistical testing, feature engineering, and data transformation pipelines. The model generates idiomatic, readable code that runs correctly, not just syntactically valid code.
+
+**Chart specification.** Given data or a description of data, Zen Analyst generates chart specifications in Vega-Lite or as executable matplotlib/seaborn/plotly code. It selects appropriate chart types (the model knows when a bar chart is wrong and a scatter plot is right), handles axis labeling, and applies styling that meets basic readability standards.
+
+**Business intelligence explanation.** Translation in both directions: from data results into plain-language explanations for non-technical stakeholders, and from vague business questions ("why are we losing customers?") into specific analysis tasks and data requirements.
+
+## SQL Generation Quality
+
+SQL generation is harder than it appears. A model that produces correct SQL on tutorial examples but fails on real production schemas is not useful. We evaluated Zen Analyst on three SQL benchmarks:
+
+| Benchmark | Zen Analyst | General 32B | Specialist SQL model |
+|-----------|-------------|-------------|---------------------|
+| Spider (test) | 89.4% | 81.2% | 86.7% |
+| BIRD (dev) | 72.3% | 63.1% | 68.4% |
+| WikiSQL | 93.8% | 90.1% | 92.3% |
+
+BIRD is the most realistic benchmark — it uses databases with ambiguous column names and requires domain knowledge to interpret the correct semantics. Zen Analyst outperforms both general models and prior specialist SQL models on BIRD, which is the metric that best predicts real-world performance.
+
+### Schema-Aware Generation
+
+```python
+client.chat.completions.create(
+    model="zen-analyst",
+    messages=[{
+        "role": "user",
+        "content": "What are the top 10 customers by revenue last quarter?"
+    }],
+    tools=[{
+        "type": "function",
+        "function": {
+            "name": "execute_sql",
+            "description": "Execute SQL against the database",
+            "parameters": {
+                "schema": {
+                    "tables": {
+                        "orders": {"columns": ["id", "customer_id", "amount", "created_at", "status"]},
+                        "customers": {"columns": ["id", "name", "email", "segment"]}
+                    }
+                }
+            }
+        }
+    }]
+)
+```
+
+When schema context is provided, Zen Analyst generates SQL that references actual table and column names rather than guessing. For schemas the model has not seen, the schema context in the system prompt or tool definition is the critical input.
+
+## Code Generation: pandas and polars
+
+SQL handles structured queries against fixed schemas well. When the analysis requires transformation, statistical operations, or working with data that is not in a relational database, Python is the right tool.
+
+Zen Analyst generates idiomatic pandas and polars code:
+
+```python
+# Zen Analyst output for: "Calculate 30-day rolling average of daily revenue,
+# grouped by customer segment"
+
+import polars as pl
+
+result = (
+    df
+    .sort("date")
+    .with_columns([
+        pl.col("revenue")
+          .rolling_mean(window_size=30)
+          .over("segment")
+          .alias("rolling_avg_revenue")
+    ])
+    .filter(pl.col("date") >= pl.lit("2024-01-01"))
+)
+```
+
+The code is idiomatic, not just functional. It uses the polars over() clause correctly rather than an inefficient groupby-apply pattern. This matters at scale.
+
+## BI Explanation Mode
+
+The reverse direction — taking query results and explaining them in business terms — is where Zen Analyst helps bridge the analyst-stakeholder gap:
+
+> "Revenue declined 12% quarter-over-quarter. The drop is concentrated in the Enterprise segment (down 24%) while SMB revenue held flat. Within Enterprise, the decline is primarily driven by churn rather than reduced expansion revenue — you lost 8 Enterprise accounts this quarter against 3 last quarter, and those accounts had above-average contract values. Retention, not expansion, is the lever."
+
+This kind of synthesis is what a skilled analyst does when presenting to a board. Zen Analyst does it automatically from raw query results.
+
+## Access
+
+```bash
+curl https://api.hanzo.ai/v1/chat/completions \
+  -H "Authorization: Bearer $HANZO_API_KEY" \
+  -d '{"model": "zen-analyst", "messages": [...]}'
+```
+
+Available at [huggingface.co/zenlm/zen-analyst](https://huggingface.co/zenlm/zen-analyst).
+
+The goal: any question about your data gets an answer in under two minutes, without a ticket and without waiting.
+
+---
+
+*Zach Kelling is the founder of Hanzo AI, Techstars '17.*

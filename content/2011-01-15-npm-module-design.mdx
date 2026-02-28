@@ -1,0 +1,63 @@
+---
+title: "Designing npm Modules for Commerce: Separation at the Package Level"
+date: "2011-01-15"
+author: "Zach Kelling"
+tags: ["npm", "javascript", "architecture", "open-source", "engineering", "history"]
+description: "How we structured the Hanzo commerce SDK as separate npm packages in 2011, and why monolithic SDKs were the wrong pattern."
+---
+
+# Designing npm Modules for Commerce: Separation at the Package Level
+
+By January 2011, npm had been live for a year and the Node.js ecosystem was starting to stabilize. The registry had grown from a handful of packages to several thousand. The early conventions for how to structure npm packages were being established in practice rather than by decree.
+
+We had already split the Hanzo commerce SDK into logical modules — coin.js for currency, shop.js for storefront, checkout.js for payment flow. The question was how to publish these: as one npm package with multiple entry points, or as separate packages with independent versioning.
+
+## The Case for Separate Packages
+
+The argument for separate packages was simple: your users should not have to download code they do not use.
+
+A developer building only the checkout flow for a custom storefront did not need shop.js. A developer using Hanzo currency handling in a non-commerce application did not need checkout.js. A monolithic SDK forces every user to take every dependency.
+
+In 2010 and 2011 this mattered more than it does today. npm install was slow. Bandwidth was not free. A 400KB SDK download was non-trivial in a world where broadband was less universal and mobile development was becoming real. More importantly, the test surface of each package was bounded: a bug in shop.js did not require republishing checkout.js.
+
+We published:
+- `hanzo-core` — shared utilities, EventEmitter, request handling
+- `hanzo-api` — HTTP API client, authentication
+- `hanzo-cart` — cart state management
+- `coin.js` — currency arithmetic (published independently because it had value outside Hanzo)
+- `shop.js` — product catalog and storefront
+- `checkout.js` — checkout flow and payment form
+
+Each package had its own `package.json`, its own version number, its own changelog, and its own test suite. `hanzo-cart` depended on `hanzo-core` and `coin.js`. `checkout.js` depended on `hanzo-cart` and `hanzo-api`.
+
+## The Dependency Graph Problem
+
+Separate packages with declared dependencies exposed a problem npm was still working through in early 2011: version conflicts in the dependency tree.
+
+If `checkout.js` required `hanzo-core@1.2.x` and `shop.js` required `hanzo-core@1.1.x`, you had a conflict. npm's resolution strategy at the time was less sophisticated than it is now. In some cases it would install both versions in different subtrees; in others it would fail.
+
+We addressed this by treating the Hanzo package family as a versioned unit: all packages in the family had the same major and minor version. `coin.js` was the exception — it had no Hanzo dependencies and versioned independently.
+
+This was a manual coordination requirement. When we bumped `hanzo-core` to `1.3.0`, every package that depended on it needed a release that updated that dependency. We wrote a release script that handled this. It was not elegant but it worked.
+
+## Peer Dependencies
+
+npm's `peerDependencies` field did not exist yet in early 2011 (it was added in npm 1.2 in 2012). Without it, shared dependencies that were expected to be provided by the consumer — like a jQuery plugin that assumed jQuery was already present — had to be handled by convention and documentation rather than by the package manager.
+
+The `hanzo-cart` package expected the EventEmitter implementation to be provided. In Node.js environments, this was the built-in EventEmitter. In browser environments, it was our lightweight browser EventEmitter. We handled this with a conditional require:
+
+```javascript
+var EventEmitter = typeof require !== 'undefined' && require.resolve('events')
+  ? require('events').EventEmitter
+  : window.EventEmitter;
+```
+
+This was inelegant. Browserify, which arrived in 2011, eventually made this cleaner by providing Node.js built-in shims for the browser. But in early 2011, handling the node/browser duality in npm packages was an unsolved problem that every package author worked around differently.
+
+## What We Got Right
+
+The separate package approach paid off over time. `coin.js` became independently useful to developers who had no interest in the rest of the Hanzo SDK. The small, focused packages were easier to understand, easier to contribute to, and easier to evaluate for security review than a monolith.
+
+The explicit dependency declarations — even with their versioning coordination overhead — made the SDK's internal architecture visible and auditable. Every `require()` in the codebase pointed to a named, versioned dependency.
+
+That visibility was worth the overhead.

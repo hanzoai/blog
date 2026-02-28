@@ -1,0 +1,74 @@
+---
+title: "CDN and Edge Delivery for Commerce: What You Can Cache and What You Can't"
+date: "2015-12-10"
+author: "Zach Kelling"
+tags: ["cdn", "cloudflare", "performance", "commerce", "caching"]
+description: "Product images and JS bundles belong at the edge. Checkout belongs nowhere near it. The distinction matters more than most commerce engineers realize."
+---
+
+# CDN and Edge Delivery for Commerce: What You Can Cache and What You Can't
+
+In late 2015 we had moved most of our static assets to Cloudflare. This is the story of what that decision involved, what worked, and the near-disaster of nearly putting checkout behind a CDN cache.
+
+## Cloudflare in 2015
+
+Cloudflare's free tier had launched in 2010 and their pro/business tiers were well-established by 2015. Their CDN was legitimately good — 30+ PoPs globally, anycast routing, and a reverse proxy model that required no changes to your origin server setup beyond a DNS change.
+
+The features we used in 2015: CDN for static assets, DDoS protection (which mattered during peak commerce events — flash sales attracted scraper traffic), and their early Workers product was just becoming available in private beta.
+
+What Cloudflare could not do in 2015: per-request logic at the edge. Their Workers product changed this eventually, but in 2015 the CDN was a pure caching and routing layer. The sophistication was in what you chose to cache and how.
+
+## The Three Categories of Commerce Assets
+
+**Static assets: always cache, long TTL.** JavaScript bundles, CSS files, fonts, and the Hanzo SDK — these were versioned by content hash in the filename (`hanzo-sdk.a3f8c2.min.js`). Infinite TTL. The hash changes on every deploy, so cache busting is automatic. A CDN hit serving these from an edge node 20ms from the user is strictly better than a cache miss hitting our origin in a US datacenter.
+
+Image processing was the bigger win. Product images — multiple sizes, WebP and JPEG variants — were stored in S3, served via a CloudFront distribution (later migrated to Cloudflare), and cached at the edge with a 30-day TTL. The origin was never hit for a repeat visitor viewing a product image they had seen before. At scale, product images account for 60-80% of page weight and a significant fraction of origin requests. Eliminating those was meaningful.
+
+**Cacheable HTML pages: cache with short TTL and cache-busting strategy.** Category pages, product listing pages, even product detail pages for items with no personalized content — these could be cached at the edge for 5-60 minutes with Stale-While-Revalidate semantics. Not appropriate for personalized pages (cart contents, recommendations based on account history) but fine for the top of funnel.
+
+The Stale-While-Revalidate approach was important: serve the cached version immediately and refresh the cache in the background. This meant edge cache misses did not translate to user-visible latency spikes.
+
+**Checkout: never cache, at the edge or anywhere else.** This is where the near-disaster occurred.
+
+## The Checkout Caching Mistake We Almost Made
+
+A client asked why their checkout page load was slow. It was — about 900ms TTFB from the US West Coast to their origin in US East. The obvious answer, based on the success we had caching everything else, was "put it behind the CDN."
+
+We almost did it. The request was to add Cloudflare in front of the checkout domain.
+
+The problem: checkout pages are not idempotent. The checkout flow involves:
+
+- Session-bound cart state (specific to this user, this device, this session)
+- CSRF tokens (must be fresh per form load, cannot be reused)
+- Price calculations that may change between the time a user adds to cart and the time they hit the pay button (inventory, promotions, tax calculation based on shipping address)
+- Payment tokenization requests that create server-side intent objects tied to specific amounts
+
+If you cache a checkout page, you might serve a user someone else's CSRF token, someone else's cart state, or a stale price for an item that changed. In the worst case, you could serve payment intent data from a previous user's session.
+
+We did not implement the CDN for checkout. Instead we:
+
+1. Moved the checkout origin to a US West Coast datacenter (reducing TTFB by ~300ms for that client's user base)
+2. Improved server-side rendering time (the 900ms was partly origin latency and partly a slow rendering path)
+3. Prefetched the checkout page in the background when the user added their first item to cart, so by the time they clicked checkout, the page was already warm
+
+The prefetch approach gave the user-perceived performance improvement without the safety risks of caching.
+
+## Cache-Control Headers
+
+Getting Cache-Control headers right is an operational discipline. The common mistakes:
+
+- Setting `Cache-Control: public, max-age=86400` on dynamically generated pages (caches a specific user's page for 24 hours, serves it to every subsequent visitor)
+- Not setting `Vary: Accept-Encoding` on compressed assets (causing uncompressed responses to be served from cache to clients that accept gzip)
+- Setting `Cache-Control: no-cache` when you mean `no-store` (no-cache means "check with origin before serving"; no-store means "don't store this at all")
+
+We standardized on:
+- Static assets with content-hash in filename: `Cache-Control: public, max-age=31536000, immutable`
+- Product images: `Cache-Control: public, max-age=2592000` (30 days)
+- API responses with JSON data: `Cache-Control: private, max-age=0, no-store`
+- HTML pages: case-by-case, but defaulting to `Cache-Control: no-store` unless explicitly reviewed
+
+The `immutable` directive (telling the browser not to revalidate even on hard refresh) was new in 2015 and not yet widely supported, but Firefox had it and Chrome was adding it. We used it on the content-hash-named assets.
+
+---
+
+*Hanzo completed the Cloudflare CDN migration for static assets in Q4 2015. Checkout pages remained on direct origin delivery. The prefetch pattern for checkout warm-up was implemented for high-traffic clients in the same period.*

@@ -1,0 +1,92 @@
+---
+title: "Zen Science: AI for Research, Hypothesis Generation, and Literature Synthesis"
+date: "2024-11-15"
+author: "Zach Kelling"
+tags: ["ai", "models", "zen", "science", "research", "launch", "zen-mode"]
+description: "Zen Science is trained on a deep scientific corpus including PubMed, arXiv, and patent databases, enabling hypothesis generation, experimental design support, and cross-domain literature synthesis."
+---
+
+# Zen Science: AI for Research, Hypothesis Generation, and Literature Synthesis
+
+Science is cumulative and increasingly fast. A researcher in computational biology needs to track developments in machine learning, structural biology, genomics, and chemistry simultaneously. No individual can read everything relevant to their field. The literature is enormous, cross-disciplinary, and growing at a rate that makes staying current a full-time job that competes with doing actual research.
+
+Zen Science was built for this environment. A large model with deep scientific corpus training, optimized for the specific tasks that researchers actually need: synthesizing literature, connecting findings across domains, generating hypotheses, and supporting experimental design.
+
+## Scientific Corpus Training
+
+Standard LLM training corpora include scientific text, but not at the depth or quality that scientific reasoning requires. Web-crawled scientific text is noisy: preprints without peer review, popular science summaries that lose nuance, retracted papers treated as valid, and text from behind paywalls scraped at low quality.
+
+Zen Science's training corpus was constructed to address this:
+
+**PubMed full-text**: 4.2M papers with full text, not just abstracts. Full methodology sections, results, and supplementary material. Filtered to remove retracted papers and papers with major post-publication corrections.
+
+**arXiv**: 2.1M papers across physics, mathematics, computer science, quantitative biology, statistics, and economics. Full LaTeX source, which preserves mathematical notation better than rendered PDF extraction.
+
+**Patents**: 8.4M scientific patents from USPTO, EPO, and WIPO. Patents are underused scientific text — they contain detailed mechanistic descriptions and claims that are distinct from journal article writing.
+
+**Textbooks**: A curated set of university-level textbooks spanning 22 scientific disciplines. Textbook knowledge is pedagogically structured, which provides a different perspective on scientific content than research papers.
+
+**Clinical trials**: ClinicalTrials.gov full records, including protocol documents, results, and adverse events.
+
+Total scientific corpus: approximately 290B tokens of high-quality scientific text.
+
+## Capabilities
+
+### Literature Synthesis
+
+Given a research question, Zen Science synthesizes relevant findings from across its training corpus. This is not citation retrieval — it is integration: identifying where findings agree, where they conflict, what the current consensus is, and where the genuine open questions lie.
+
+The model is explicit about uncertainty. When evidence is mixed, it reports the state of the evidence rather than picking a side.
+
+### Hypothesis Generation
+
+This is the capability researchers find most novel. Given a set of observations, experimental constraints, and a research direction, Zen Science generates candidate hypotheses ranked by:
+
+1. Consistency with existing evidence
+2. Novelty (not just restatements of known results)
+3. Testability (the hypothesis must be falsifiable with realistic experiments)
+4. Mechanistic specificity (vague hypotheses are less useful)
+
+Generated hypotheses come with explicit reasoning chains so researchers can evaluate the logic, not just the conclusion.
+
+### Experimental Design Support
+
+"I want to test whether compound X inhibits pathway Y in cell type Z. What controls do I need?" Zen Science reasons through experimental design: appropriate controls, sample sizes based on expected effect sizes, potential confounders, and protocol considerations specific to the cell type and assay.
+
+It is not a protocol generator for specific equipment — for that, specialized laboratory automation tools exist. It is a reasoning assistant for the design phase.
+
+### Cross-Domain Connection
+
+The most valuable scientific insights often come from recognizing that a technique or finding from one field applies to a problem in another field. Zen Science was evaluated specifically on cross-domain transfer tasks — questions that require connecting findings across disciplines. It performs significantly better than models not trained with deep scientific corpus coverage, where cross-domain connections require integrating knowledge that may be physically separated in the training distribution.
+
+## Benchmarks
+
+| Benchmark | Zen Science | General 72B |
+|-----------|-------------|-------------|
+| GPQA Diamond (Science) | 74.2% | 58.3% |
+| MedQA (USMLE) | 81.6% | 72.4% |
+| PubMedQA | 79.3% | 68.7% |
+| SciQ | 95.8% | 93.1% |
+| ARC Challenge | 91.7% | 87.2% |
+
+## What Zen Science Is Not
+
+Zen Science is not a search engine over scientific papers. It does not retrieve papers, cite specific papers by DOI, or provide guaranteed current knowledge on active research areas. Its training corpus has a knowledge cutoff, and fast-moving fields will have developments the model does not know.
+
+For tasks requiring citations and current literature, use Zen Science in combination with a RAG pipeline that can retrieve recent papers and provide them as context.
+
+Zen Science does not perform experiments, access laboratory systems, or connect to databases. It is a language model reasoning tool, not a laboratory information system.
+
+## Access
+
+```bash
+hf download zenlm/zen-science
+```
+
+API: `api.hanzo.ai/v1/chat/completions`, model `zen-science`.
+
+Co-developed with Zoo Labs Foundation, whose DeSci (Decentralized Science) initiative focuses on open scientific infrastructure.
+
+---
+
+*Zach Kelling is the founder of Hanzo AI, Techstars '17.*

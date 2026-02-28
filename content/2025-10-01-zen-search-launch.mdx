@@ -1,0 +1,111 @@
+---
+title: "Zen Search: A Model Built for Retrieval-Augmented Generation"
+date: "2025-10-01"
+author: "Zach Kelling"
+tags: ["ai", "models", "zen", "search", "rag", "retrieval", "launch", "zen-mode"]
+description: "Zen Search is optimized for RAG pipelines: low hallucination rates, citation-grounded answers, and training specifically for working with retrieved context rather than relying on memorized knowledge."
+---
+
+# Zen Search: A Model Built for Retrieval-Augmented Generation
+
+Retrieval-Augmented Generation (RAG) is one of the most widely deployed AI patterns in production today. The premise is simple: instead of relying on knowledge memorized during training, retrieve relevant documents at query time and provide them to the model as context. The model generates an answer grounded in those documents.
+
+The problem is that most models are not trained to do this well. They were trained to answer questions from memory. When you give them retrieved documents as context, they do one of two things: they ignore the context and answer from memorized knowledge (hallucinating confidently when the context contradicts their prior), or they copy from the context poorly without synthesizing it usefully.
+
+Zen Search is trained specifically for RAG. The context is not an afterthought — working with retrieved evidence is the primary task.
+
+## Training for Retrieval
+
+Zen Search's training dataset was constructed around retrieval scenarios. Every training example has the structure:
+
+1. A question or task
+2. A set of retrieved passages (some relevant, some partially relevant, some irrelevant)
+3. A correct answer that is grounded in the relevant passages
+
+The model learns three things from this:
+
+**Evidence selection.** Given ten retrieved passages, which ones actually support an answer to this question? The model learns to identify genuinely relevant passages rather than treating all retrieved context equally.
+
+**Faithful synthesis.** How do you synthesize an answer that is faithful to what the passages actually say? Not what you know from training, not what sounds plausible — what the evidence specifically supports.
+
+**Uncertainty expression.** When the retrieved passages do not contain enough information to answer the question confidently, say so explicitly. This is harder than it sounds: most models will confabulate an answer rather than admit the retrieved context is insufficient.
+
+## Hallucination Rates
+
+We measure hallucination in RAG specifically: cases where the model generates claims that are not supported by the provided context. This is distinct from factual accuracy (claims that contradict ground truth) — we care specifically about faithfulness to context.
+
+| Model | Faithfulness (TruLens) | Context Precision | Answer Relevance |
+|-------|----------------------|-------------------|-----------------|
+| Zen Search | 94.7% | 91.3% | 93.2% |
+| Zen Pro (general) | 88.2% | 84.7% | 89.1% |
+| Baseline 70B | 83.6% | 79.4% | 85.7% |
+
+Faithfulness measures whether claims in the answer are supported by retrieved context. At 94.7%, Zen Search generates unsupported claims 5.3% of the time. That is low but not zero — it should not be used for high-stakes applications without output validation.
+
+## Citation Grounding
+
+Zen Search supports citation mode, where every substantive claim in the answer is attributed to a specific source passage:
+
+```python
+response = client.chat.completions.create(
+    model="zen-search",
+    messages=[{
+        "role": "user",
+        "content": "What is the company's refund policy?"
+    }],
+    extra_body={
+        "documents": [
+            {"id": "policy-v3", "text": "Refunds are accepted within 30 days..."},
+            {"id": "faq-2024", "text": "For damaged items, refunds are processed..."}
+        ],
+        "citation_mode": "inline"
+    }
+)
+```
+
+Output includes `[policy-v3]` style inline citations that map claims to specific source documents. This enables downstream validation and supports user-facing UIs that want to show "source" links alongside AI answers.
+
+## RAG Pipeline Optimization
+
+Zen Search is designed to work well with imperfect retrieval. Production RAG pipelines do not always retrieve the perfect documents. Zen Search handles:
+
+**Noisy context**: When some retrieved passages are irrelevant, the model identifies and ignores them rather than incorporating noise.
+
+**Conflicting context**: When retrieved passages disagree, the model flags the conflict rather than silently choosing one.
+
+**Sparse context**: When retrieved passages cover the topic only partially, the model answers what it can from context and explicitly flags what it cannot answer from the provided information.
+
+**Long context**: 128K context window accommodates large retrieval results. For typical enterprise RAG (10-20 chunked passages per query), the full results fit in a single context without truncation.
+
+## Integration with Zen Embedding
+
+Zen Search is designed to pair with Zen Embedding (our retrieval embedding model) for end-to-end RAG pipelines. The embedding model retrieves; the search model generates. Both were trained with compatible assumptions about chunking strategy, relevance signals, and passage formatting.
+
+```python
+from hanzo import RAGPipeline
+
+pipeline = RAGPipeline(
+    retriever_model="zen-embedding",
+    generator_model="zen-search",
+    vector_store="pgvector"
+)
+
+answer = pipeline.query(
+    "What does the contract say about termination?",
+    corpus_id="contract-docs-2024"
+)
+```
+
+## Access
+
+```bash
+hf download zenlm/zen-search
+```
+
+API: `api.hanzo.ai/v1/chat/completions`, model `zen-search`.
+
+The model that reads what you give it, answers from what it finds, and tells you when the answer is not in there.
+
+---
+
+*Zach Kelling is the founder of Hanzo AI, Techstars '17.*

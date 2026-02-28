@@ -1,0 +1,37 @@
+---
+title: "The First Enterprise Client: Learning What Large Scale Actually Means"
+date: "2010-09-20"
+author: "Zach Kelling"
+tags: ["enterprise", "scale", "commerce", "history", "customers"]
+description: "The first enterprise customer changed how we thought about scale, reliability, and what commerce infrastructure actually needed to do when the traffic wasn't a trickle."
+---
+
+# The First Enterprise Client: Learning What Large Scale Actually Means
+
+In 2010, Hanzo Commerce landed its first enterprise client. I won't name them — they were a well-known consumer brand, and the relationship was under NDA — but the technical requirements they brought were unlike anything we'd handled from small merchants.
+
+The volume: tens of thousands of transactions per day with traffic spikes around major marketing events. The reliability requirement: 99.9% uptime with sub-200ms API response times under load. The compliance requirement: PCI DSS Level 1 — the most stringent payment card data security standard.
+
+We had built the infrastructure to be scalable in theory. The enterprise client was the first real test of whether "in theory" and "in practice" were the same thing.
+
+## What We Had to Build
+
+**PCI Level 1 compliance.** Our existing infrastructure was PCI-compliant for smaller volumes. Level 1 required a formal QSA audit, network segmentation documentation, penetration testing, and a security operations process we didn't have formalized. It took four months and a security firm engagement to get there. Everything we learned in that process became standard for how we built infrastructure going forward.
+
+**Dedicated infrastructure.** The enterprise client required tenant isolation — their traffic on their own hardware, with capacity guarantees that multi-tenant infrastructure couldn't provide. We built the Hanzo dedicated infrastructure tier, which would later become Hanzo Enterprise, from this requirement.
+
+**SLA monitoring and reporting.** "99.9% uptime" isn't a number you can report on without instrumenting for it. We built the SLA tracking infrastructure — uptime calculation, P95/P99 latency reporting, error rate dashboards — to have the data to back up the commitments we were making.
+
+**Support escalation paths.** Enterprise clients have operations teams that need to reach a human when something breaks at 2am. We defined our support tiers, escalation procedures, and on-call rotation as a direct result of this client's requirements.
+
+## What We Learned
+
+The lesson wasn't that enterprise was harder. The lesson was that enterprise requirements, taken seriously, forced us to build things that made the entire platform better for everyone.
+
+PCI Level 1 compliance benefited every merchant on the platform — better security, better segmentation, better auditing. SLA monitoring helped us catch and fix issues that had been invisible before we instrumented for them. The dedicated tier gave us a revenue stream that funded infrastructure improvements that scaled down to the shared tier.
+
+Enterprise clients, when they have real standards, are the best product feedback mechanism available.
+
+---
+
+*The dedicated infrastructure tier built for this engagement became a standard offering. The PCI Level 1 certification was renewed annually from 2010 forward.*

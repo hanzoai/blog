@@ -1,0 +1,37 @@
+---
+title: "Hanzo ML v2: The Year the Models Actually Got Good"
+date: "2018-07-15"
+author: "Zach Kelling"
+tags: ["machine-learning", "ai", "recommendations", "nlp", "history", "research"]
+description: "In 2018, the Hanzo ML stack crossed a threshold — the models were better than what clients could build in-house, not just faster. The shift from 'convenient AI' to 'essential AI' changed our product positioning."
+---
+
+# Hanzo ML v2: The Year the Models Actually Got Good
+
+In 2018, something shifted. Not the technology — we'd been building the ML stack since 2012. What shifted was the performance gap between what Hanzo's models could do and what a reasonably well-resourced team could build independently.
+
+In 2015, the recommendation engine was better than manual curation. In 2016, it was better than simple collaborative filtering built in-house. In 2018, it was better than most purpose-built ML teams because of the training data scale — data from years of aggregate commerce events across hundreds of clients, in dozens of categories.
+
+## What Changed Technically
+
+**Transfer learning** became available as a practical technique. Instead of training models from scratch for each new client, we could fine-tune a base model on the collective dataset and adapt it to a new client's catalog in hours. Cold start — the period before a new merchant's model has enough data to be accurate — compressed from months to days.
+
+**The NLP models.** The copy generation system in 2015 used LSTMs. In 2018, we rebuilt it on the Transformer architecture (Attention Is All You Need was published in 2017 — we implemented our version within a year). The quality improvement was immediate and obvious: longer-range coherence, better handling of brand voice, more accurate response to training signal about what linguistic patterns drove conversion.
+
+**Multi-task learning.** The recommendation model and the conversion optimization model had been trained separately. We combined them into a single multi-task model that shared representations between the two objectives. The result: better recommendations (because the conversion signal informed which recommendations to surface) and better conversion optimization (because the item embedding informed the copy model).
+
+## The Positioning Shift
+
+Before 2018, we could tell clients "our AI will save you time." After 2018, we could tell clients "our AI will outperform your in-house alternatives." Those are different conversations.
+
+The first conversation is about efficiency. The second conversation is about capability. The second is harder to sell — it requires clients to accept that a third-party system can be better than their internal team — but when clients accepted it, the relationship was stickier and the ROI was more defensible.
+
+## The Data Network Effect
+
+The 2018 models were better not primarily because we had better algorithms. They were better because we had more and more varied training data. The data network effect — more clients → more data → better models → more clients — was compounding.
+
+This dynamic is what ultimately defines the ceiling for standalone AI products. A single brand's behavioral data, no matter how well-instrumented, will always be narrower than the aggregate of hundreds of brands in related categories. The platform with the broadest data scope wins on model quality, eventually, even if it starts behind on algorithm sophistication.
+
+---
+
+*Hanzo ML v2 shipped across all production environments in Q3 2018. The multi-task architecture established in that release is the foundation of the current Hanzo AI stack.*

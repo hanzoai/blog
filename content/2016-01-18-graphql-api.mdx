@@ -1,0 +1,88 @@
+---
+title: "Evaluating GraphQL for the Commerce API in 2016"
+date: "2016-01-18"
+author: "Zach Kelling"
+tags: ["graphql", "api", "rest", "commerce", "backend"]
+description: "GraphQL was brand new in 2016. We spent two months evaluating it for the Hanzo commerce API before deciding to keep REST for payments and adopt GraphQL selectively."
+---
+
+# Evaluating GraphQL for the Commerce API in 2016
+
+Facebook open-sourced GraphQL in July 2015. By early 2016 it had a JavaScript reference implementation, a handful of early adopters who were very loud about it on Twitter, and exactly zero production hardening in the commerce space.
+
+We spent two months evaluating it. This is what we found.
+
+## What GraphQL Promised
+
+The pitch was compelling. Our REST API had the classic over-fetching problem: the product endpoint returned 40 fields, but a mobile storefront needed 8 of them. Bandwidth mattered, especially for commerce clients with customers in emerging markets on 3G connections.
+
+It also had the under-fetching problem: to render a full product page you needed the product endpoint, the reviews endpoint, the inventory endpoint, and optionally the recommendations endpoint. Four round trips. GraphQL could collapse these into one.
+
+The type system was attractive for SDK generation. A GraphQL schema is machine-readable. You could generate client-side type bindings from the schema automatically, which would have eliminated a class of bugs where our SDK was out of sync with the API response shape.
+
+## What We Built
+
+We built a GraphQL layer in front of the existing REST services using `graphql-js` (which was then at version 0.4) and `express-graphql`. The schema covered products, cart, and orders.
+
+The resolver structure was straightforward:
+
+```javascript
+const ProductType = new GraphQLObjectType({
+  name: 'Product',
+  fields: {
+    id: { type: GraphQLString },
+    title: { type: GraphQLString },
+    price: { type: GraphQLFloat },
+    inventory: {
+      type: InventoryType,
+      resolve: (product) => fetchInventory(product.id)
+    },
+    reviews: {
+      type: new GraphQLList(ReviewType),
+      resolve: (product) => fetchReviews(product.id)
+    }
+  }
+});
+```
+
+The field-level resolvers meant GraphQL would only fetch inventory and reviews if the client requested them. For a mobile client requesting only `id, title, price`, the inventory and review fetches would not execute. This was the over-fetching fix working as advertised.
+
+## The N+1 Problem
+
+What the demos did not emphasize: the N+1 query problem. If you queried a list of 20 products and included the `inventory` field, GraphQL would invoke the inventory resolver 20 times — once per product. Twenty separate HTTP calls to the inventory service.
+
+The fix in 2016 was DataLoader, an open-source library from Facebook that batched and cached resolver calls within a single request. DataLoader coalesced the 20 inventory fetches into one batched call. This worked but added complexity — every resolver that fetched from a data source needed to be written against a DataLoader instance.
+
+This was a non-trivial operational concern. Without DataLoader, GraphQL was actively worse than REST for any query that involved lists of items. With DataLoader, you recovered the performance but at the cost of a new abstraction every engineer needed to understand.
+
+## The Caching Problem
+
+REST APIs cache naturally. HTTP caching — Cache-Control headers, ETags, CDN edge caching — all operate at the URL level. `GET /v1/products/12345` is cacheable. CDNs understand it. Edge nodes cache it.
+
+GraphQL sends everything as `POST /graphql`. HTTP caching infrastructure does not know how to cache based on the request body. You lose HTTP-level caching entirely.
+
+In 2016 there were no mature solutions to this. Persisted queries (sending a hash of the query rather than the full text) were being discussed but not yet standardized. Apollo (the company) had not yet built the client-side caching that would eventually make GraphQL caching tractable.
+
+For commerce — where product pages are served to many users and caching at the CDN edge provides significant performance and origin-load benefits — losing HTTP caching was a real cost.
+
+## Why We Kept REST for Payments
+
+The payment and order endpoints stayed on REST. The reasons:
+
+**Idempotency keys.** The REST pattern for idempotency in payments is well-established: send a `Idempotency-Key` header on the request. Every payment provider, every bank integration, every audit trail tool understands this pattern. In GraphQL there is no equivalent standard. We would have needed to invent our own.
+
+**Audit trails.** Payment audit trails are logged at the HTTP level. URL, method, headers, request body, response status, response body, timestamp. With REST the audit log is a series of clean HTTP requests. With GraphQL it is a series of `POST /graphql` requests where the semantic meaning is buried in the body. This made compliance and audit review harder without tooling we did not have.
+
+**Tooling maturity.** In 2016, REST tooling — Postman, curl, standard HTTP monitoring — just worked. GraphQL tooling (GraphiQL was the main development tool) was good but not integrated into the operational tooling our clients' engineering teams were using.
+
+## The Verdict
+
+GraphQL for the storefront data API: yes, eventually. The over-fetching and round-trip problems were real and the field-selection and batching capabilities were the right solution. We held off in 2016 because the caching story was unresolved, but moved in this direction by 2017.
+
+GraphQL for the transaction/payment API: no. The benefits were smaller (payment mutations have one shape, over-fetching is not a concern), and the costs in idempotency, auditing, and tooling integration were higher.
+
+The decision was not "GraphQL vs REST" as a binary. It was: which API design fits which part of the problem?
+
+---
+
+*Hanzo's GraphQL evaluation ran from January to March 2016. The storefront query API began a phased GraphQL migration in late 2017. Payment and order mutation APIs remained REST throughout.*

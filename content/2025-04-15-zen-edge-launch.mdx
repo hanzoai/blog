@@ -1,0 +1,108 @@
+---
+title: "Zen Edge: 1.5B On-Device AI That Actually Works"
+date: "2025-04-15"
+author: "Zach Kelling"
+tags: ["ai", "models", "zen", "edge", "on-device", "mobile", "launch", "zen-mode"]
+description: "Zen Edge is a 1.5B model compiled for on-device inference on phones and embedded hardware. 4-bit quantized, MLC-compiled, and distilled from larger Zen models for quality that punches above its size."
+---
+
+# Zen Edge: 1.5B On-Device AI That Actually Works
+
+The cloud model assumption — that AI inference always runs on a server — is breaking down. Privacy-sensitive applications cannot send data off-device. Embedded systems cannot depend on network connectivity. Real-time applications need latency that physics prevents when a round trip to a data center is required.
+
+The challenge is that most small models are just bad. A 1.5B model trained from scratch has a knowledge ceiling. It hallucinates more, follows instructions less reliably, and produces lower-quality outputs than users expect from AI in 2025.
+
+Zen Edge solves this with distillation. The model is small. The knowledge inside it is not.
+
+## Architecture and Quantization
+
+Zen Edge is 1.5B parameters. At BF16, that is 3GB — too large for most phones. At INT4 (4-bit quantization using our quantization pipeline), it is 900MB. That fits in the memory budget of a mid-range Android phone from 2023.
+
+The quantization approach matters. Naive round-to-nearest 4-bit quantization degrades model quality significantly. Zen Edge uses a two-stage quantization process:
+
+1. **GPTQ calibration**: The quantization process is calibrated on a representative dataset so the rounding errors introduced by 4-bit compression are concentrated in the least-impactful weight positions.
+2. **BitDelta delta compression**: Adaptation weights (fine-tuning deltas from the base) are compressed separately using BitDelta (ZIP-007), keeping the base model quantization and the fine-tuning delta quantization at different precision levels.
+
+The result is a model where 4-bit quantization costs approximately 2-3% performance on standard benchmarks rather than 8-12% with naive quantization.
+
+## MLC Compilation
+
+Zen Edge is compiled with MLC (Machine Learning Compilation) to native code for each target platform. This is distinct from running a generic interpreter:
+
+- **iOS/macOS**: Compiled to Metal shaders, running on the GPU through Metal Performance Shaders
+- **Android**: Compiled to Vulkan compute shaders or OpenCL depending on device
+- **ARM embedded**: Compiled to NEON SIMD instructions for CPU inference
+- **x86 edge**: AVX-512 intrinsics for Intel/AMD embedded
+
+Pre-compilation eliminates the runtime compilation cost. The first inference call on a fresh install is fast. There is no JIT warmup period.
+
+## Distillation Pipeline
+
+The quality of a 1.5B model is fundamentally limited by its parameter count. But what knowledge is encoded in those 1.5B parameters is not fixed — distillation from a much larger teacher model (in Zen Edge's case, Zen Pro 32B) transfers learned representations that a 1.5B model cannot acquire from raw pretraining data alone.
+
+The distillation used a task-specific curriculum: the teacher model generated high-quality responses to a broad dataset of real-world tasks. The student model (Zen Edge) learned to approximate those responses. This is more effective than learning from human-written text directly because the teacher's outputs are consistently formatted, consistently high-quality, and cover distributions that are underrepresented in human-generated text.
+
+Post-distillation, Zen Edge was fine-tuned on mobile-specific use cases: voice assistant interactions, quick information lookup, on-device text editing assistance, and privacy-sensitive personal context applications.
+
+## Performance
+
+| Metric | Zen Edge 1.5B | Competitor 1.8B | Competitor 3.8B |
+|--------|-------------|----------------|----------------|
+| TTFT (iPhone 15 Pro) | 47ms | 82ms | 143ms |
+| Token/sec (iPhone 15 Pro) | 31 | 18 | 11 |
+| MMLU | 58.4 | 52.1 | 61.7 |
+| MT-Bench | 6.4 | 5.9 | 6.8 |
+| Memory footprint (INT4) | 900MB | 1.1GB | 2.4GB |
+| Battery drain per 1K tokens | 0.08% | 0.14% | 0.27% |
+
+Quality-per-watt is the right metric for on-device models. Zen Edge performs well against models in the 3-4B range when measured this way.
+
+## Privacy Properties
+
+When running on-device, Zen Edge processes data entirely locally. No network calls, no telemetry, no prompt logging. For applications with personal data — health information, private communications, financial records — this is a hard requirement, not a preference.
+
+The model itself contains no user data. It is a static artifact that does not update from usage. Each device runs an identical copy.
+
+## Integration
+
+```swift
+// iOS via MLC Swift SDK
+import MLCSwift
+
+let engine = MLCEngine()
+await engine.reload(modelPath: "zen-edge-q4", engineConfig: EngineConfig())
+
+for await chunk in await engine.chat.completions.create(
+    messages: [.init(role: "user", content: "Summarize this text: ...")],
+    model: "zen-edge",
+    stream: true
+) {
+    print(chunk.choices.first?.delta.content ?? "")
+}
+```
+
+```kotlin
+// Android via MLC Android SDK
+val engine = MLCEngine(context)
+engine.reload("zen-edge-q4")
+
+engine.chatCompletionStream(request).collect { chunk ->
+    print(chunk.choices.first()?.delta?.content ?: "")
+}
+```
+
+## Download
+
+Pre-compiled binaries for iOS and Android:
+
+```bash
+# Weights and compile scripts
+hf download zenlm/zen-edge
+hf download zenlm/zen-edge --include "*.bin"  # MLC pre-compiled
+```
+
+Build instructions at [zenlm.org/edge](https://zenlm.org/edge).
+
+---
+
+*Zach Kelling is the founder of Hanzo AI, Techstars '17.*

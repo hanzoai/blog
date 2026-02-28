@@ -1,0 +1,112 @@
+---
+title: "Zen Audit: Code Security and Smart Contract Analysis"
+date: "2025-10-10"
+author: "Zach Kelling"
+tags: ["ai", "models", "zen", "audit", "security", "smart-contracts", "launch", "zen-mode"]
+description: "Zen Audit is trained on CVE databases, audit reports, and vulnerability research to provide automated code security analysis and smart contract auditing with low false positive rates."
+---
+
+# Zen Audit: Code Security and Smart Contract Analysis
+
+Security vulnerabilities have a consistent property: they are obvious in hindsight. The SQL injection was right there. The reentrancy bug was straightforward once you drew the call graph. The off-by-one error was visible to any careful reader.
+
+The problem is finding them before exploitation rather than after. Automated static analysis catches simple patterns but misses semantic vulnerabilities. Manual audits are expensive, slow, and do not scale to the pace of modern software development. Zen Audit is built to fill the gap — an AI auditor that understands vulnerabilities semantically, not just syntactically.
+
+## Training Data
+
+Zen Audit's specialized training sits on top of a strong base model. The security-specific training corpus included:
+
+**CVE Database**: 200,000+ CVE entries with associated vulnerable code snippets, patches, and descriptions. The model learns to associate code patterns with specific vulnerability classes.
+
+**Audit Reports**: 4,800 professional security audit reports from public smart contract audits (Code4rena, Sherlock, Immunefi disclosures) and traditional software security advisories. These reports contain expert reasoning about why code is vulnerable — not just a finding, but the logic leading to it.
+
+**Vulnerability Research**: Security conference proceedings, academic papers on vulnerability discovery, and published exploit code (where legally redistributable). Understanding how vulnerabilities are exploited builds better intuition for where they hide.
+
+**Secure Code Examples**: Equally important — training on correctly implemented patterns helps the model distinguish vulnerable code from idiomatic safe code, reducing false positives.
+
+Total security corpus: approximately 40B tokens of high-signal security content.
+
+## Capabilities
+
+### Smart Contract Auditing
+
+Solidity and Vyper smart contract analysis with deep understanding of EVM semantics:
+
+- **Reentrancy**: Identifies patterns where external calls precede state updates, including cross-contract reentrancy
+- **Integer overflow/underflow**: Pre-Solidity 0.8 unchecked arithmetic and edge cases in SafeMath usage
+- **Access control**: Missing or incorrectly applied access modifiers, privilege escalation paths
+- **Oracle manipulation**: Flash loan attack vectors and price oracle assumptions
+- **Frontrunning**: Transaction ordering vulnerabilities in DEX and auction contracts
+- **Logic errors**: Incorrect reward calculations, fee-on-transfer token edge cases, precision loss
+
+### Traditional Code Security
+
+Language support: Python, Go, Rust, JavaScript/TypeScript, Java, C, C++, PHP, Ruby.
+
+Coverage includes OWASP Top 10, CWE/SANS Top 25, and language-specific vulnerability classes:
+
+- Injection (SQL, NoSQL, command, LDAP)
+- Broken authentication and session management
+- Sensitive data exposure
+- XML external entity processing
+- Deserialization vulnerabilities
+- Server-side request forgery
+- Cryptographic misuse
+
+### False Positive Rate
+
+False positives are the primary failure mode of security tooling — if every flag requires human review, the tool does not scale. We measured Zen Audit's false positive rate on a held-out set of 2,400 code samples with ground-truth vulnerability labels:
+
+| Vulnerability Class | True Positive Rate | False Positive Rate |
+|--------------------|-------------------|---------------------|
+| Reentrancy | 91.3% | 4.2% |
+| Integer overflow | 87.6% | 6.8% |
+| SQL injection | 95.1% | 3.1% |
+| SSRF | 83.4% | 8.7% |
+| Insecure deserialization | 79.2% | 11.3% |
+| Access control | 88.9% | 5.4% |
+
+These numbers are measured on realistic code, not textbook examples. Insecure deserialization has the highest false positive rate because the vulnerability depends heavily on context that is often outside the analyzed code snippet.
+
+## Usage
+
+```bash
+# Via CLI
+hanzo audit --model zen-audit --file contracts/Vault.sol
+
+# Via API
+curl https://api.hanzo.ai/v1/chat/completions \
+  -H "Authorization: Bearer $HANZO_API_KEY" \
+  -d '{
+    "model": "zen-audit",
+    "messages": [{
+      "role": "user",
+      "content": "Audit the following Solidity contract for security vulnerabilities:\n\n```solidity\n...\n```"
+    }]
+  }'
+```
+
+Output format includes:
+- Severity classification (Critical / High / Medium / Low / Informational)
+- Vulnerability description with affected lines
+- Exploitation scenario
+- Recommended fix
+- Confidence level
+
+## Limitations
+
+Zen Audit is a reasoning tool, not a formal verifier. It does not provide mathematical proof of security properties. It will miss novel vulnerabilities that do not resemble patterns in its training data. It should be used as a first-pass screening tool and as a supplement to, not replacement for, human security review for high-value targets.
+
+Critical smart contracts handling significant value should have professional human audits. Zen Audit can reduce the scope of that audit by flagging the obvious issues first.
+
+## Access
+
+```bash
+hf download zenlm/zen-audit
+```
+
+API: `api.hanzo.ai/v1/chat/completions`, model `zen-audit`.
+
+---
+
+*Zach Kelling is the founder of Hanzo AI, Techstars '17.*

@@ -1,0 +1,37 @@
+---
+title: "Platform v2: Multi-Region Infrastructure and the Scale We'd Always Planned For"
+date: "2016-11-20"
+author: "Zach Kelling"
+tags: ["infrastructure", "scale", "multi-region", "commerce", "history"]
+description: "In late 2016 we deployed multi-region infrastructure for Hanzo Commerce — active-active data centers with sub-50ms response times globally. The scale we had designed for since 2008 was now operational."
+---
+
+# Platform v2: Multi-Region Infrastructure and the Scale We'd Always Planned For
+
+In late 2016, Hanzo Commerce deployed multi-region infrastructure. Not edge caching — actual active-active data centers in three regions, with data replication and intelligent routing that could serve any request from the nearest available node.
+
+This was infrastructure we had planned for since 2008. We'd built the data model to be eventually consistent, designed the event system for cross-region replication, and made API design decisions specifically to allow stateless request handling. In 2008, this was architectural aspirations. In 2016, it was production.
+
+## What Changed
+
+For merchants, the change was invisible — which was exactly the point. Sub-50ms API response times from Europe and Asia-Pacific, where we'd previously been routing requests across the Atlantic to US data centers. Checkout latency is directly correlated with conversion rate; the latency improvement translated immediately to revenue improvement for merchants with international customers.
+
+For resilience: the multi-region deployment meant that a single data center failure no longer caused an outage. Traffic rerouted automatically, within the failover time of a DNS TTL. The SLA we were able to promise moved from 99.9% to 99.99%.
+
+## The Data Layer
+
+Replicating commerce data across regions is harder than it looks. The naive approach — synchronous replication — creates unacceptable latency for write operations. The correct approach requires thinking carefully about which data needs strong consistency (payment state, inventory counts) and which can be eventually consistent (analytics, behavioral events).
+
+We used a CRDT-based approach for the eventually consistent data — conflict-free replicated data types that merged automatically without coordination. Inventory counts and payment state used synchronous consensus, accepting the latency cost for the correctness guarantee.
+
+This design went into the Lux network years later, when we were thinking about multi-node consensus for blockchain state. The same fundamental problems — distributed state with different consistency requirements — have the same fundamental solutions.
+
+## The Commerce-as-Infrastructure Vision
+
+V2 was the first moment that Hanzo Commerce felt like infrastructure rather than a product. The uptime was infrastructure-grade. The latency was infrastructure-grade. The API contract stability — v1 endpoints still working, unchanged, five years after launch — was infrastructure-grade.
+
+That's what we had been building toward: not a commerce platform that competed on features, but a commerce layer that operated as transparently as the internet itself. Always available, always fast, always correct.
+
+---
+
+*Platform v2 is the infrastructure that current Hanzo Commerce runs on. The multi-region architecture has been extended and improved but the fundamental design is unchanged.*

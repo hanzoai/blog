@@ -1,0 +1,74 @@
+---
+title: "Building a Promotion Engine: The Combinatorics Problem"
+date: "2011-05-22"
+author: "Zach Kelling"
+tags: ["commerce", "engineering", "discounts", "architecture", "history"]
+description: "How we built a composable promotion and discount engine in 2011 — the rule system design, stacking limits, and the combinatorics problem that makes promotions hard."
+---
+
+# Building a Promotion Engine: The Combinatorics Problem
+
+Promotions are harder than they look. A 10% discount off a product is trivial. A 10% discount for customers who have bought more than three times this year, applicable only to items in the "Summer" collection, stackable with free shipping but not with any other percentage discount, valid between June 15 and July 4 — now you have an engineering problem.
+
+We built the Hanzo promotion engine in the first half of 2011 after enough clients had asked for promotion capabilities that a generic solution was clearly necessary.
+
+## Promotion Types
+
+Before designing the engine, we enumerated the promotion types we needed to support:
+
+- **Percentage discount**: 15% off. Applied to order total, a specific product, or a collection.
+- **Absolute discount**: $10 off. Same scope options.
+- **Free shipping**: Nullify the shipping cost. Conditional on order total, item count, or both.
+- **BOGO**: Buy one get one. Buy two get one. Fractional free item pricing.
+- **Tiered pricing**: Buy 3 for $X each, buy 10 for $Y each (lower per-unit price at higher quantities).
+- **Gift with purchase**: Add a specific product to cart at zero cost when order meets conditions.
+
+These are the main types. There are more edge cases (volume discounts, flash sales, referral credits) but these covered 95% of what clients needed.
+
+## The Rule System
+
+Each promotion had a conditions array and an actions array. Conditions determined when the promotion applied; actions determined what it did.
+
+```json
+{
+  "id": "promo_summer15",
+  "conditions": [
+    { "type": "order_total_gte", "value_cents": 5000 },
+    { "type": "item_in_collection", "collection_id": "summer-2011" },
+    { "type": "date_range", "start": "2011-06-15", "end": "2011-07-04" }
+  ],
+  "actions": [
+    { "type": "percentage_discount", "value": 15, "scope": "matching_items" }
+  ],
+  "stack_group": "percentage",
+  "stack_limit": 1
+}
+```
+
+Conditions were evaluated against the cart state: order total, items present, user history, current date. All conditions had to be true for the promotion to apply (AND semantics). OR semantics — apply if any condition is true — required separate promotions.
+
+Actions were applied to the cart after conditions passed. An action had a type, a value, and a scope. Scope could be `order` (apply to the full order total), `matching_items` (apply only to items that matched the conditions), or `cheapest_item` (for BOGO-style discounts).
+
+## The Stacking Problem
+
+Allowing promotions to stack arbitrarily creates combinatorial explosion and business problems. A customer who applies a 20% discount code and also qualifies for a 15% summer sale and also has a 10% loyalty discount could legitimately combine all three if stacking is unrestricted, netting a 45% reduction.
+
+Whether this is intended behavior is a business decision. The engineering problem is making it configurable without requiring special-case code for every combination.
+
+We solved this with stack groups. Each promotion belonged to a named stack group (e.g., `percentage`, `shipping`, `loyalty`). A `stack_limit` field on the group specified how many promotions from that group could apply simultaneously. When evaluating which promotions to apply, the engine collected all applicable promotions, grouped them by stack group, and applied at most `stack_limit` promotions from each group (selecting the most valuable ones for the customer by default).
+
+The `shipping` group almost always had a stack limit of 1 — free shipping does not stack with 50% off shipping. The `percentage` group typically had a limit of 1 or 2. The `absolute` group might allow stacking if the business wanted to combine a coupon code with a sale.
+
+This model handled most real-world promotion stacking requirements without special cases.
+
+## Floating-Point Again
+
+Promotion math reintroduced the floating-point problem that coin.js was designed to solve. A 15% discount on a $47.99 cart:
+
+`4799 * 0.15 = 719.85` — round to `720` cents = $7.20 discount. Cart total: `4799 - 720 = 4079` cents = $40.79.
+
+The rounding rule for discounts was the most contentious design decision. Should `719.85` round up (720) or down (719)? The convention we used: round in the customer's favor for percentage discounts (round the discount up, reducing the customer's cost). This was both customer-friendly and PCI-compliant in the sense that it was deterministic and auditable.
+
+## What We Learned
+
+A promotion engine is a policy enforcement system. The engineering challenge is making it flexible enough to express the business's promotion logic without requiring code changes for each new promotion. The rule-based approach — conditions and actions as declarative configuration — made merchant operations teams able to configure new promotions without engineering involvement, which was the goal from the start.

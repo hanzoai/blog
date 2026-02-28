@@ -1,0 +1,73 @@
+---
+title: "Backbone.js and the Commerce SDK: MVC Comes to the Storefront"
+date: "2011-04-10"
+author: "Zach Kelling"
+tags: ["backbone", "javascript", "mvc", "frontend", "commerce", "history"]
+description: "How we integrated the Hanzo commerce SDK with Backbone.js in 2011 — the router-based checkout flow pattern and MVC applied to storefronts."
+---
+
+# Backbone.js and the Commerce SDK: MVC Comes to the Storefront
+
+Backbone.js was released in October 2010 by Jeremy Ashkenas — the same person who wrote CoffeeScript. By April 2011 it was the leading JavaScript MVC framework. Not because it was the most opinionated framework (it was the least), but because it was small, well-documented, and composable with existing code.
+
+At its core, Backbone gave you four things: Models (objects with events and serialization), Collections (arrays of Models), Views (DOM management tied to Models), and a Router (hash-based navigation). That was it. No prescribed directory structure, no mandatory conventions, no heavy dependency chain.
+
+This composability made Backbone a natural integration target for the Hanzo commerce SDK.
+
+## The Commerce MVC Pattern
+
+Before Backbone, the standard approach to a single-page storefront was jQuery: event listeners on DOM elements, direct DOM manipulation on state changes, no clear separation between data and presentation.
+
+The Backbone integration gave shop.js a proper data layer. The product catalog became a Backbone Collection. Individual products were Backbone Models. Cart items were Models. The Collection's built-in `fetch()` method handled API loading with Backbone's sync mechanism, which we adapted to use the Hanzo API client instead of Backbone's default REST conventions.
+
+The View layer was where the integration created the most value. A Backbone View bound to a CartModel re-rendered automatically when the Model's `change` event fired. This was the reactive pattern we had built manually in the earlier EventEmitter implementation, now handled by Backbone's infrastructure.
+
+```coffeescript
+class CartView extends Backbone.View
+  initialize: ->
+    @listenTo @model, 'change', @render
+
+  render: ->
+    @$el.html @template(@model.toJSON())
+    @
+```
+
+The `listenTo` method — added in Backbone 0.9 to prevent memory leaks from zombie views — handled the subscription lifecycle automatically. The view cleaned up its event subscriptions when removed from the DOM.
+
+## The Router-Based Checkout Flow
+
+The Backbone Router was particularly useful for checkout.js. A multi-step checkout flow benefits from URL-addressable states: the user can use the browser's back button to go from payment back to shipping, bookmarks work, and the browser history accurately reflects where the user is in the flow.
+
+Pre-Backbone, implementing browser history navigation in a JavaScript checkout flow required either pushState (available but inconsistently supported in 2011) or hash-based navigation implemented by hand. Backbone's Router abstracted this:
+
+```coffeescript
+class CheckoutRouter extends Backbone.Router
+  routes:
+    'checkout/cart':     'cart'
+    'checkout/shipping': 'shipping'
+    'checkout/payment':  'payment'
+    'checkout/confirm':  'confirm'
+
+  shipping: ->
+    new ShippingView(model: @checkout).render()
+
+  payment: ->
+    return @navigate('checkout/shipping') unless @checkout.shippingComplete()
+    new PaymentView(model: @checkout).render()
+```
+
+The guard in `payment` — redirecting to shipping if the previous step was incomplete — enforced the checkout flow invariant. You could not navigate directly to the payment step without having completed shipping.
+
+This pattern — router guards enforcing step ordering, each step as a named route — became the standard pattern for checkout flows built on the Hanzo SDK and was adopted widely enough in the ecosystem that it influenced how developers outside Hanzo structured multi-step forms.
+
+## What Backbone Got Wrong for Commerce
+
+Backbone's Model sync was designed for REST CRUD operations. Commerce operations are often not CRUD. A checkout completion is not a Model update — it is a multi-step transactional operation with external API calls to payment gateways and fulfillment systems.
+
+Backbone's `Model.save()` called `Backbone.sync` which made a PUT or POST request. Fitting a payment capture into this model required overriding `sync` in checkout-specific models, which worked but felt like working against the framework rather than with it.
+
+The other limitation was Backbone's lack of a data binding mechanism. Views re-rendered when Models changed, but Backbone had no two-way binding — form input changes had to be explicitly wired back to the Model. For checkout forms with many fields, this meant a lot of `change` event listeners. Angular and later frameworks addressed this with two-way binding; Backbone developers wrote it by hand.
+
+## The Integration Value
+
+Despite its limitations, the Backbone integration made the Hanzo SDK significantly more useful to the developers who were building storefronts in 2011. Backbone was what they knew. Meeting developers where they were — providing Backbone-native Models and Views they could drop into existing Backbone applications — was more important than architectural purity.

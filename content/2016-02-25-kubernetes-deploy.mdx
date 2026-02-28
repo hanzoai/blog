@@ -1,0 +1,67 @@
+---
+title: "Kubernetes for Commerce Infrastructure in Early 2016"
+date: "2016-02-25"
+author: "Zach Kelling"
+tags: ["kubernetes", "infrastructure", "devops", "docker", "deployment"]
+description: "We adopted Kubernetes 1.1 in early 2016 and migrated off bare EC2. The ops complexity was real. Whether it was worth it depends on what you count."
+---
+
+# Kubernetes for Commerce Infrastructure in Early 2016
+
+We adopted Kubernetes in February 2016. The version was 1.1 — Kubernetes 1.0 had shipped in July 2015, marking the project's first "production-ready" designation. By our February adoption, the 1.1 release had been out for a few months, which meant it had a known set of bugs and a growing community of people who had hit those bugs first.
+
+This is the honest retrospective: what we got, what we gave up, and whether it was worth it.
+
+## What We Were Running Before
+
+Three EC2 instances per service: two application nodes and one standby. Manual deployment: SSH into each application node, pull the latest Docker image, restart the service. The deployment script was about 80 lines of bash. HAProxy in front, configured manually with each instance's IP hardcoded.
+
+It worked. The downside was deployment coordination: deploying to three services sequentially took about 20 minutes, because we waited for health checks between each instance. There was no automated rollback — if something was wrong you SSHed in and restarted the previous image by hand.
+
+The other issue was resource utilization. Each EC2 instance was sized for peak load. The cart service was busy during evenings and weekends. The catalog service was busy during catalog import jobs that ran at 2am. They were never busy at the same time, but they each had dedicated instances. We were paying for peak capacity on each service simultaneously.
+
+## Kubernetes 1.1: What It Could Do
+
+The core primitives that mattered for us in 1.1:
+
+**Pods and ReplicaSets**: Define that you want three replicas of the cart service running. Kubernetes schedules them across available nodes, restarts them if they crash, and maintains the replica count.
+
+**Services and kube-proxy**: A stable virtual IP address for each logical service, backed by kube-proxy load balancing across healthy pods. This replaced the HAProxy configuration we were maintaining manually.
+
+**Rolling deployments**: Update a deployment and Kubernetes would spin up new pods before terminating old ones, waiting for health checks to pass. Automated what our deploy script was doing manually.
+
+**Resource requests and limits**: Specify CPU and memory requirements per pod. The scheduler used these to bin-pack pods onto nodes efficiently. This was the mechanism for improving resource utilization.
+
+## What Kubernetes 1.1 Could Not Do
+
+Storage was underdeveloped. Persistent volumes existed but the tooling around them was rough. For stateless services this was fine. For PostgreSQL and Redis — which we needed to be persistent — we kept them on dedicated EC2 instances outside the cluster. Kubernetes would not host our databases until the storage story matured considerably (we eventually moved databases into cluster in late 2017).
+
+Cluster autoscaling was not in 1.1. You manually specified the number of EC2 instances in your cluster. If you added more pods than fit on existing nodes, they sat in Pending state until you manually added nodes. We ran the cluster slightly over-provisioned to avoid this.
+
+The dashboard was minimal. Visibility into what was running required `kubectl get pods` or the rudimentary web UI. The modern ecosystem of Prometheus, Grafana, and purpose-built Kubernetes observability tools did not exist yet.
+
+## The Migration
+
+We ran Kubernetes and raw EC2 in parallel for two months. Services migrated one at a time, with the EC2 instances staying up until the Kubernetes deployment had been running clean for two weeks. The catalog service migrated first (lowest risk, highest resource variability). Cart was last.
+
+The operational learning curve was steep. A small team learning Kubernetes while running a commerce platform means incidents. We had two: one where a misconfigured resource limit caused the catalog service to get OOMKilled repeatedly during a large import, and one where a namespace misconfiguration during a DNS migration caused intra-cluster service discovery to fail for about 90 seconds. Both were recoverable. Both were educational.
+
+## The Resource Utilization Win
+
+After migration, we ran the same workload on 30% fewer EC2 instance-hours. The scheduler bin-packed services effectively. The catalog import job that had previously needed a dedicated large instance ran on whatever capacity was available at 2am, burst across multiple nodes, and finished in less time.
+
+Over a year this was meaningful cost savings. It was also the thing we could point to when someone asked "was it worth it?"
+
+## The Operational Cost
+
+The honest answer is that Kubernetes added operational complexity that required one engineer to become a specialist. YAML authoring, debugging scheduling failures, understanding etcd, managing certificate rotation — these are not skills that generalist Node.js engineers have by default.
+
+In 2016 the Kubernetes ecosystem was also immature. There was no Helm for templating YAML. There was no ArgoCD for GitOps. Every operator was hand-rolling their own tooling.
+
+If we were a team of three with no dedicated infrastructure experience, I would not have recommended Kubernetes in early 2016. The operational overhead relative to a simpler EC2-with-autoscaling setup would have been net negative.
+
+For us — with a team member who had relevant infrastructure experience and workloads with significant resource variance — it paid off.
+
+---
+
+*Hanzo completed the Kubernetes 1.1 migration in April 2016. All stateless services ran in cluster. PostgreSQL and Redis remained on dedicated EC2 through end of 2017.*

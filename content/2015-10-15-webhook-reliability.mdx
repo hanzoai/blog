@@ -1,0 +1,87 @@
+---
+title: "Webhook Reliability at Scale"
+date: "2015-10-15"
+author: "Zach Kelling"
+tags: ["webhooks", "reliability", "idempotency", "payment", "backend"]
+description: "Building reliable webhook delivery is harder than it looks. At-least-once delivery, idempotency keys, exponential backoff, and why payment webhooks are a special case."
+---
+
+# Webhook Reliability at Scale
+
+Webhooks are the connective tissue of commerce infrastructure. Order placed, payment captured, inventory updated, subscription renewed — every significant event in a commerce system needs to be communicated to the outside world reliably. We had been running webhook infrastructure since 2009 and by 2015 we had learned most of the lessons the hard way.
+
+## The Fundamental Guarantee: At-Least-Once Delivery
+
+The impossible guarantee is exactly-once delivery. A webhook delivery involves a network call from our system to a customer's endpoint. If we send the webhook and the network drops before we receive an HTTP 200 response, we don't know if the customer received it or not. Did their server process it and fail to respond? Did the request never arrive? We cannot distinguish these cases.
+
+The consequence: we must retry. If we don't retry on ambiguous failures, we will occasionally drop events. For commerce — where a missed order notification means a merchant doesn't fulfill the order — dropping events is a worse failure mode than delivering duplicates.
+
+So we commit to at-least-once delivery: every event will be delivered at least once, and may be delivered more than once. The customer's endpoint must handle duplicates.
+
+## Idempotency Keys
+
+The mechanism for handling duplicates is idempotency. Every webhook payload includes a `x-hanzo-event-id` header — a UUID that is stable across retries of the same event. If we retry a failed delivery, the event ID is the same.
+
+The customer's endpoint is responsible for deduplicating on this ID. The simplest implementation is a database table of processed event IDs:
+
+```sql
+CREATE TABLE processed_webhooks (
+  event_id UUID PRIMARY KEY,
+  received_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+```
+
+On receipt, the endpoint inserts the event ID. If the insert fails with a unique constraint violation, the event is a duplicate and should be silently acknowledged. Most customers implemented something like this once we explained the guarantee.
+
+Payment webhooks from Stripe, Braintree, and PayPal use the same pattern. Stripe's `stripe-signature` header and idempotent event IDs are the canonical example of doing this right.
+
+## Retry with Exponential Backoff
+
+When a webhook delivery fails (non-2xx response, connection timeout, DNS failure), we retry with exponential backoff. Our schedule:
+
+- Retry 1: 30 seconds after initial failure
+- Retry 2: 2 minutes
+- Retry 3: 10 minutes
+- Retry 4: 1 hour
+- Retry 5: 6 hours
+- Retry 6: 24 hours
+- After 7 failures: event marked as failed, alert sent to customer
+
+The backoff serves two purposes. First, it avoids hammering a customer's endpoint when it is down — a sudden spike of retried webhooks when their server recovers from downtime could take it down again. Second, it gives transient failures (a 30-second deployment, a flapping network link) time to resolve before we escalate.
+
+The jitter is important. Without jitter, all events that failed at time T retry at T+30s simultaneously, creating a retry thundering herd. We add ±20% random jitter to each retry interval.
+
+## The Queue Architecture
+
+The delivery mechanism was a job queue. In 2015 we used Redis as the queue backend (the `kue` library for Node.js). Each webhook delivery was a job. The job contained the target URL, the payload, the event ID, and the delivery attempt number.
+
+Failed jobs were not discarded — they were re-enqueued with a `delay` equal to the backoff interval. The queue workers processed jobs continuously. At our scale (tens of thousands of webhook deliveries per hour across all clients), we ran four worker processes.
+
+The queue gave us durability (Redis persistence meant jobs survived process restarts), visibility (we could inspect the queue and see which deliveries were stuck), and rate limiting (workers processed at a fixed rate, preventing us from overwhelming customer endpoints).
+
+## Why Payment Webhooks Are Different
+
+Payment webhooks from third-party processors (Stripe, PayPal, Braintree) flowing into our system are a special case that required different handling.
+
+The difference is financial finality. When Stripe sends us a `payment_intent.succeeded` event, that event is authoritative — it means money has moved. The business logic that runs on receipt of that event (marking an order as paid, triggering fulfillment, sending a receipt email) must run exactly once. Not almost once. Once.
+
+The idempotency approach works here but requires stronger implementation. We used a transactional outbox pattern: the handler for the Stripe webhook ran in a database transaction that (a) recorded the Stripe event ID as processed, (b) updated the order status, and (c) enqueued the fulfillment job. If any of these failed, the transaction rolled back and the webhook handler returned a 500, causing Stripe to retry. If all succeeded and Stripe then retried anyway (which they do occasionally), the duplicate check on the Stripe event ID would short-circuit before any state changes.
+
+This is more complex than a simple idempotency table but necessary when the side effects of duplicate processing are financial.
+
+## Webhook Observability
+
+By October 2015 we had a dashboard showing:
+
+- Total deliveries per hour, by client
+- Delivery success rate (HTTP 2xx received within 30 seconds of delivery attempt)
+- Retry queue depth
+- Events currently in failed state
+
+The metrics that mattered most: retry queue depth trending up was the early warning sign that a customer's endpoint was struggling. We alerted at >100 events in the retry queue for any single customer.
+
+Customers got a webhook log in their dashboard — every event, every delivery attempt, the HTTP status code returned, and the response body on failure. This visibility eliminated most support tickets about "we didn't get the webhook for order X."
+
+---
+
+*Hanzo's webhook infrastructure handled at-least-once delivery from 2009, but the idempotency key header, exponential backoff with jitter, and payment webhook transaction pattern were all added or formalized by 2015.*

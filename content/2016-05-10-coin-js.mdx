@@ -1,0 +1,43 @@
+---
+title: "Coin.js: Crypto Commerce Before It Was Cool"
+date: "2016-05-10"
+author: "Zach Kelling"
+tags: ["bitcoin", "ethereum", "crypto", "commerce", "javascript", "open-source", "hanzo-js"]
+description: "We built Coin.js in 2016 — a JavaScript library for accepting Bitcoin and Ethereum in checkout flows. The moment crypto hit mainstream attention two years later, the infrastructure was already deployed."
+---
+
+# Coin.js: Accepting Crypto Before Anyone Asked For It
+
+In 2016, asking customers to pay with Bitcoin was still mostly a stunt. The checkout flow was clunky — copy a wallet address, open a separate app, scan a QR code, wait 10 minutes for confirmation. Nobody optimized for that experience because nobody expected it to matter.
+
+We built Coin.js anyway.
+
+## Why in 2016
+
+The Hanzo thesis on crypto payments was straightforward: the payment friction would decrease over time, the wallet adoption would increase, and when those two curves crossed the merchants who already had crypto checkout would have a significant advantage over those scrambling to integrate.
+
+That thesis looked premature in 2016. It looked prescient in 2017-2018 when crypto payment volume exploded and merchants were paying premium integration fees for what we'd already shipped.
+
+## What Coin.js Was
+
+A JavaScript library for integrating Bitcoin and Ethereum payments into checkout flows. Built on Hanzo Commerce's payment abstraction layer — the same API that translated to Stripe or Braintree, now also translating to crypto payment rails.
+
+Key features:
+
+**QR code generation.** Automatic payment address and amount encoding as a scannable QR code, with the correct amount denominated in the local currency converted to crypto at current exchange rates.
+
+**Payment detection.** WebSocket subscription to the relevant blockchain for incoming transactions, with automatic confirmation counting and merchant notification on sufficient block depth.
+
+**Multi-currency support.** BTC and ETH at launch, with the architecture to add any token-based payment without changes to the merchant's checkout code.
+
+**Exchange rate locking.** At checkout initiation, we locked the exchange rate for 15 minutes — long enough for a customer to complete payment, short enough to limit merchant exposure to crypto volatility.
+
+## The 2017-2018 Vindication
+
+When crypto prices surged in late 2017, there was a brief window where paying in Bitcoin was genuinely interesting to customers — the asset appreciation made people want to use it. Merchants with Coin.js already deployed saw organic crypto checkout adoption without doing anything.
+
+The moment passed. Crypto volatility made it impractical as a primary payment method for most retail contexts. But the infrastructure and the pattern — accepting programmable money natively in checkout — became foundational for everything we built in the Web3 commerce space afterward.
+
+---
+
+*Coin.js is at github.com/hanzo-js/coin.js. The crypto payment primitives it established are the foundation of Hanzo's Web3 commerce layer.*

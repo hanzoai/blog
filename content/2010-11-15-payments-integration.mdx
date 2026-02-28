@@ -1,0 +1,39 @@
+---
+title: "Payments at the Infrastructure Level: Building for Every Gateway"
+date: "2010-11-15"
+author: "Zach Kelling"
+tags: ["payments", "commerce", "infrastructure", "gateways", "history"]
+description: "In 2010 we abstracted the payment layer so merchant integrations could switch gateways without rewriting their checkout flows. This turned out to be one of the most valuable infrastructure decisions we made."
+---
+
+# Payments at the Infrastructure Level: Building for Every Gateway
+
+In 2010, every payment gateway had a different API. Stripe was new and would eventually standardize the developer experience for card processing, but in 2010 it was one option among many. Braintree, Authorize.net, PayPal, and a long list of regional processors each had their own integration patterns, webhook formats, error codes, and settlement timelines.
+
+For a commerce platform, this fragmentation was a tax on every merchant integration.
+
+## The Abstraction
+
+We built a payment gateway abstraction layer that translated the Hanzo payment primitives — authorize, capture, void, refund — into the native API calls for each supported gateway. The merchant's checkout flow spoke to Hanzo. Hanzo translated to whichever gateway the merchant had configured.
+
+The abstraction wasn't just a thin wrapper. It normalized the edge cases: the different ways each gateway handled partial captures, the different formats for declined card reason codes, the different approaches to refund settlement timing. When Stripe changed their API in 2012, we updated the Stripe adapter. No merchant integration needed to change.
+
+## Why This Mattered for International Commerce
+
+The payment fragmentation problem was worst internationally. A merchant selling in Japan needed a Japanese processor. A merchant selling in Brazil needed a Brazilian processor. Each one was a separate integration project.
+
+With the gateway abstraction, adding a new processor was a matter of writing an adapter — not reintegrating the entire checkout flow. By 2012, we supported seventeen payment processors across twelve countries.
+
+This was directly competitive: a merchant who wanted to expand internationally could do so by configuring a new processor in their Hanzo dashboard, not by hiring an integration engineer for six months.
+
+## The Fraud and Risk Layer
+
+Building the payment abstraction also gave us a natural place to insert fraud scoring. Because all payment events flowed through the Hanzo payment layer, we had a unified view of transaction patterns across all merchants on the platform.
+
+The fraud model trained on collective transaction data — a merchant with 100 orders per day had far less signal than the aggregate of all merchants' 100,000 orders per day. The collective signal made the model better for everyone, especially smaller merchants who couldn't train accurate fraud models on their own data alone.
+
+This was the beginning of the pattern that would define Hanzo's AI layer: aggregated behavioral data creating models that were individually valuable to every merchant on the platform.
+
+---
+
+*Hanzo Commerce supports all major payment processors. The gateway abstraction has processed billions in transactions since 2010.*

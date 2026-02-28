@@ -1,0 +1,45 @@
+---
+title: "From Crowdstart to Hanzo: Why We Changed the Name"
+date: "2010-10-05"
+author: "Zach Kelling"
+tags: ["company", "brand", "history", "commerce", "engineering"]
+description: "The Crowdstart to Hanzo rebrand in 2010 — what the name change meant, why 'hanzo' the legendary swordsmith made sense, and what it signaled about our focus."
+---
+
+# From Crowdstart to Hanzo: Why We Changed the Name
+
+The company was originally called Crowdstart. The name made sense when we started: we were building infrastructure for crowd-powered commerce — group buying, campaign-based sales, community-driven product launches. The "crowd" was the unit of commercial activity we were optimizing for.
+
+By mid-2010 the name had stopped fitting. We were not primarily a crowdfunding platform. We were building infrastructure that commerce platforms were built on top of. The name was pointing at one application of the technology rather than at what the technology actually was.
+
+## The Problem with Crowdstart
+
+Crowdstart as a name created positioning confusion. When we talked to potential clients, we spent the first ten minutes of every conversation explaining that we were not Kickstarter, not a group buying site (Groupon was everywhere in 2010), not a crowdfunding platform. We were a commerce infrastructure company.
+
+The name was also tying us to a market moment. "Crowd" as a prefix was getting attached to everything in 2010 — crowdsourcing, crowdfunding, crowdwork. Most of these companies would not survive the decade. We did not want to be associated with a trend we were not part of and that we suspected was overhyped.
+
+## Why Hanzo
+
+The name Hanzo comes from Hattori Hanzo, the legendary Japanese swordsmith. The mythology: Hanzo made perfect tools — instruments of precision built for masters of their craft. The swords he forged were not decorative. They were functional, precise, and in the hands of the right person, extraordinarily effective.
+
+The analogy was direct: we built tools, not swords. The commerce SDK, the analytics platform, the payment abstraction — these were instruments that skilled developers and companies picked up to do their work better. We had no interest in being a consumer-facing brand. We were craftsmen building for craftsmen.
+
+The Japanese aesthetic alignment was intentional. The software philosophy we tried to embody — simplicity, precision, doing exactly one thing correctly — has parallels in the craftsmanship traditions of Japanese toolmaking. This was not a marketing affectation. It was a genuine statement of what we were trying to do.
+
+## What the Rebrand Required
+
+The technical work of the rebrand was more significant than the naming discussion. "Crowdstart" was embedded in our API endpoints, our npm package names, our internal tooling, our documentation, and our client integrations.
+
+We versioned the transition. The Crowdstart API remained available for existing clients. New clients got the Hanzo API. The SDK packages on npm were published under the `hanzo` name. We ran both names simultaneously for about six months before deprecating the Crowdstart endpoints.
+
+The npm transition was the most visible. In 2010 npm was young enough that most package names were unclaimed. `hanzo`, `hanzo-commerce`, `hanzo-cart`, `coin.js`, `shop.js` were all available. We registered them immediately.
+
+## What Did Not Change
+
+The rebrand was a name change, not a strategy change. The architecture decisions we had made — modular JavaScript libraries, server-side Node.js, Redis for cart state, PCI-compliant tokenization — remained unchanged. We were not pivoting. We were correcting a naming mistake.
+
+The internal culture also did not change. Crowdstart had been a small, focused engineering team that cared about clean code and correct architecture. Hanzo was the same team with a better name.
+
+Looking back, the rebrand was the right call at the right time. "Hanzo" communicated precision and craft in a way that "Crowdstart" never could. When the JavaScript commerce ecosystem developed, Hanzo was a name that stood apart from the generic SaaS naming conventions of the era. It was specific. It meant something.
+
+That clarity of identity turned out to matter more than we expected.

@@ -1,0 +1,67 @@
+---
+title: "Product Search Relevance in 2011: Why Basic Keyword Search Fails"
+date: "2011-02-28"
+author: "Zach Kelling"
+tags: ["search", "elasticsearch", "relevance", "commerce", "engineering", "history"]
+description: "Building product search with TF-IDF and early Elasticsearch in 2011 — the fundamental mismatch between keyword search and how people shop."
+---
+
+# Product Search Relevance in 2011: Why Basic Keyword Search Fails
+
+Every SQL database has `LIKE` queries. In early 2011, most commerce platforms were using `LIKE '%keyword%'` or full-text search built into their database as the product search implementation. It worked in the sense that it returned results. It did not work in the sense of returning the right results in the right order.
+
+We integrated Elasticsearch — which had just released version 0.16 in late 2010 — in early 2011 for the Hanzo product search layer. The switch from database full-text search to Elasticsearch was one of the highest-leverage infrastructure changes we made that year.
+
+## Why Database Full-Text Search Fails for Products
+
+Database full-text search in PostgreSQL and MySQL is built around document retrieval: given a query, find documents that contain the query terms. The ranking is based on term frequency and document length normalization (TF-IDF in some form). For searching articles or documentation, this is reasonable.
+
+Product search has different properties that break the document retrieval model:
+
+**Short documents.** A product title is 3-8 words. A product description might be 50-200 words. TF-IDF ranking becomes unreliable at this scale — the variance in term frequency between a 5-word title and a 150-word description is not meaningful signal.
+
+**Synonym importance.** A user searching "sneakers" should find products titled "athletic shoes." A user searching "laptop" should find "notebook computer." General-purpose full-text search has no domain-specific synonym handling.
+
+**Attribute search.** Searching "red small hoodie" is a multi-attribute query. The user wants results matching color, size, and product type. LIKE queries treat the entire input as a text string and find products where those words appear together. An attribute-aware search can decompose the query and match each attribute separately.
+
+**Faceted filtering.** After a search, commerce users filter by price, color, size, brand. This requires the search system to know about product attributes and support aggregate queries over the result set — a different capability than basic text matching.
+
+## Elasticsearch 0.16 in Production
+
+Elasticsearch 0.16 was young software. The API was in flux. The documentation was thin. The Java memory requirements were non-trivial (we were running it on a 2GB heap). But the core capabilities were there: distributed inverted index, near-real-time indexing, powerful query DSL, faceted aggregations.
+
+Our product document structure:
+
+```json
+{
+  "id": "prod_abc123",
+  "title": "Merino Wool Crew Neck Sweater",
+  "description": "...",
+  "brand": "Everlane",
+  "category": "Apparel > Sweaters",
+  "attributes": {
+    "color": ["navy", "charcoal", "cream"],
+    "size": ["XS", "S", "M", "L", "XL"]
+  },
+  "price_cents": 6800,
+  "in_stock": true
+}
+```
+
+The query was a multi-field query with boosting: title matches boosted 3x, brand matches boosted 2x, description matches weighted 1x. This crude boosting immediately improved result relevance for product name searches over pure TF-IDF.
+
+Faceted aggregations on `attributes.color`, `attributes.size`, and price range were computed at query time and returned alongside the search results. This meant a single Elasticsearch query returned both the ranked product results and the facet counts for filtering — one round trip.
+
+## What TF-IDF Got Right
+
+TF-IDF was not useless for product search. Rare terms in product titles — brand names, model numbers, specific material terms — had high IDF scores and ranked appropriately. A search for a specific model number almost always returned the correct product at the top.
+
+The failures were in common-term searches. "Black dress" returned dozens of results with wildly varying relevance because both "black" and "dress" were common in the index. Ranking by TF-IDF gave too much weight to documents where these words appeared frequently in the description, not in the title.
+
+The fix was the multi-field boosting: force the ranking to weight title matches heavily, regardless of description frequency.
+
+## The Lesson in Relevance Tuning
+
+Relevance tuning for product search is a domain-specific problem. Generic search algorithms, however mathematically sound, need product-aware adjustments. The process of improving search relevance was empirical: collect search queries, look at the top results for each query, identify the worst mismatches, adjust the query DSL or index structure to fix them.
+
+This improvement loop — measure, identify bad results, hypothesize a fix, test — was more valuable than any single algorithmic choice.

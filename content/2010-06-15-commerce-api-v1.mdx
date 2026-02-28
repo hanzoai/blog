@@ -1,0 +1,41 @@
+---
+title: "Commerce API v1: The Contract That Lasted a Decade"
+date: "2010-06-15"
+author: "Zach Kelling"
+tags: ["api", "commerce", "sdk", "infrastructure", "history"]
+description: "In 2010 we shipped the first stable version of the Hanzo Commerce API. The design decisions made in that release defined the interface that merchants and developers would build on for the next decade."
+---
+
+# Commerce API v1: The Contract That Lasted a Decade
+
+The first stable Hanzo Commerce API shipped in mid-2010. We had been operating for two years — enough time to understand what a commerce API actually needed to do, which turned out to be different from what we had originally assumed.
+
+## What We Got Wrong in v0
+
+The v0 API was designed around our internal data model — the way we thought about commerce entities. Customers, products, orders, transactions. Clean and logical from an engineering perspective.
+
+What it missed: the way merchants and frontend developers actually thought about these things was different from our internal model. A merchant didn't think in terms of "transactions" — they thought in terms of "sales." A frontend developer didn't want to compose five API calls to show a product page — they wanted a single endpoint that returned everything the page needed.
+
+V1 was redesigned around the consumer's mental model, not the producer's.
+
+## The Design Decisions That Survived
+
+**Idempotency keys on all mutation endpoints.** Every order create, payment capture, and fulfillment update could be retried safely. Network failures and race conditions in commerce are not edge cases — they happen constantly. Building idempotency in from the start meant merchant integrations were resilient by default.
+
+**Event webhooks as a first-class feature.** Instead of polling for order status, merchants subscribed to events: `order.created`, `order.paid`, `order.fulfilled`, `payment.failed`. This decoupled the merchant's backend from Hanzo's — they could react to events without maintaining polling infrastructure.
+
+**Pagination with cursor-based tokens.** Offset-based pagination breaks when items are added during iteration. Cursor tokens gave consistent traversal of large datasets even as they changed in real-time.
+
+**Versioned endpoints.** `/v1/` in the URL from day one. This commitment cost nothing at the time and saved enormous friction as the API evolved. When we shipped v2 endpoints with breaking changes in 2015, v1 continued to work. Merchants upgraded on their own schedule.
+
+## The Developer Experience Bet
+
+In 2010, developer experience as a concept was just emerging. Twilio had shown that building for developers meant treating documentation as a product, providing working code examples in every language, and making it possible to go from API key to working integration in under an hour.
+
+We applied that thinking to Hanzo Commerce. The documentation included complete, copy-pasteable example requests for every endpoint. The error messages explained what went wrong and how to fix it. The client libraries handled authentication, retry logic, and serialization so integrators could focus on their application logic.
+
+The bet paid off: word-of-mouth developer adoption became one of our primary growth channels. Developers who integrated Hanzo for one project would bring it to their next one.
+
+---
+
+*The Hanzo Commerce API v1 design documents are in the internal archive. The core endpoint patterns it established are still recognizable in the current API.*

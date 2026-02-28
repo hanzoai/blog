@@ -1,0 +1,93 @@
+---
+title: "Zen Math: 72B Mathematical Reasoning at Frontier Scale"
+date: "2024-10-20"
+author: "Zach Kelling"
+tags: ["ai", "models", "zen", "math", "reasoning", "launch", "zen-mode"]
+description: "Zen Math is a 72B model specialized for mathematical reasoning, scoring 84.3% on MATH and 72.1% on AIME 2024, with chain-of-thought generation and formal theorem proving capabilities."
+---
+
+# Zen Math: 72B Mathematical Reasoning at Frontier Scale
+
+Mathematics is the clearest test of whether a model reasons or pattern-matches. A model that cannot verify its own intermediate steps, cannot catch its own arithmetic errors, and cannot distinguish a valid proof from a plausible-sounding one has a fundamental reasoning limitation that shows up everywhere — not just in math problems.
+
+Zen Math is our answer to that. A 72B model trained specifically to do mathematics correctly, with chain-of-thought reasoning as a first-class capability and formal verification integration for proof generation.
+
+## Training
+
+Zen Math started from the same 72B base as other large Zen models. The specialization happened in three stages:
+
+**Mathematical pretraining supplement.** The base model's training corpus, while large, has uneven mathematical coverage. We supplemented with a curated mathematical corpus: ArXiv math papers, Lean and Coq proof libraries, competition problem databases (AMC through IMO), university-level problem sets, and a large synthesis of worked solutions across difficulty levels. Total supplemental mathematical text: approximately 180B tokens.
+
+**Chain-of-thought fine-tuning.** Mathematical reasoning requires showing work. We fine-tuned on a dataset of 2.4M worked mathematical problems where intermediate steps are explicit, verified, and aligned with how a skilled mathematician would approach the problem — not just a list of steps but a principled derivation.
+
+**Process reward modeling.** Standard RLHF rewards the final answer. In mathematics, this incentivizes models to guess answers and produce plausible-looking but incorrect reasoning. We trained a process reward model that evaluates each step in a mathematical derivation, not just the conclusion. The main model was then trained against this process reward signal, which produces qualitatively different reasoning: the model is more likely to notice when an intermediate step is wrong and backtrack rather than continuing down an invalid path.
+
+## Benchmarks
+
+| Benchmark | Zen Math 72B | General 72B Baseline |
+|-----------|-------------|---------------------|
+| MATH (all levels) | 84.3% | 71.2% |
+| MATH Level 5 | 67.8% | 48.3% |
+| AIME 2024 | 72.1% | 41.6% |
+| AMC 2024 | 91.4% | 78.9% |
+| GSM8K | 95.2% | 92.8% |
+| GPQA (Math) | 68.3% | 54.7% |
+
+The AIME jump is significant. AIME problems require multi-step reasoning with no partial credit for close answers — you either solve it or you do not. A general 72B model at 41.6% is already impressive; Zen Math at 72.1% reflects genuine improvement in multi-step mathematical reasoning.
+
+GSM8K (grade school math) is nearly saturated at this scale. The interesting benchmark is MATH Level 5 — competition-level problems that require non-obvious insight. 67.8% versus 48.3% for the baseline represents a real capability gap.
+
+## Chain-of-Thought
+
+Extended thinking mode in Zen Math produces detailed step-by-step reasoning before the final answer. This is not cosmetic:
+
+1. The reasoning trace allows verification — you can check each step
+2. The model is less likely to produce wrong answers with plausible reasoning when forced to make each step explicit
+3. Educational use cases benefit directly from readable derivations
+
+```
+User: Prove that √2 is irrational.
+
+Zen Math (thinking):
+  Approach: proof by contradiction.
+  Assume √2 is rational. Then √2 = p/q where p, q are integers with gcd(p,q) = 1.
+  Squaring: 2 = p²/q², so p² = 2q².
+  p² is even, therefore p is even (since odd² is odd).
+  Write p = 2k. Then (2k)² = 2q², so 4k² = 2q², so q² = 2k².
+  q² is even, therefore q is even.
+  But then gcd(p,q) ≥ 2, contradicting gcd(p,q) = 1.
+  Contradiction established. √2 is irrational. ∎
+
+Answer: √2 is irrational. [Full proof above]
+```
+
+## Formal Theorem Proving
+
+Zen Math can generate Lean 4 proof sketches for mathematical statements. This is not a replacement for formal verification tools — the model makes mistakes, and the output requires checking with Lean. But as a proof assistant, it substantially accelerates the process:
+
+- Generates proof strategy from a mathematical statement
+- Fills in routine steps automatically
+- Suggests lemmas when the direct approach stalls
+- Translates informal mathematical arguments to formal proof structure
+
+This capability is in beta. The formal proving mode is available with `mode: "formal"` in the API.
+
+## Limitations
+
+Zen Math is not a computer algebra system. For symbolic computation, numerical integration, or algebraic manipulation of specific functions, purpose-built systems (Mathematica, SymPy, SageMath) are more reliable. Zen Math's value is in reasoning, proof construction, and problem decomposition — not in replacing CAS tools.
+
+The model also degrades on problems that require visual reasoning (geometric proofs with complex figures). Use Zen Vision in combination with Zen Math for those cases.
+
+## Access
+
+```bash
+hf download zenlm/zen-math
+```
+
+API: `api.hanzo.ai/v1/chat/completions`, model `zen-math`.
+
+For extended thinking: add `"thinking": {"enabled": true, "budget_tokens": 16384}` to your request.
+
+---
+
+*Zach Kelling is the founder of Hanzo AI, Techstars '17.*

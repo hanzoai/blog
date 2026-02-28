@@ -1,0 +1,80 @@
+---
+title: "The First Analytics Pipeline: Events Before Google Had an API"
+date: "2010-11-12"
+author: "Zach Kelling"
+tags: ["analytics", "kafka", "data-engineering", "commerce", "infrastructure", "history"]
+description: "Building a conversion funnel analytics pipeline in 2010 — events to message queue to warehouse — before GA had a usable API."
+---
+
+# The First Analytics Pipeline: Events Before Google Had an API
+
+Google Analytics in 2010 was a pixel and a JavaScript tag. It counted pageviews. It had goals. It had limited funnel tracking. What it did not have was a proper API that let you programmatically retrieve data in useful granularity for commerce analytics.
+
+The questions we needed to answer for clients were not answerable with GA: What percentage of users who added an item to cart completed checkout? At which step did they drop off? What was the revenue attributable to each traffic source? What was the average order value for customers acquired through a specific campaign?
+
+These are funnel analytics questions. GA had funnel visualization but it was rigid and required pre-configured goals. We needed an event stream we controlled.
+
+## The Event Schema
+
+The first decision was the event schema. Commerce analytics events had a common structure:
+
+```json
+{
+  "event": "checkout.step.completed",
+  "session": "sess_abc123",
+  "user": "usr_xyz789",
+  "timestamp": 1289567890,
+  "properties": {
+    "step": "payment",
+    "cart_value_cents": 4998,
+    "currency": "USD",
+    "items": 2
+  }
+}
+```
+
+Every event had: event name (dot-namespaced), session ID, optional user ID, unix timestamp, and a flat properties object. No nested objects in properties — flat was easier to query. Event names followed a noun.verb pattern: `cart.item.added`, `checkout.step.completed`, `order.placed`, `order.fulfilled`.
+
+The schema was intentionally rigid. Early in 2010 we tried allowing arbitrary event shapes and immediately created a warehouse full of data that was impossible to query consistently. Standardizing the schema made analytics queries straightforward SQL.
+
+## The Pipeline Architecture
+
+Events were emitted from the browser (via a JavaScript tracking library) and from the server (via a server-side SDK call on order events). Both paths sent to the same HTTP endpoint.
+
+From there: the event collector wrote to a message queue. In 2010 we used a combination of Redis lists (for low-latency event acceptance) and a dedicated message broker. Kafka was open-sourced by LinkedIn in January 2011; in late 2010 we were using an earlier open-source message queue called ActiveMQ for the durable part of the pipeline. It was not glamorous but it worked.
+
+From the queue, a consumer wrote to the analytics warehouse. We used PostgreSQL for the analytics store — Redshift did not exist yet, BigQuery was still internal at Google, Snowflake was years away. A well-indexed PostgreSQL table with a composite index on `(event, timestamp)` and a separate index on `session` handled our query volume adequately.
+
+The pipeline latency from event emission to queryable warehouse entry was about 30 seconds. This was intentional — we prioritized correctness and durability over real-time visibility.
+
+## The Funnel Query
+
+The core analytics product was funnel analysis. Given a sequence of events, what percentage of sessions completed each step?
+
+```sql
+WITH funnel_sessions AS (
+  SELECT session,
+    MAX(CASE WHEN event = 'cart.viewed' THEN 1 ELSE 0 END) AS step1,
+    MAX(CASE WHEN event = 'checkout.started' THEN 1 ELSE 0 END) AS step2,
+    MAX(CASE WHEN event = 'checkout.step.completed'
+             AND properties->>'step' = 'payment' THEN 1 ELSE 0 END) AS step3,
+    MAX(CASE WHEN event = 'order.placed' THEN 1 ELSE 0 END) AS step4
+  FROM events
+  WHERE timestamp > extract(epoch from now() - interval '7 days')
+  GROUP BY session
+)
+SELECT
+  SUM(step1) as cart_views,
+  SUM(step2) as checkout_starts,
+  SUM(step3) as payment_reached,
+  SUM(step4) as orders_placed
+FROM funnel_sessions;
+```
+
+This was the query clients asked for most often. The conversion rate between each step told them where they were losing customers.
+
+## What We Got Wrong
+
+We stored timestamps as Unix integers, not timestamptz. Timezone analysis was painful later. We also did not deduplicate events at ingest — network retries could produce duplicate event records. We compensated with deduplication in queries using session+event+timestamp as a composite key, but it added complexity.
+
+The lesson: define idempotency semantics for events at the schema design stage, not after.
