@@ -1,8 +1,8 @@
 export const siteConfig = {
-  name: "Hanzo Blog",
-  url: "https://hanzo.blog",
+  name: "lux.blog",
+  url: "https://lux.blog",
   description:
-    "AI research, infrastructure, models, and more from Hanzo AI.",
+    "Lux Network — post-quantum blockchain, multi-consensus architecture, and sovereign compute infrastructure.",
 };
 
 export type SiteConfig = typeof siteConfig;

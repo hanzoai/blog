@@ -6,22 +6,21 @@ export default function Footer() {
       <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
           <Image
-            src="/hanzo-logo.svg"
-            alt="Hanzo"
+            src="/lux-logo.svg"
+            alt="Lux"
             width={16}
             height={16}
             className="dark:invert-0 invert opacity-50"
           />
-          <span>© 2025 Hanzo AI, Inc. Techstars &apos;17.</span>
+          <span>© 2025 Lux Industries, Inc.</span>
         </div>
         <div className="flex items-center gap-4">
-          <a href="https://hanzo.ai/privacy" className="hover:text-foreground transition-colors">Privacy</a>
-          <a href="https://hanzo.ai/terms" className="hover:text-foreground transition-colors">Terms</a>
-          <a href="https://blog.zoo.ngo" className="hover:text-foreground transition-colors hidden sm:block">zoo blog</a>
-          <a href="https://zenlm.org/blog" className="hover:text-foreground transition-colors hidden sm:block">zen blog</a>
-          <a href="https://zeekay.blog" className="hover:text-foreground transition-colors hidden sm:block">zeekay.blog</a>
+          <a href="https://lux.network/privacy" className="hover:text-foreground transition-colors">Privacy</a>
+          <a href="https://lux.network/terms" className="hover:text-foreground transition-colors">Terms</a>
+          <a href="https://docs.lux.network" className="hover:text-foreground transition-colors hidden sm:block">docs</a>
+          <a href="https://hanzo.blog" className="hover:text-foreground transition-colors hidden sm:block">hanzo blog</a>
           <a
-            href="https://github.com/hanzoai"
+            href="https://github.com/luxfi"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-foreground transition-colors"

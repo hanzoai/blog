@@ -3,6 +3,7 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import Script from "next/script";
 import { ThemeProvider } from "@/components/theme-provider";
+import { PostHogProvider } from "@/components/posthog-provider";
 import { siteConfig } from "@/lib/site";
 import { metadataKeywords } from "./metadata";
 import { SiteNav } from "@/components/site-nav";
@@ -43,6 +44,7 @@ export default function RootLayout({
         />
       )}
       <body>
+        <PostHogProvider>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
@@ -53,6 +55,7 @@ export default function RootLayout({
           {children}
           <Footer />
         </ThemeProvider>
+        </PostHogProvider>
       </body>
     </html>
   );

@@ -3,20 +3,20 @@ import { siteConfig } from "@/lib/site";
 
 export const metadataKeywords = [
     "Blog",
-    "Hanzo AI",
-    "Hanzo Blog",
-    "AI Research",
-    "AI Infrastructure",
-    "AI Models",
-    "Zen Models",
-    "Machine Learning",
-    "LLM",
-    "Foundation Models",
-    "Blockchain",
     "Lux Network",
-    "MCP",
-    "Model Context Protocol",
-    "Agent Framework",
+    "Lux Blog",
+    "Blockchain",
+    "Consensus",
+    "Post-Quantum Cryptography",
+    "Multi-Consensus Architecture",
+    "Snow Protocol",
+    "Subnets",
+    "EVM Compatibility",
+    "Sovereign Compute",
+    "Decentralized Infrastructure",
+    "Validator Network",
+    "ZK Proofs",
+    "Bridge Protocol",
 ]
 
 export const metadata: Metadata = {
@@ -25,11 +25,11 @@ export const metadata: Metadata = {
     keywords: metadataKeywords,
     authors: [
         {
-            name: "Hanzo AI",
-            url: "https://hanzo.ai",
+            name: "Lux Network",
+            url: "https://lux.network",
         },
     ],
-    creator: "Hanzo AI",
+    creator: "Lux Network",
     openGraph: {
         type: "website",
         locale: "en_US",
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
         card: "summary_large_image",
         title: siteConfig.name,
         description: siteConfig.description,
-        creator: "@hanzoai",
+        creator: "@luxnetwork",
     },
     robots: {
         index: true,

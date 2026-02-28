@@ -1,8 +1,8 @@
 {
-  "name": "@hanzo/blog",
+  "name": "lux-blog",
   "version": "0.1.0",
   "private": true,
-  "description": "Hanzo AI Blog — AI research, infrastructure, models, and more",
+  "description": "Lux Network Blog — post-quantum blockchain, multi-consensus architecture, and sovereign compute infrastructure.",
   "scripts": {
     "dev": "fumadocs-mdx && next dev --turbopack",
     "build": "fumadocs-mdx && next build",
@@ -29,6 +29,7 @@
     "motion": "^12.23.11",
     "next": "15.3.5",
     "next-themes": "^0.4.6",
+    "posthog-js": "^1.240.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^3.3.1",
