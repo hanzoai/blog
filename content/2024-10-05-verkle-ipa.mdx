@@ -1,0 +1,62 @@
+---
+title: "Verkle Trees: IPA on Bandersnatch in Go"
+date: "2024-10-05"
+author: "Hanzo AI"
+tags: ["verkle-trees", "ipa", "bandersnatch", "zero-knowledge", "cryptography", "go"]
+description: "Inner Product Arguments on the Bandersnatch/Banderwagon curve for Verkle trees: Fiat-Shamir transcript labels, 8 rounds, barycentric coefficients, and amd64 assembly for Montgomery field operations."
+---
+
+Verkle trees are the planned replacement for Merkle-Patricia tries in Ethereum state storage. The core advantage: proof size scales with O(1) per level rather than O(k) where k is the width of each node. A Verkle proof for a single key in a tree with branching factor 256 is far smaller than the corresponding Merkle proof.
+
+The Lux crypto library implements the Inner Product Argument (IPA) over the Bandersnatch curve, the component that makes Verkle tree proofs work.
+
+## Bandersnatch and Banderwagon
+
+Bandersnatch is a twisted Edwards curve defined over the BLS12-381 scalar field. Its specific structure makes it efficient for IPA-based vector commitments. Banderwagon is the prime-order subgroup of Bandersnatch — using Banderwagon avoids small-subgroup attacks without requiring explicit cofactor clearing on every operation.
+
+The choice of Bandersnatch for Verkle trees is deliberate: the curve was designed by the Ethereum Foundation specifically for this use case. Its arithmetic is faster than Pedersen commitments over BN254 for the vector sizes needed in Ethereum state proofs.
+
+## The Inner Product Argument
+
+An IPA is a proof system for the relation: given a commitment C to a vector **a**, and a public point **b**, prove that ⟨**a**, **b**⟩ = z without revealing **a**.
+
+In the Verkle tree context, C is a polynomial commitment (the node's hash), **b** encodes the evaluation point (the next byte of the key path), and z is the committed value at that point. Verifying the IPA proves that the committed polynomial evaluates to the claimed value at the claimed point.
+
+The Lux IPA runs for 8 rounds. Each round halves the witness size by folding the vector using a random challenge. After 8 rounds, the witness is a constant-size proof regardless of the original vector length (up to 256 elements).
+
+## Fiat-Shamir Transcript
+
+The protocol is made non-interactive via Fiat-Shamir transformation. The prover computes challenges by hashing the transcript so far. The transcript labels used in the Lux implementation:
+
+- `ipa`: domain separator for the IPA protocol
+- `C`: commitment to the vector
+- `input point`: the evaluation point
+- `output point`: the evaluation result
+- `w`: random scalar for combining the inner product relation
+- `L`: left cross-commitment in each round
+- `R`: right cross-commitment in each round
+- `x`: the round challenge derived from L and R
+
+These labels are not arbitrary strings. They are the transcript labels that bind each challenge to the specific protocol step that generated it. A verifier replays the Fiat-Shamir computation using the same labels and obtains the same challenges as the prover. Any deviation — a different label, a different order of transcript elements — produces a different challenge, causing the proof to fail verification.
+
+The labels need to be stable across implementations. Any client that generates IPA proofs for the Lux network must use exactly these strings.
+
+## Barycentric Coefficients
+
+Verkle tree evaluation uses barycentric interpolation. Given a polynomial committed via its evaluations at a predefined set of points (the domain), evaluate at an arbitrary new point using barycentric weights.
+
+Barycentric evaluation is numerically efficient — O(n) versus O(n²) for naive Lagrange interpolation — and has a straightforward formula. The Lux implementation precomputes barycentric weights for the standard domain (256 elements for the Verkle tree branching factor) once at initialization and caches them.
+
+## amd64 Assembly for Montgomery Arithmetic
+
+The Montgomery field arithmetic — the modular multiplication algorithm used in all the field operations underlying Bandersnatch arithmetic — has an amd64 assembly implementation. Montgomery multiplication on modern x86 CPUs involves MULQ and ADCQ instructions that the compiler cannot fully optimize from Go source. The assembly implementation uses MULQ directly and avoids intermediate allocations.
+
+The assembly is in `ipa/field_amd64.s` with corresponding declarations in `field_amd64.go`. Non-amd64 targets use the pure-Go fallback.
+
+## Why This Matters
+
+Verkle trees reduce Ethereum witness sizes from hundreds of kilobytes (for Merkle proofs on a wide trie) to a few kilobytes. Smaller witnesses mean stateless clients are feasible — a node can verify a block without storing the entire state trie by receiving and verifying a witness for each state access.
+
+The IPA implementation in the Lux crypto library is the cryptographic layer for this capability. The Fiat-Shamir transcript labels, the 8-round structure, the Bandersnatch curve choice, and the assembly optimization are all serving the same goal: small, fast, verifiable proofs of Verkle tree membership.
+
+The amd64 assembly is the last mile. A correct, slow IPA implementation is a research artifact. A correct, fast implementation is production infrastructure.

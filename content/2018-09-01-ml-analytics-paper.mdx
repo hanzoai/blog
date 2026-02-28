@@ -1,0 +1,59 @@
+---
+title: "847 Features, 0.89 AUC: ML for Commerce Analytics"
+date: "2018-09-01"
+author: "Zach Kelling"
+tags: ["machine-learning", "analytics", "commerce", "feature-engineering", "prediction"]
+description: "The ML Analytics paper, September 2018: 847-feature engineering pipeline, 0.89 AUC purchase prediction, 0.84 AUC churn prediction, modified k-means with behavioral embeddings, 2.3x marketing ROI, 50M events/day."
+---
+
+By 2018, Hanzo's merchant network was processing 50 million events per day across 500+ merchants. Events: page views, product searches, add-to-cart, checkout initiation, purchase completion, return visits. This was a dataset with real signal about purchase behavior. The paper documents what we extracted from it.
+
+## 847 Features
+
+The feature engineering pipeline produces 847 features per customer-merchant pair. This number is not arbitrary and it is not the result of throwing everything at the wall. It is the result of systematic enumeration of the feature categories that carry independent signal:
+
+**Behavioral sequence features.** Order and timing of actions within a session. Time between add-to-cart and checkout initiation. Number of product page visits before purchase. Browse-to-buy ratios.
+
+**Recency, frequency, monetary (RFM) features.** Classical RFM computed at multiple time windows: 7-day, 30-day, 90-day, lifetime. Each window independently useful; the combination captures customer lifecycle.
+
+**Product affinity features.** Which product categories a customer engages with. Category sequence patterns. Cross-category behavior.
+
+**Session-level features.** Device type, session duration, entry source, exit behavior. Not as predictive individually; contribute in combination.
+
+**Temporal features.** Day of week, hour of day, seasonality indicators. Purchase behavior has strong temporal structure that vanilla models miss without explicit encoding.
+
+**Interaction features.** Products of feature pairs with known causal relationships. These are the most expensive to compute at 847 features, but they capture non-linear dependencies that linear models cannot learn.
+
+## 0.89 AUC Purchase Prediction
+
+AUC (area under the ROC curve) of 0.89 for purchase probability within a session. For reference: a random classifier scores 0.5, a perfect classifier scores 1.0. 0.89 is strong for behavioral prediction in commerce — the purchase decision has genuine noise from factors outside the observable feature set (a user's current budget, a purchase they made on a competitor's site, a gift they are buying for someone else).
+
+Churn prediction (predicting whether a customer will not return for another purchase within 90 days) achieved 0.84 AUC.
+
+These models powered two applications: real-time personalization (show the right product to a high-purchase-probability user) and batch marketing targeting (send reactivation campaigns to high-churn-risk customers before they churn).
+
+## Modified k-Means with Behavioral Embeddings
+
+Standard customer segmentation uses demographic clustering or RFM quintiles. We replaced this with a modified k-means that operates on behavioral embeddings.
+
+The embedding is learned: a neural network trained to predict the next action in a session, given the session history to that point. The embedding layer's output is a dense vector representation of a customer's behavioral style. Customers with similar embeddings have similar purchase patterns regardless of their demographic profile.
+
+Modified k-means runs on these embeddings with a modification: cluster membership is soft, with each customer carrying fractional membership in multiple clusters. This reflects the reality that customer segments overlap — a high-value B2B buyer sometimes exhibits the same behavior as a consumer in a specific product category.
+
+The 2.3x marketing ROI improvement over demographic-based segmentation came from this model. Behavioral embeddings find segments that demographic features obscure.
+
+## Operating at 50M Events/Day
+
+The pipeline runs continuously. 50M events/day is roughly 580 events per second, sustained. The feature engineering is the bottleneck: 847 features per customer-merchant pair, recomputed as new events arrive.
+
+The architecture separates hot-path feature computation (updated on every event, used for real-time personalization) from cold-path feature computation (recomputed in batch, used for marketing targeting and model training). The hot path maintains a narrow feature set that can be updated incrementally. The cold path runs the full 847-feature pipeline nightly.
+
+This separation is not elegant from a purist standpoint — you have two feature implementations that must stay consistent — but it is the only architecture that achieves both real-time response latency and full-feature model quality.
+
+## What 2.3x Means in Practice
+
+2.3x marketing ROI means that for every dollar spent on a marketing campaign using this system's targeting, you get $2.30 back, compared to $1.00 from demographic-based targeting with the same spend. Across 500+ merchants with substantial marketing budgets, the aggregate dollar impact is large.
+
+The system is not doing anything philosophically novel. Feature engineering + gradient boosting + better segmentation is a known formula. What made it work was having the right data volume (50M events/day from a coherent merchant network) and doing the feature engineering work seriously rather than settling for a small feature set.
+
+847 features is not a boast. It is the count of features that independently passed significance testing on held-out data.

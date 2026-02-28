@@ -1,0 +1,65 @@
+---
+title: "NIST FIPS 203/204/205: ML-KEM, ML-DSA, SLH-DSA in Production"
+date: "2024-07-15"
+author: "Hanzo AI"
+tags: ["nist", "fips-203", "fips-204", "fips-205", "ml-kem", "ml-dsa", "slh-dsa", "post-quantum", "rust"]
+description: "The Hanzo Rust crypto library implements ML-KEM-512/768/1024, ML-DSA-44/65/87, and HQC-128/192/256 with deny(unsafe_code), ZeroizeOnDrop on all secrets, SecurityLevel enum, and hybrid KE with the HANZO_HYBRID_KE_v1 domain separator."
+---
+
+NIST finalized FIPS 203, 204, and 205 in August 2024. These three standards — ML-KEM, ML-DSA, and SLH-DSA — are the post-quantum algorithms NIST selected after an eight-year competition. The Hanzo Rust crypto library implements all three, plus HQC as an additional KEM alternative.
+
+## The Standards
+
+**FIPS 203: ML-KEM** (Module-Lattice Key Encapsulation Mechanism). Based on CRYSTALS-Kyber. Three security levels: ML-KEM-512 (Level 1, 128-bit), ML-KEM-768 (Level 3, 192-bit), ML-KEM-1024 (Level 5, 256-bit). Used for key establishment.
+
+**FIPS 204: ML-DSA** (Module-Lattice Digital Signature Algorithm). Based on CRYSTALS-Dilithium. Three security levels: ML-DSA-44 (Level 2), ML-DSA-65 (Level 3), ML-DSA-87 (Level 5). Used for digital signatures.
+
+**FIPS 205: SLH-DSA** (Stateless Hash-Based Digital Signature Algorithm). Based on SPHINCS+. 12 parameter sets spanning speed-vs-size tradeoffs at each security level. Hash-based: security relies on the collision resistance of the hash function rather than lattice hardness assumptions.
+
+## The Hanzo Rust Implementation
+
+The library lives at `/Users/z/work/hanzo/crypto/src/`. Design invariants enforced at the compiler level:
+
+```rust
+#![deny(unsafe_code)]
+```
+
+No unsafe Rust in the cryptography library. This eliminates memory safety bugs — buffer overflows, use-after-free, data races — at the language level. Cryptographic code has historically been a target for memory safety attacks; denying unsafe code is not a style choice, it is a security property.
+
+**ZeroizeOnDrop on all secret types.** Every private key, every secret share, every session secret is annotated with `ZeroizeOnDrop`. When these values go out of scope, their memory is deterministically zeroed before deallocation. This prevents key material from persisting in freed heap memory where it could be read by an attacker with heap inspection capability.
+
+## The SecurityLevel Enum
+
+The public API exposes a `SecurityLevel` enum with three values:
+
+```rust
+pub enum SecurityLevel {
+    Level1, // 128-bit classical equivalent
+    Level3, // 192-bit classical equivalent
+    Level5, // 256-bit classical equivalent
+}
+```
+
+Callers select a security level; the library selects the appropriate parameter set. `Level3` maps to ML-KEM-768, ML-DSA-65. This prevents direct use of parameter set names that do not carry their security implications — a caller who picks `Level5` knows what they are getting.
+
+## HQC
+
+In addition to the FIPS-standardized algorithms, the library includes HQC (Hamming Quasi-Cyclic) — a code-based KEM that was a NIST Round 4 alternate finalist. HQC-128, HQC-192, and HQC-256 provide a code-based alternative to the lattice-based ML-KEM. Using a code-based KEM alongside a lattice-based KEM in a hybrid construction means the construction remains secure even if a lattice attack is found.
+
+## Hybrid Key Exchange
+
+The hybrid KE implementation uses the `HANZO_HYBRID_KE_v1` domain separator. This is the Hanzo-specific label that distinguishes hybrid key exchanges in Hanzo protocols from hybrid key exchanges in other protocols (e.g., the Lux network uses `QZMQ-HybridKEM-v1`).
+
+Domain separation ensures that even if the same key pair is used in multiple protocol contexts, the derived key material is independent. Cross-protocol binding attacks — where a session in one protocol can be replayed in another — are prevented by the domain separator.
+
+## Self-Test Suite
+
+The library includes known-answer tests (KATs) for every algorithm and parameter set. KATs use test vectors from the NIST submission packages. Any change to the implementation that alters the output for a known input fails the KAT immediately.
+
+This is the standard for cryptographic library correctness. "The code compiles" is not sufficient. "The code matches NIST test vectors" is.
+
+## Deployment Context
+
+FIPS finalization in August 2024 removed the primary objection to deploying these algorithms in production: "they might change." They have not changed. FIPS 203, 204, and 205 are stable standards with mandatory compliance requirements for US federal agencies by 2030 and voluntary adoption guidance for all others.
+
+Deploying now, before the 2030 deadline, provides post-quantum protection against store-now-decrypt-later attacks on data encrypted today. The Hanzo crypto library is the implementation layer for that deployment.

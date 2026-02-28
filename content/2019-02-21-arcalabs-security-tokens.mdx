@@ -1,0 +1,66 @@
+---
+title: "arcalabs st-contracts: Security Token Engineering"
+date: "2019-02-21"
+author: "Zach Kelling"
+tags: ["security-tokens", "blockchain", "smart-contracts", "compliance", "ethereum", "arcalabs"]
+description: "arcalabs/st-contracts, created February 21, 2019: the Arca security token protocol. What compliance engineering means for smart contracts — transfer restrictions, investor accreditation, on-chain cap tables, and why this is not ERC-20."
+---
+
+`arcalabs/st-contracts` was created on February 21, 2019. Security tokens were the idea that had survived the ICO collapse: if you are going to put financial instruments on a blockchain, you need those instruments to comply with securities law.
+
+The `st-contracts` project is the Arca security token protocol — the smart contract implementation that makes compliant digital securities work.
+
+## What Makes a Security Token Different from ERC-20
+
+ERC-20 is a fungible token standard. It defines a minimal interface: `balanceOf`, `transfer`, `approve`, `transferFrom`. The standard has no concept of who can hold the token, what restrictions apply to transfers, or what legal regime governs the instrument.
+
+That is exactly wrong for a security. A security is a regulated instrument. The law specifies:
+
+- Who can hold it (accredited investors, qualified purchasers, specific jurisdictions)
+- Under what conditions it can be transferred (lockup periods, volume restrictions, registration requirements)
+- What information must be recorded (cap table, transfer history, beneficial ownership)
+- What rights it represents (equity, debt, revenue participation)
+
+An ERC-20 token with a $100M valuation and no transfer controls is a compliance disaster. `st-contracts` implements the controls.
+
+## Transfer Restrictions
+
+The core mechanism: every `transfer` and `transferFrom` call is intercepted by a compliance oracle before execution. The oracle checks:
+
+**Investor accreditation.** Has the recipient completed KYC/AML? Are they accredited under Reg D, or a qualified purchaser under the '40 Act, or a qualified institutional buyer? The oracle maintains a registry of verified investor identities, keyed by wallet address.
+
+**Jurisdiction restrictions.** Securities may be exempt from registration in some jurisdictions and not others. A Reg S offshore offering cannot flow back to US persons during the lockup period. The oracle checks sender and recipient jurisdiction and rejects cross-jurisdiction transfers that violate the offering terms.
+
+**Lockup periods.** Tokens acquired in a private placement are typically restricted from resale for a year (Rule 144). The oracle records the acquisition date and acquisition type for each holder and blocks transfers until the restriction expires.
+
+**Transfer volume limits.** Volume restrictions on resale prevent market manipulation by large holders. The oracle tracks rolling transfer volumes against configurable limits.
+
+If any check fails, the transfer reverts with a reason code. The reason code is logged on-chain.
+
+## On-Chain Cap Table
+
+Every transfer updates the on-chain cap table. The cap table is the authoritative record of who holds what quantity of the security. Traditional cap table management is a manual, error-prone process that requires reconciliation between transfer agent records, broker records, and company records.
+
+An on-chain cap table is updated atomically with every transfer. There is no reconciliation problem: the blockchain is the record. The transfer is the record update.
+
+The `st-contracts` cap table supports:
+- Current balances by address
+- Historical balance queries (as of any block height)
+- Beneficial ownership declarations (a wallet held by a fund can declare the underlying beneficial owner)
+- Aggregate holder reporting (total holders, holder count by jurisdiction, distribution of holdings)
+
+## On-Chain Compliance vs Off-Chain Compliance
+
+The design choice: compliance checks happen on-chain, in the contract, with an oracle. An alternative is to do compliance off-chain and only submit pre-approved transfers. The on-chain approach is more expensive (oracle calls cost gas) but provides stronger guarantees — non-compliant transfers are impossible, not just discouraged.
+
+For a regulated instrument where a non-compliant transfer could result in securities law violations, "impossible" is the correct requirement.
+
+## The February 2019 Context
+
+The ICO boom of 2017-2018 ended in a regulatory reckoning. Most ICO tokens were unregistered securities. The SEC was issuing enforcement actions. The industry was figuring out how to do token issuance correctly.
+
+`st-contracts` was part of the answer: if you want the programmable, liquid, globally-accessible properties of blockchain tokens for capital instruments, you need to build the compliance layer into the token itself. The contract is the transfer agent. The oracle is the compliance department. The chain is the cap table.
+
+The engineering is not glamorous. Transfer restrictions, accreditation registries, and lockup period tracking are not exciting primitives. But they are the difference between a digital security that can actually be issued and traded, and an ERC-20 token with a securities law problem.
+
+`st-contracts` chose to build the compliance in.

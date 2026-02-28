@@ -1,0 +1,51 @@
+---
+title: "Earle: Genetic Algorithms Beat Human Marketers 34%"
+date: "2016-03-01"
+author: "Zach Kelling"
+tags: ["machine-learning", "genetic-algorithms", "marketing", "optimization", "earle"]
+description: "The Earle paper: marketing campaigns as genomes, domain-specific genetic operators for text, image, and audience selection, 34% conversion improvement over human-designed campaigns, and 2.8x faster convergence than multi-armed bandits."
+---
+
+The Earle paper came from a question that kept recurring across Hanzo merchants: if we have campaign performance data, why are humans still designing the next campaign? The data knows what works. The gap is the optimization loop.
+
+Earle closes that loop with genetic algorithms applied to marketing campaign design.
+
+## Campaigns as Genomes
+
+The central abstraction: a marketing campaign is a genome. Every element — subject line, headline copy, call-to-action text, hero image selection, audience targeting parameters, send time — is a gene. A population of campaigns is a population of genomes.
+
+Standard genetic algorithm machinery follows from there: selection (keep campaigns with higher conversion rates), crossover (combine elements from two successful campaigns), mutation (randomly alter individual elements). The fitness function is conversion rate, measured directly from purchase events.
+
+What makes this non-trivial is that marketing campaigns are not fixed-length binary strings. The genes are heterogeneous: text has structure, images have semantic relationships, audience segments have hierarchical dependencies. Naive crossover across these domains produces nonsense.
+
+## Domain-Specific Genetic Operators
+
+Earle's contribution is genetic operators that respect the structure of each gene type.
+
+**Text operators.** Subject line crossover does not splice character sequences — it splices semantic units: the opener, the value proposition, the call-to-action. Mutations respect sentence structure and brand voice constraints. We built a small grammar that constrained the mutation space to valid marketing copy.
+
+**Image operators.** Image selection is a discrete choice from a catalog. Crossover selects from the top-performing images in each parent. Mutation replaces one image with a randomly sampled alternative weighted by historical performance within the same product category.
+
+**Audience operators.** Targeting segments have hierarchical structure: geographic region contains city, age range contains specific age, interest category contains interest tag. Crossover respects this hierarchy — you cannot combine a parent audience of "New York, 25-34" with a parent audience of "Texas" and produce "New York, Texas." The operator understands what can be meaningfully combined.
+
+## Results
+
+**34% conversion improvement** over human-designed campaigns in controlled experiments. Human marketers designed campaigns using their own judgment and historical intuition. Earle ran from the same data. The comparison is direct.
+
+This is not a small effect. A third more conversions from the same audience is the difference between a campaign that covers its cost and a campaign that drives meaningful revenue.
+
+**2.8x faster convergence than multi-armed bandits.** Multi-armed bandits are the standard alternative: run multiple variants in parallel, dynamically allocate traffic toward the winner. Bandits are effective but they explore the variant space one observation at a time. Genetic algorithms explore the variant space by recombining successful elements — they exploit structure in the search space that bandits treat as opaque.
+
+The 2.8x convergence advantage means Earle finds near-optimal campaigns faster, which matters when campaign windows are short (a product launch, a seasonal promotion, a flash sale).
+
+## What This Required
+
+Large populations need large traffic. Earle was viable at the scale of Hanzo's merchant network — campaigns across 500+ merchants provided enough signal to train the fitness function and run populations with statistical confidence. A single small merchant running Earle in isolation would not have had enough data.
+
+This is an argument for shared infrastructure. Individual merchants benefit from optimization learned across the collective.
+
+## The Name
+
+Earle is named after the geneticist Earle Harold who did foundational work on population genetics. It felt right: the algorithm is population-level optimization applied to a design problem, and the name carries that lineage.
+
+The paper was published in 2016. The system ran in production. The 34% number is from real merchant campaigns, not a synthetic benchmark.

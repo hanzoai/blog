@@ -1,0 +1,66 @@
+---
+title: "Post-Quantum EVM Precompiles: ML-DSA, ML-KEM, SLH-DSA at 0x0110"
+date: "2023-12-01"
+author: "Hanzo AI"
+tags: ["evm", "post-quantum", "precompiles", "ml-dsa", "ml-kem", "slh-dsa", "lamport"]
+description: "Post-quantum EVM precompiles in the Lux Network: ML-DSA at 0x0110-0x0119, ML-KEM at 0x0120-0x0129, SLH-DSA at 0x0130-0x0139, SHAKE at 0x0140-0x0149, Lamport at 0x0150-0x0159. Why precompiles are the right architecture for PQ crypto in EVM."
+---
+
+Ethereum's precompile mechanism puts expensive cryptographic operations at fixed addresses with custom Go implementations rather than Solidity. ECRECOVER is at 0x01. SHA256 is at 0x02. Pairing operations for BN254 are at 0x08. The pattern works because EVM bytecode is too slow for the arithmetic in these operations, but the verifier still needs to call them from contract code.
+
+Post-quantum cryptography has the same problem, amplified. ML-DSA signature verification requires lattice arithmetic that would be prohibitively expensive in EVM bytecode. Putting PQ operations in precompiles is the correct architecture.
+
+## The Precompile Address Space
+
+The Lux Network reserves a range of precompile addresses for post-quantum operations:
+
+| Algorithm family | Address range | Parameter sets |
+|-----------------|---------------|----------------|
+| ML-DSA (FIPS 204) | 0x0110 – 0x0119 | ML-DSA-44, ML-DSA-65, ML-DSA-87 |
+| ML-KEM (FIPS 203) | 0x0120 – 0x0129 | ML-KEM-512, ML-KEM-768, ML-KEM-1024 |
+| SLH-DSA (FIPS 205) | 0x0130 – 0x0139 | 12 parameter sets |
+| SHAKE | 0x0140 – 0x0149 | SHAKE-128, SHAKE-256, XOF variants |
+| Lamport OTS | 0x0150 – 0x0159 | SHA256, SHA512, SHA3 variants |
+
+The range structure — 16 addresses per algorithm family — leaves room for parameter set variants and future additions without reordering existing precompiles.
+
+## ML-DSA: Lattice-Based Digital Signatures
+
+ML-DSA (Module-Lattice Digital Signature Algorithm, FIPS 204) is the NIST-standardized lattice signature scheme. Three parameter sets, three security levels:
+
+- ML-DSA-44: Level 2, 128-bit security
+- ML-DSA-65: Level 3, 192-bit security
+- ML-DSA-87: Level 5, 256-bit security
+
+The precompiles expose key generation, signing, and verification. Verification is the most commonly called operation from contract code — a contract verifying that a transaction was authorized by a post-quantum key calls the ML-DSA verify precompile.
+
+## SLH-DSA: Stateless Hash-Based Signatures
+
+SLH-DSA (FIPS 205) is stateless — unlike XMSS or LMS, there is no state to manage across signatures. This is important for contract-facing operations where state management adds complexity.
+
+The 12 parameter sets span the security/size tradeoff space. The signature sizes vary significantly:
+- SLH-DSA-128s: 7,856 bytes (optimized for signature size)
+- SLH-DSA-128f: 17,088 bytes (optimized for signing speed)
+
+For on-chain signature verification, size matters because calldata costs gas. The 128s variant is the expected choice for most contract use cases.
+
+## Lamport OTS
+
+Lamport one-time signatures are the simplest post-quantum construction: sign a message by revealing pre-images of a hash chain. Security relies only on the collision resistance of the hash function. The implementation supports SHA256, SHA512, and SHA3 hash functions.
+
+The critical property enforced in the implementation: key erasure after single use. A Lamport key used twice reveals the entire private key. The implementation enforces single-use in code — the key is erased after the first signing call. This is not advisory; it is a hard constraint.
+
+## Why Precompiles are the Right Architecture
+
+Alternative approaches:
+1. **Solidity library.** A pure Solidity ML-DSA verifier would require implementing lattice arithmetic in EVM bytecode. The gas cost would be prohibitive — millions of gas per verification.
+2. **Off-chain verification with on-chain attestation.** Submit a proof that verification succeeded. This works but adds protocol complexity and a trusted intermediary.
+3. **Precompiles.** Custom Go implementations at fixed addresses, called like any precompile. Gas cost is calibrated to actual computation time. Solidity callers need no changes beyond knowing the address.
+
+Precompiles give Solidity contracts native access to post-quantum signature verification at gas costs comparable to ECRECOVER. That is the right level of integration — PQ security available as a first-class operation, not as an expensive workaround.
+
+## Forward Compatibility
+
+The reserved address ranges (0x0110-0x0159) mean that when additional PQ algorithms are standardized — or when parameter sets are updated for the post-FIPS-finalization ecosystem — there are addresses available without disrupting existing precompile layouts. The structure was designed for the long term.
+
+Post-quantum precompiles are not a research feature. They are the infrastructure needed for smart contracts to remain secure after a cryptographically-relevant quantum computer exists.

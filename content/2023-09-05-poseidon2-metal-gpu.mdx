@@ -1,0 +1,61 @@
+---
+title: "Poseidon2 on Apple Silicon: GPU-Accelerated ZK Hashing"
+date: "2023-09-05"
+author: "Hanzo AI"
+tags: ["poseidon2", "zero-knowledge", "apple-silicon", "metal", "gpu", "cryptography", "merkle"]
+description: "Poseidon2 (BN254 field) in the Lux crypto library, Metal GPU acceleration on Apple Silicon, the 64-element GPU threshold, and the full API for ZK Merkle trees: HashPair, MerkleRoot, VerifyProof, Commitment, Nullifier."
+---
+
+Poseidon2 is a hash function designed for zero-knowledge proof systems. Standard cryptographic hash functions — SHA-256, BLAKE2b — are efficient in software and hardware but expensive to prove in ZK circuits. Poseidon2 reduces the number of arithmetic operations needed to represent the hash in a circuit, directly reducing proof generation cost.
+
+The Lux crypto library implements Poseidon2 over the BN254 field with Metal GPU acceleration on Apple Silicon.
+
+## Why Poseidon2
+
+ZK Merkle trees are the core data structure for many ZK applications: inclusion proofs, exclusion proofs, commitment schemes with opening proofs. Every node in a Merkle tree is a hash. For a tree of depth 32, a single inclusion proof requires 32 hash computations. Proving that computation in a ZK circuit requires those hashes to be cheap in the arithmetic constraint system.
+
+SHA-256 requires about 25,000 R1CS constraints per hash. Poseidon2 requires around 250. The 100x reduction in constraints translates directly to 100x reduction in prover time and proof size for hash-heavy computations.
+
+The BN254 field is used because BN254 (also called alt_bn128) is the elliptic curve for which Ethereum's precompiles provide efficient pairing verification. Poseidon2 over BN254 field elements produces outputs that are natively compatible with on-chain ZK proof verification.
+
+## Metal GPU Acceleration
+
+The Lux implementation uses Apple Metal for GPU acceleration of Poseidon2 on Apple Silicon machines. The GPU acceleration kicks in at a threshold of 64 elements.
+
+Why 64 elements? GPU dispatch has fixed overhead — kernel launch, data transfer to GPU memory, result transfer back. For small batches, this overhead exceeds the speedup from parallelism. The 64-element threshold is the crossover point where GPU execution outperforms CPU execution including transfer overhead.
+
+Below 64 elements: CPU path. Above 64 elements: Metal GPU path.
+
+The GPU path parallelizes the field arithmetic across Poseidon2's permutation rounds. The BN254 field operations — modular addition, multiplication, and the S-box operations — map naturally to GPU parallelism at the element level.
+
+## The Full API
+
+The Lux Poseidon2 implementation exposes a complete API for ZK Merkle tree operations:
+
+**Leaf-level operations:**
+- `HashPair(left, right [32]byte) [32]byte` — hash two child nodes to a parent
+- `BatchHashPair(pairs [][2][32]byte) [][32]byte` — hash multiple pairs, GPU-accelerated above threshold
+
+**Tree-level operations:**
+- `MerkleLayer(leaves [][32]byte) [][32]byte` — compute one level of the Merkle tree
+- `MerkleRoot(leaves [][32]byte) [32]byte` — compute the root from all leaves
+
+**Proof operations:**
+- `VerifyProof(root, leaf [32]byte, proof [][32]byte, path []bool) bool` — verify a Merkle inclusion proof
+- `BatchVerifyProofs(root [32]byte, proofs []MerkleProof) []bool` — batch verification
+
+**Commitment operations:**
+- `Commitment(secret, nullifier [32]byte) [32]byte` — compute a Pedersen-style commitment
+- `Nullifier(secret, index [32]byte) [32]byte` — compute the nullifier for a spent commitment
+
+The Commitment and Nullifier functions implement the UTXO privacy pattern common in ZK applications: you commit to a secret value, and the nullifier prevents double-spending without revealing the secret.
+
+## Why GPU Matters Here
+
+ZK proof generation is computationally intensive. The Merkle hashing step is not the bottleneck in all ZK applications, but in systems with large trees (millions of leaves) or high proof volume, it can be. GPU acceleration on the hash step directly reduces the wall-clock time for proof generation on developer hardware.
+
+Apple Silicon's unified memory architecture makes GPU acceleration particularly efficient for this workload: there is no PCIe transfer latency between CPU and GPU memory. Data stays in the same physical memory pool; only the compute moves to the GPU.
+
+The 64-element threshold means the acceleration is automatic — callers do not choose the execution path. The implementation selects CPU or GPU based on batch size at runtime.
+
+Poseidon2 with Metal GPU acceleration is the correct implementation for ZK Merkle trees on Apple Silicon. The API covers the full lifecycle from leaf hashing to proof verification to commitment generation.

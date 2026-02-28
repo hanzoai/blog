@@ -1,0 +1,51 @@
+---
+title: "Crowdstart: Stateless Commerce on Google App Engine"
+date: "2014-06-01"
+author: "Zach Kelling"
+tags: ["commerce", "go", "appengine", "architecture", "stateless"]
+description: "How we built Crowdstart Commerce: stateless Go on Google App Engine, idempotent operations, eventual consistency for cart state, and sub-100ms p99 latency serving 500 merchants."
+---
+
+The core problem with commerce infrastructure in 2014 was state. Every cart system I had seen kept mutable session state server-side, which meant sticky sessions, session replication, or accepting that your checkout was a single point of failure. We decided to throw that out.
+
+Crowdstart Commerce is built on a single architectural principle: the server holds no session state. Every request carries everything it needs to be processed independently. The backend is Go on Google App Engine.
+
+## Why Go on App Engine
+
+Go was two years old as a 1.x language. App Engine had just added Go support in a way that actually worked. The combination gave us what we needed: stateless handler processes that spun up fast, no persistent memory, horizontal scale with zero coordination overhead.
+
+App Engine's constraint — no persistent local state between requests — was a feature, not a limitation. It forced every design decision toward statelessness.
+
+## Idempotent Operations
+
+Every API operation in Crowdstart is idempotent. A client can submit the same cart update or payment intent multiple times and the system produces the same result. This is non-trivial to implement correctly because the naive approach — checking if a record already exists — introduces TOCTOU races.
+
+We used a combination of client-generated idempotency keys and App Engine's datastore transaction semantics. The idempotency key is hashed and stored as the datastore entity key. A transaction either creates the entity (first attempt) or reads back the existing result (retry). The response is identical either way.
+
+This eliminated an entire class of "did that go through?" support tickets.
+
+## Eventual Consistency for Cart State
+
+App Engine's Datastore provides strongly consistent reads within entity groups and eventually consistent reads across them. We modeled carts as entity groups, which gave us strong consistency for operations on a single cart. Cross-cart analytics and aggregate views accepted eventual consistency.
+
+The tradeoff was deliberate. A customer adding items to their cart sees immediate consistent feedback. A merchant's dashboard showing total active carts across all customers can lag by seconds. Nobody complained about the dashboard lag. They would have complained about cart corruption.
+
+## Latency
+
+Sub-100ms p99 at the API layer. This required profiling App Engine instance startup (the cold-start penalty) and sizing warm instance pools against traffic patterns. Go's startup time was a significant advantage over JVM-based alternatives — warm instances were ready in under 5ms.
+
+Hot paths: cart read, cart update, payment intent creation. All three under 80ms p99 in steady state. Datastore read latency dominated. We structured entity key lookups to avoid index scans on the hot path.
+
+## Scale
+
+500+ merchants on the platform. The stateless architecture meant merchant traffic was fully isolated — one merchant's spike did not affect another's latency. App Engine's automatic scaling handled bursty traffic patterns without any manual intervention.
+
+The design also made multi-tenancy trivial. Tenant isolation is a key prefix in the datastore namespace. No schema changes when a merchant onboards.
+
+## What We Got Right
+
+The paper documents something I believe more now than I did then: stateless commerce at the API layer is the only design that scales without operational heroics. The state exists — carts, orders, payments — but it lives in the datastore, not in your application tier. Your application tier is a pure function from request to response.
+
+That is a constraint worth imposing on yourself early. The alternative is years of fighting session affinity, cache invalidation, and deployment coordination.
+
+The Crowdstart architecture became the foundation for everything we built at Hanzo over the next decade.

@@ -1,0 +1,65 @@
+---
+title: "Hybrid Post-Quantum Cryptography: X25519 + ML-KEM in Production"
+date: "2023-06-20"
+author: "Hanzo AI"
+tags: ["post-quantum", "ml-kem", "x25519", "hybrid", "fips-203", "cryptography"]
+description: "Why hybrid classical+PQ constructions are the right approach, the HKDF-SHA256 combination with the QZMQ-HybridKEM-v1 salt, ML-KEM-768 (FIPS 203) parameters, and the HANZO_HYBRID_KE_v1 domain separator in Rust."
+---
+
+Migrating to post-quantum cryptography should not require a flag-day switchover where all classical algorithms are disabled simultaneously. Hybrid constructions — combining a classical key exchange with a post-quantum key exchange — provide the right transition path. The combined key material is secure if either algorithm is secure. You get PQ security now without betting everything on the immaturity of PQ implementations.
+
+Both the Lux (Go) and Hanzo (Rust) cryptography libraries implement hybrid key exchange. They are not identical, but they share the same structural approach.
+
+## ML-KEM-768 (FIPS 203)
+
+ML-KEM is the NIST-standardized Module-Lattice Key Encapsulation Mechanism. FIPS 203 was finalized in 2024. The 768-parameter set is the Level 3 security level (192-bit classical equivalent).
+
+Key sizes for ML-KEM-768:
+- Public key: 1184 bytes
+- Secret key: 2400 bytes
+- Ciphertext: 1088 bytes
+- Shared secret: 32 bytes
+
+These are not small. X25519 public keys are 32 bytes. The ML-KEM-768 public key is 37x larger. In a protocol where key material is transmitted, this matters for message sizing. In a protocol where key material is stored, it matters for storage. The tradeoff is accepted: post-quantum security requires larger keys.
+
+## The Hybrid Construction
+
+The Lux Go implementation combines X25519 and ML-KEM. The shared secret derivation:
+
+```
+combined_secret = HKDF-SHA256(
+    salt: "QZMQ-HybridKEM-v1",
+    ikm:  x25519_shared_secret || mlkem_shared_secret,
+    info: context
+)
+```
+
+HKDF-SHA256 is used because it is a well-analyzed KDF with the extract-then-expand structure needed for hybrid key material combination. The concatenation of both shared secrets as the IKM ensures that the output is indistinguishable from random if either input is indistinguishable from random.
+
+The salt `QZMQ-HybridKEM-v1` is the domain separator for this specific protocol and version. Changing the protocol requires changing the salt. Reusing the salt across different protocols creates cross-protocol binding attacks. The explicit versioning in the salt string (`v1`) allows future protocol versions to coexist.
+
+## The Hanzo Rust Implementation
+
+The Hanzo crypto library (`/Users/z/work/hanzo/crypto/src/`) implements the same hybrid structure in Rust with different implementation details:
+
+Domain separator: `HANZO_HYBRID_KE_v1`. The different separator from the Lux implementation ensures that hybrid key exchanges for Hanzo protocols cannot be confused with Lux network protocol key exchanges, even if the same key pairs are used across both.
+
+The Rust implementation supports the full ML-KEM parameter range: ML-KEM-512 (Level 1, 128-bit), ML-KEM-768 (Level 3, 192-bit), and ML-KEM-1024 (Level 5, 256-bit). The `SecurityLevel` enum makes the choice explicit at the type level.
+
+Security invariants enforced at the type level:
+- `#![deny(unsafe_code)]` — no unsafe Rust in the cryptography library
+- `ZeroizeOnDrop` on all secret key types — keys are zeroed in memory when dropped
+
+The combination of `deny(unsafe_code)` and `ZeroizeOnDrop` eliminates two large categories of cryptographic implementation bugs: memory safety vulnerabilities and key material leakage through heap inspection.
+
+## Why Hybrid Now
+
+The argument for deploying hybrid classical+PQ today: store-now-decrypt-later attacks. An adversary with access to recorded ciphertext can decrypt it in the future once a cryptographically-relevant quantum computer exists. Any sensitive communications encrypted today with purely classical algorithms are vulnerable to this attack.
+
+Hybrid deployment adds PQ security to all new key exchanges without waiting for full ecosystem migration. The QZMQ transport protocol and the Hanzo Rust library both deploy hybrid constructions as the default.
+
+## Interoperability Note
+
+The different domain separators (`QZMQ-HybridKEM-v1` vs `HANZO_HYBRID_KE_v1`) mean the two implementations are not directly interoperable for key exchange. They share the algorithm and structure; they bind to different protocols. This is correct: you do not want protocol-level key material to silently cross protocol boundaries.
+
+Hybrid post-quantum key exchange is deployable now. The algorithms are standardized (FIPS 203). The implementation libraries are available. The transition cost is key size overhead. That is a reasonable price for post-quantum security against store-now-decrypt-later attacks.

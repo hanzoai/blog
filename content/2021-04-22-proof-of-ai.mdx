@@ -1,0 +1,61 @@
+---
+title: "Proof of AI: Consensus for ML Workloads"
+date: "2022-04-22"
+author: "Zach Kelling"
+tags: ["proof-of-ai", "consensus", "machine-learning", "blockchain", "tee", "zoo"]
+description: "The Zoo PoAI paper: TEE attestations plus probabilistic verification plus multi-party quality scoring for Byzantine fault-tolerant ML workload consensus. 847 TPS, 2.3s finality, 94% useful work efficiency on a 100-node testnet."
+---
+
+Proof of Work burns energy on puzzles. Proof of Stake selects validators by capital holdings. Neither is designed for a world where the economically valuable computation is machine learning inference and training. Proof of AI (PoAI) is a consensus mechanism designed specifically for that world.
+
+The paper was published in April 2022. The testnet ran on 100 nodes.
+
+## The Core Problem
+
+How do you reach Byzantine fault-tolerant consensus on whether an ML workload was executed correctly? This is harder than it sounds.
+
+For a hash puzzle (PoW), verification is trivial: hash the result, check the leading zeros. For a token balance (PoS), verification requires only reading state. For ML inference — "was this the correct output for this model given this input?" — verification requires either re-running the inference (expensive) or trusting some attestation mechanism (requires a different trust model).
+
+PoAI uses three mechanisms in combination: TEE attestations, probabilistic verification, and multi-party quality scoring.
+
+## TEE Attestations
+
+Trusted Execution Environments (TEEs) — Intel SGX, AMD SEV, ARM TrustZone — provide hardware-level isolation for computation. A TEE can produce a cryptographic attestation: a signed claim that a specific computation ran on specific code in an isolated environment, with a specific output.
+
+In PoAI, compute nodes run ML inference inside TEEs. The attestation proves that the inference ran on the specified model weights, with the specified input, producing the specified output, without tampering. Validators accept the attestation as evidence of honest execution without re-running the inference.
+
+TEE attestations are not perfect — side-channel attacks exist, and the trust root is Intel or AMD rather than the network itself. But they raise the cost of cheating substantially compared to no attestation.
+
+## Probabilistic Verification
+
+Not every inference is re-verified. The protocol selects a random subset of recent computations for full re-verification by a separate set of validators. The selection is unpredictable by the original compute node.
+
+A node that returns fraudulent results — claiming to have run inference when it did not, or returning cached outputs for different inputs — is caught with probability proportional to the re-verification rate. The economic penalty for detection is set high enough that the expected value of cheating is negative.
+
+This is the same logic as spot-check auditing in traditional finance, applied to decentralized compute. Full verification of everything is too expensive; random verification of a sample is sufficient with the right penalty structure.
+
+## Multi-Party Quality Scoring
+
+For generative ML outputs — text, images, code — there is no single correct answer. Quality scoring requires multiple evaluators. PoAI uses multi-party quality scoring: several independent validators assess output quality and reach consensus on a score using a voting mechanism.
+
+The scoring criteria are model-specific and declared in the compute request. For language model outputs: coherence, instruction following, factual accuracy where verifiable. The multi-party structure prevents any single validator from manipulating quality scores.
+
+## BFT Properties
+
+PoAI inherits Byzantine fault tolerance with f < n/3: the protocol tolerates up to one-third of validators behaving arbitrarily maliciously. This is the standard BFT bound from PBFT and its successors. The safety proof follows from the quorum structure: any two quorums of size 2n/3 + 1 overlap by at least one honest node.
+
+## Testnet Results
+
+100-node testnet. 847 TPS (transactions per second) of compute requests. 2.3 second finality.
+
+94% useful work efficiency: 94% of compute cycles on the network went to actual ML inference. The remaining 6% went to consensus overhead — attestation verification, probabilistic re-verification, quality scoring, and the BFT protocol itself. For comparison, PoW networks direct less than 1% of compute to useful work.
+
+The 94% efficiency number is the design goal made concrete. The consensus mechanism should cost as little as possible relative to the useful work it secures. 6% overhead is a plausible production target.
+
+## Why This Matters
+
+The trajectory is toward AI compute becoming the dominant workload on decentralized networks. PoAI is a consensus mechanism designed for that trajectory rather than inherited from the hash-puzzle era.
+
+TEE attestations provide a trust anchor that does not require re-execution. Probabilistic verification keeps overhead low. Multi-party quality scoring handles the absence-of-ground-truth problem for generative tasks. The combination achieves BFT safety with 94% useful work efficiency on a 100-node testnet.
+
+That is a credible foundation for a network where the valuable computation is ML.

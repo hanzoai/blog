@@ -1,0 +1,59 @@
+---
+title: "Hanzo Checkout: 47% Less Cart Abandonment, Formally Proven"
+date: "2018-03-01"
+author: "Zach Kelling"
+tags: ["checkout", "commerce", "payments", "pci", "formal-verification", "state-machine"]
+description: "The Checkout paper, March 2018: one-click checkout, 47% cart abandonment reduction, PCI DSS Level 1, payment state machine with formal safety proofs, 2,000+ merchants, $1.2B annually."
+---
+
+Cart abandonment is the primary loss in e-commerce. A user adds items, reaches checkout, and leaves. The industry average abandonment rate at checkout was around 70% when we started this work. Our question: what fraction of that is preventable, and what does preventing it require technically?
+
+The Hanzo Checkout paper answers both.
+
+## 47% Reduction
+
+We measured a 47% reduction in cart abandonment rate among merchants using Hanzo Checkout compared to their prior checkout implementations. This is a controlled comparison — same merchants, same products, same traffic sources. The variable is the checkout implementation.
+
+The mechanism is not mystery: friction at checkout is the primary driver of abandonment. Friction means form fields, page loads, redirect chains, re-entering payment information, and uncertainty about whether the action succeeded. One-click checkout removes almost all of this.
+
+A returning customer with a stored payment method and address completes checkout in a single action. No redirect to a payment processor page. No form fields. One button. Sub-200ms transaction initiation latency.
+
+## PCI DSS Level 1
+
+Storing payment credentials to enable one-click checkout requires operating a payment vault. A payment vault is a PCI DSS in-scope system. We built to Level 1 — the highest tier, required for processors handling over 6 million transactions annually.
+
+Level 1 compliance means annual on-site audits by a Qualified Security Assessor, penetration testing, log monitoring, and formal incident response procedures. It is not lightweight compliance theater. The controls are real and the audit is thorough.
+
+The architecture that enables this: cardholder data never touches merchant systems. The Hanzo Checkout client-side component tokenizes the card directly to the Hanzo vault before the token is submitted to merchant application code. Merchants handle tokens, not card numbers. Their systems are out of PCI scope for raw cardholder data.
+
+## Payment State Machine with Formal Safety Proofs
+
+The checkout flow is a state machine. States: cart, address-collected, shipping-selected, payment-initiated, payment-authorized, payment-captured, order-fulfilled, refunded. Transitions are guarded by preconditions.
+
+We applied formal verification to the state machine. The safety properties we proved:
+
+- No order can transition to `payment-captured` without passing through `payment-authorized`.
+- No order in terminal state (`order-fulfilled`, `refunded`) can re-enter an active state.
+- Double-capture is impossible: a capture transition is only valid from `payment-authorized`, which is removed once the capture transition fires.
+- Partial refund totals cannot exceed captured amount.
+
+These are not unit tests. They are proofs that hold for all possible execution paths, including concurrent requests. The state machine implementation is the formal specification. There is no divergence between spec and code because the spec is the code.
+
+The practical result: in 2,000+ merchants processing $1.2B annually, we have had zero double-charge incidents attributable to state machine bugs. The formal proof converts what would otherwise be a risk category into a solved problem.
+
+## Scale
+
+2,000+ merchants. $1.2B processed annually as of the paper's writing. Sub-200ms transaction initiation for the happy path.
+
+The $1.2B number is significant context for the PCI Level 1 choice. You do not get to $1.2B in annual volume without taking security compliance seriously. The investment in Level 1 compliance is a prerequisite for operating at that scale, not an optional enhancement.
+
+## What the Paper Documents
+
+The paper is primarily a systems paper, not a payment theory paper. It documents:
+
+1. The user experience design choices that drive the abandonment reduction
+2. The tokenization architecture that enables one-click without PCI scope expansion for merchants
+3. The state machine model and its formal safety properties
+4. The operational infrastructure (fraud detection, dispute handling, refund mechanics) needed to run a payment system at scale
+
+Cart abandonment is an engineering problem, not just a UX problem. The 47% reduction came from solving it at the infrastructure layer, not by adding better copy to the checkout page.

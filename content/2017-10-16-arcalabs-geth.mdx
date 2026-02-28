@@ -1,0 +1,54 @@
+---
+title: "arcalabs: Deploying Geth at Scale for Commerce"
+date: "2017-10-16"
+author: "Zach Kelling"
+tags: ["ethereum", "geth", "blockchain", "commerce", "arcalabs", "infrastructure"]
+description: "Why Hanzo needed its own Geth deployment tooling in 2017, what the arcalabs/geth-node project does, and how Ethereum integration with commerce infrastructure evolved into broader blockchain data tooling."
+---
+
+`arcalabs/geth-node` was created on October 16, 2017. It was not a research project. It was a production need.
+
+By mid-2017, enough Hanzo merchants were asking about accepting ETH that the question became operational: how do you run Ethereum infrastructure reliably as part of a commerce platform? The answer was not "use a third-party API." Third-party Ethereum APIs in 2017 were slow, had unpredictable uptime, and added a counterparty dependency to payment flows that had none.
+
+The answer was to run Geth ourselves, with the same operational rigor we applied to our other infrastructure.
+
+## What geth-node Does
+
+`geth-node` is deployment tooling for go-ethereum (Geth) nodes within the Hanzo infrastructure. Specifically:
+
+- Containerized Geth with pinned versions and reproducible builds
+- Configuration management for mainnet, testnet, and private networks
+- Chain data volume management and snapshot bootstrapping (syncing from scratch takes days; bootstrapping from a snapshot takes hours)
+- RPC endpoint configuration with authentication and rate limiting
+- Health checking and automatic restart on failure
+- Log aggregation compatible with the rest of the Hanzo observability stack
+
+The goal was a Geth node that behaved like any other service in the platform: deployable, observable, and recoverable without manual intervention.
+
+## Ethereum and Commerce
+
+The integration surface between Ethereum and commerce was narrower than the 2017 hype suggested. The real use cases:
+
+**Payment acceptance.** A customer pays in ETH. The commerce platform watches the mempool for transactions to merchant wallet addresses, waits for sufficient confirmation depth, then marks the order as paid. `geth-node` provided the RPC endpoint that order processing called to check transaction status.
+
+**Token-denominated sales.** Some merchants were selling access to their ERC-20 token projects. This required reading ERC-20 `Transfer` events from the Geth node to detect incoming token payments.
+
+**Smart contract crowdsales.** The Arca work (which came later) grew from this: if you are running a token sale via a smart contract, the commerce layer needs to interact with that contract for checkout flows.
+
+## bitcoin-reader Followed
+
+Two months after `geth-node`, on December 9, 2017, `arcalabs/bitcoin-reader` was created. Then `binance-recorder` in January 2018, `ethereum-reader` in February 2018.
+
+The pattern is clear in retrospect: `geth-node` was the first step of building proper multi-chain data infrastructure. You need a node before you need a reader. You need a reader before you need a recorder. You need recorders before you can build analytics on blockchain data.
+
+The `geth-node` project in October 2017 was the founding piece of what became the arcalabs blockchain data stack.
+
+## Why This Mattered for Commerce
+
+Commerce platforms are fundamentally about trust in payment. Every payment method — card, ACH, wire, crypto — has its own verification model. For cards, you trust the card network. For ACH, you trust the bank. For ETH, you trust the consensus of the Ethereum network.
+
+Trusting Ethereum consensus means reading it yourself. An Ethereum node is your direct connection to that consensus. Delegating that connection to a third party means trusting their read of consensus, which adds a layer of trust that undermines the whole model.
+
+Running your own Geth node, with `geth-node` handling the operational complexity, was the correct answer to the question of how to accept ETH in a commerce platform that takes payment trust seriously.
+
+The October 2017 creation date puts this in its real context: right at the peak of Ethereum's first major bull cycle, when the question of accepting crypto in commerce went from hypothetical to urgent.

@@ -1,0 +1,59 @@
+---
+title: "shop.js on npm: the storefront layer"
+date: "2015-12-07"
+author: "Zach Kelling"
+tags: ["npm", "javascript", "storefront", "commerce", "sdk"]
+description: "shop.js ships December 7, 2015: the storefront rendering layer, separate from the core hanzo API client. Why we split them, what shop.js does, and the API design that made headless commerce composable."
+---
+
+Four months after the `hanzo` core SDK, `shop.js` published to npm on December 7, 2015. The separation was intentional and worth explaining.
+
+## Why Two Packages
+
+The `hanzo` npm package is an API client. It knows about HTTP, authentication, serialization, and the Hanzo backend endpoints. It has no opinion about rendering, DOM, or user interface.
+
+`shop.js` is the storefront layer. It knows about product displays, cart UI state, checkout flows, and browser events. It has no opinion about how to talk to the API — it delegates that to `hanzo`.
+
+The split follows a principle I believe in: separate what changes at different rates. The API client changes when the backend API changes. The storefront layer changes when product UI patterns evolve or when merchant customization requirements shift. These are different cadences, different concerns, different authors.
+
+## What shop.js Does
+
+The storefront layer handles the stateful UI problems that `hanzo` deliberately avoids:
+
+**Cart state management.** The `hanzo` SDK gives you cart operations. `shop.js` gives you a cart object that tracks local state, batches updates, and syncs with the backend. Optimistic UI — show the item added immediately, sync in the background — is handled at this layer.
+
+**Product display logic.** Variant selection: a product with size and color options needs to resolve the correct SKU from the user's selections before adding to cart. `shop.js` models this combinatorics problem so every storefront does not have to.
+
+**Checkout flow state machine.** The steps from cart to completed order — address collection, shipping method selection, payment capture — are a state machine. `shop.js` makes that state machine explicit and navigable.
+
+**Form binding.** Credit card inputs, address fields, coupon codes. `shop.js` handles the binding between HTML form elements and the underlying commerce state.
+
+## API Design
+
+The API is event-driven. Storefront components emit events (`add-to-cart`, `checkout-started`, `order-completed`) and respond to commands. This made `shop.js` compatible with the emerging component-based frontend architectures — React, Angular, Vue — without being coupled to any of them.
+
+```javascript
+const shop = new Shop({ client: hanzoClient })
+
+shop.on('order:completed', (order) => {
+  analytics.track('Purchase', { orderId: order.id, total: order.total })
+})
+
+shop.cart.add({ productId: 'prod_123', quantity: 1 })
+```
+
+## Why Separate from the Core SDK
+
+Merchants building headless storefronts — custom React apps, custom mobile apps — needed the `hanzo` API client but not `shop.js`. They built their own UI state management suited to their framework.
+
+Merchants using more traditional storefront tooling — Liquid templates, jQuery-era sites — needed `shop.js` to handle the browser-side complexity that their server-rendered approach could not.
+
+Bundling them together would have inflated the payload for the first group and denied the second group the tested, maintained UI layer they needed.
+
+## The December 2015 Timing
+
+`shop.js` shipped into a world where headless commerce was a phrase being said but not yet widely practiced. Most commerce was still tightly coupled: Shopify controlled both the template and the API, Magento controlled both the product catalog and the checkout page.
+
+The two-package split was a bet that this coupling would break. That merchants would want to own their storefronts while using managed commerce backends. That bet was directionally correct; it just took longer than 2015 to become the default.
+
+`shop.js` is still the right abstraction: a storefront layer that knows about UI state, delegates API calls to a clean client library, and stays out of the way of whatever rendering framework you prefer.

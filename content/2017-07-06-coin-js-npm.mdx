@@ -1,0 +1,53 @@
+---
+title: "coin.js ships: currency primitives for the token era"
+date: "2017-07-06"
+author: "Zach Kelling"
+tags: ["npm", "javascript", "currency", "cryptocurrency", "decimal", "coin.js"]
+description: "coin.js publishes July 6, 2017 — a currency primitive library for JavaScript. Multi-currency, decimal precision, token denominations. The float trap explained. Shipping into the ICO era."
+---
+
+`coin.js` published to npm on July 6, 2017. The timing was not accidental.
+
+The summer of 2017 was when the ICO era went vertical. Every week there was a new token launch, a new smart contract crowdsale, a new project denominating value in something other than USD. JavaScript applications were suddenly handling ETH, BTC, custom ERC-20 tokens, and fiat simultaneously.
+
+Every one of those applications was about to make the same mistake with floating point.
+
+## The Float Trap
+
+JavaScript's `Number` type is IEEE 754 double-precision floating point. This is fine for most numeric computations. It is wrong for currency.
+
+```javascript
+0.1 + 0.2 // 0.30000000000000004
+```
+
+That error is 4e-17. Irrelevant for scientific computing. Catastrophic when multiplied by transaction volume at scale. A system processing $1.2B annually with floating point accumulation errors will, eventually, produce incorrect totals that cannot be reconciled.
+
+The fix is not complicated: represent monetary values as integers in their smallest denomination. Dollars become cents. Ether becomes wei (1e18 wei per ETH). BTC becomes satoshi (1e8 satoshi per BTC). All arithmetic is integer arithmetic. Formatting for display is a separate, final step.
+
+`coin.js` enforces this discipline.
+
+## What coin.js Provides
+
+**Denomination handling.** Every currency has a canonical smallest unit. `coin.js` maintains a denomination registry: USD uses 2 decimal places (cents), ETH uses 18 (wei), BTC uses 8 (satoshi). Operations always work in the smallest unit. Formatting converts to human-readable at the display boundary and nowhere else.
+
+**Multi-currency arithmetic.** `coin.js` refuses to add values of different currencies without explicit conversion. `usd(100).add(eth(1))` throws. This is correct behavior. Silent coercion between currencies is a category of bug that causes actual financial loss.
+
+**Token denominations.** ERC-20 tokens specify their own decimal places. A token with 6 decimals uses different integer arithmetic than ETH. `coin.js` accepts a decimals parameter so token-denominated values work through the same system.
+
+**Formatting.** Display is the last step. `coin.js` formats for locales: thousands separators, decimal marks, currency symbols. Format only for human eyes. Compute always in integers.
+
+## July 2017
+
+The date matters as context. In early 2017, if you were building commerce in JavaScript, you mostly worried about USD, EUR, GBP. Multi-currency meant a few fiat currencies with known decimal places.
+
+By July 2017, teams building token-denominated applications were discovering that 18 decimal places is not a rounding problem, it is a completely different numeric regime. `1 ETH = 1000000000000000000 wei` — you need big integer arithmetic or you lose precision for any transaction under about 0.000001 ETH.
+
+`coin.js` shipped into this environment with a clean answer: use the right abstractions, always operate in smallest units, know your denomination before you compute.
+
+## Why a Dedicated Library
+
+The argument for pulling this into a standalone package rather than leaving it as internal utilities: currency handling is wrong in the same ways everywhere. Every JavaScript commerce project independently discovers the float trap and independently implements the integer-denomination fix with slightly different APIs. That duplication has a cost — bugs, subtle differences, maintenance overhead.
+
+A shared library with a tested implementation and a stable API is better than five projects each maintaining their own version. `coin.js` is that library.
+
+The npm publish date of July 6, 2017 sits right at the inflection point where JavaScript currency handling stopped being mostly-fiat and started being multi-denomination with programmable money. The timing was correct.

@@ -1,0 +1,53 @@
+---
+title: "CGGMP21: Threshold ECDSA for Non-Custodial Infrastructure"
+date: "2022-11-10"
+author: "Hanzo AI"
+tags: ["threshold-ecdsa", "cggmp21", "cryptography", "non-custodial", "paillier", "mpc"]
+description: "CGGMP21 implementation in the Lux Network: the 2021 paper by Canetti, Gennaro, Goldfeder, Makriyannis, and Peled. Four-round protocol, identifiable aborts, Paillier homomorphic encryption for the multiplication step."
+---
+
+The CGGMP21 protocol — "UC Non-Interactive, Proactive, Threshold ECDSA with Identifiable Aborts" — is the current state of the art for threshold ECDSA. The full author list: Canetti, Gennaro, Goldfeder, Makriyannis, and Peled, 2021. The Lux implementation follows this paper.
+
+## Why Threshold ECDSA
+
+Non-custodial key management requires that no single party holds a complete private key. The private key should be split among n parties such that any t of them can sign, but no coalition of fewer than t parties can. This is the t-of-n threshold scheme.
+
+ECDSA is the dominant signing algorithm for blockchains. Threshold ECDSA implements the non-custodial security model without changing the signature format — the output of threshold ECDSA is indistinguishable from a single-party ECDSA signature. No changes to the chain, no changes to verification logic.
+
+## The Protocol: Four Rounds
+
+CGGMP21 signing runs in four rounds:
+
+**Round 1: Commitment.** Each party commits to their random nonce contribution using a commitment scheme. Commitments are broadcast.
+
+**Round 2: Reveal.** Each party opens their commitment. Parties verify all openings against the commitments from Round 1.
+
+**Round 3: Multiply.** This is the hard round. ECDSA signing requires computing k⁻¹(m + rx) where k is the nonce, x is the private key, m is the message hash, and r is a function of the nonce's public part. The multiplication step (combining each party's nonce share with their key share) cannot be done locally — it requires a two-party multiplication protocol.
+
+The Paillier cryptosystem handles this. Each party encrypts their key share under Paillier, sends it to other parties, and the multiplication is computed homomorphically. Paillier's additive homomorphism enables: `Enc(a) * Enc(b) = Enc(a + b)`, and scalar multiplication `Enc(a) ^ k = Enc(k*a)`. These operations, combined correctly, implement the cross-party multiplication without revealing individual shares.
+
+The implementation uses 2048-bit Paillier keys. Zero-knowledge proof of plaintext knowledge accompanies each Paillier ciphertext — a party cannot send an invalid or maliciously chosen ciphertext without detection.
+
+**Round 4: Open and Finalize.** Parties combine partial signatures. If all are valid, the complete ECDSA signature is reconstructed.
+
+## Identifiable Aborts
+
+Standard MPC protocols can abort — a malicious party can refuse to cooperate in a late round, forcing the protocol to restart. In a naive protocol, the malicious party learns the honest parties' data and then aborts, gaining information while preventing completion.
+
+Identifiable aborts change this. When the protocol aborts, it identifies which party caused the abort. That party can then be excluded from the next attempt and potentially slashed (economically penalized). Abort attacks become costly rather than free.
+
+The CGGMP21 protocol tracks abort attribution through each round. The implementation maintains an abort log — which party failed which check at which round — so the identifiable abort guarantee holds in practice, not just in the security proof.
+
+## Proactive Security
+
+"Proactive" means the secret shares can be refreshed without changing the underlying secret. After a refresh, old shares are worthless. This matters because real adversaries may compromise a party's storage over time — proactive refreshing bounds the window of exposure.
+
+The Lux implementation includes proactive share refresh as a distinct protocol phase, separate from signing.
+
+## Why This Matters for Non-Custodial Infrastructure
+
+Custodial key management — a service holds complete private keys — is a trust liability. Every custodian is a target. A threshold scheme with identifiable aborts distributes this target: an attacker must compromise t parties simultaneously to steal funds, and any attempt to cause disruption identifies itself.
+
+CGGMP21 is the version of threshold ECDSA that includes the full security properties needed for production deployment: UC security model (composable with other protocols), proactive refreshing, and identifiable aborts with party attribution. Earlier threshold ECDSA schemes had weaker security guarantees.
+
+The Lux implementation of CGGMP21 provides the cryptographic foundation for non-custodial infrastructure that does not ask users to trust a single key custodian.

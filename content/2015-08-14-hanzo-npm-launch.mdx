@@ -1,0 +1,55 @@
+---
+title: "hanzo ships to npm: 2015-08-14"
+date: "2015-08-14"
+author: "Zach Kelling"
+tags: ["npm", "javascript", "sdk", "commerce", "open-source"]
+description: "The hanzo npm package ships on August 14, 2015: a JavaScript SDK for the Hanzo Commerce API, betting on JS-everything at a time when that bet was not yet obvious."
+---
+
+The `hanzo` package hit npm on August 14, 2015. First publish. Version 0.0.1.
+
+This was a deliberate bet. In 2015, JavaScript SDKs for commerce infrastructure were not the default. Most payment and commerce APIs shipped a PHP library first, a Ruby gem second, and a Node client as an afterthought. We shipped JavaScript first.
+
+## Why npm, Why JavaScript
+
+The architecture argument: Crowdstart Commerce was already stateless JSON over HTTP. A JavaScript SDK was the thinnest possible wrapper — serialize request, POST, deserialize response. No ceremony. The SDK did not need to be clever because the API was designed to not require cleverness from its clients.
+
+The market argument: React was one year old. Node was mainstream. The "JS-everywhere" stack — same language on client and server — was becoming real for the teams building the most interesting things. Betting on npm meant betting that commerce logic would end up in the same codebase as rendering logic, which turned out to be correct.
+
+## What v0.0.1 Included
+
+The initial publish covered the core Hanzo API surface:
+
+- **Orders**: create, retrieve, list. Idempotent creation with client-supplied order IDs.
+- **Customers**: create and authenticate. Email + password or tokenized identity.
+- **Products and variants**: catalog management, inventory tracking.
+- **Carts**: add item, remove item, apply coupon, calculate totals.
+- **Checkout**: initiate payment, capture, refund.
+
+The SDK was promise-based from day one. Callback-style Node APIs were already feeling dated in mid-2015. We chose promises and took the hit with older environments rather than ship a callback-first API we would regret.
+
+## SDK Design Principles
+
+One constructor, one config object:
+
+```javascript
+const client = new Hanzo({ key: 'your-api-key' })
+```
+
+Every resource is a method namespace off the client. `client.order.create()`, `client.customer.authenticate()`. No static methods, no global state, no ambient configuration. Multiple clients in one process with different keys worked without any conflicts.
+
+Errors were typed. A 402 came back as a `PaymentError` with a `code` field. A 422 came back as a `ValidationError` with a `fields` map. Client code could branch on error type without parsing strings.
+
+## The Dependency Philosophy
+
+The initial version had minimal dependencies. This was intentional. An SDK that pulls in half of npm is an SDK that causes dependency conflicts and audit failures in its consumers. We kept the dependency tree shallow.
+
+The tradeoff was writing some utilities ourselves — HTTP retry logic, response parsing, error class hierarchies. That code is not interesting, but owning it meant we controlled the behavior.
+
+## What the Bet Paid Off
+
+By 2017, the assumption embedded in this decision — that serious commerce engineering would happen in JavaScript — had become consensus. The teams building headless commerce, JAMstack storefronts, and server-rendered checkout flows all reached for Node first.
+
+The `hanzo` package was already there, designed for that world, when that world arrived.
+
+The August 2015 publish date is a small artifact, but it marks a real architectural commitment: commerce infrastructure belongs in the same ecosystem as the rest of your application stack. JavaScript was that ecosystem.
