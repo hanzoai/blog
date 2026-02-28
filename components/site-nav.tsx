@@ -20,18 +20,10 @@ export function SiteNav() {
           <span className="text-muted-foreground text-sm">/ blog</span>
         </a>
         <nav className="flex items-center gap-4 text-sm text-muted-foreground">
-          <a
-            href="https://hanzo.ai"
-            className="hover:text-foreground transition-colors"
-          >
-            hanzo.ai
-          </a>
-          <a
-            href="https://hanzo.help"
-            className="hover:text-foreground transition-colors hidden sm:block"
-          >
-            Help
-          </a>
+          <a href="https://hanzo.ai" className="hover:text-foreground transition-colors">hanzo.ai</a>
+          <a href="https://blog.zoo.ngo" className="hover:text-foreground transition-colors hidden sm:block">zoo</a>
+          <a href="https://zenlm.org/blog" className="hover:text-foreground transition-colors hidden sm:block">zen</a>
+          <a href="https://zeekay.blog" className="hover:text-foreground transition-colors hidden sm:block">zeekay</a>
           <a
             href="https://discord.gg/hanzo"
             target="_blank"

@@ -15,24 +15,11 @@ export default function Footer() {
           <span>© 2025 Hanzo AI, Inc. Techstars &apos;17.</span>
         </div>
         <div className="flex items-center gap-4">
-          <a
-            href="https://hanzo.ai/privacy"
-            className="hover:text-foreground transition-colors"
-          >
-            Privacy
-          </a>
-          <a
-            href="https://hanzo.ai/terms"
-            className="hover:text-foreground transition-colors"
-          >
-            Terms
-          </a>
-          <a
-            href="https://hanzo.ai/contact"
-            className="hover:text-foreground transition-colors"
-          >
-            Contact
-          </a>
+          <a href="https://hanzo.ai/privacy" className="hover:text-foreground transition-colors">Privacy</a>
+          <a href="https://hanzo.ai/terms" className="hover:text-foreground transition-colors">Terms</a>
+          <a href="https://blog.zoo.ngo" className="hover:text-foreground transition-colors hidden sm:block">zoo blog</a>
+          <a href="https://zenlm.org/blog" className="hover:text-foreground transition-colors hidden sm:block">zen blog</a>
+          <a href="https://zeekay.blog" className="hover:text-foreground transition-colors hidden sm:block">zeekay.blog</a>
           <a
             href="https://github.com/hanzoai"
             target="_blank"
