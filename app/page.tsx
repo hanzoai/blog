@@ -2,27 +2,8 @@ import { docs, meta } from "@/.source";
 import { loader } from "fumadocs-core/source";
 import { createMDXSource } from "fumadocs-mdx";
 import { Suspense } from "react";
-import { BlogCard } from "@/components/blog-card";
-import { TagFilter } from "@/components/tag-filter";
+import { BlogList } from "@/components/blog-list";
 import { FlickeringGrid } from "@/components/magicui/flickering-grid";
-
-interface BlogData {
-  title: string;
-  description: string;
-  date: string;
-  tags?: string[];
-  featured?: boolean;
-  readTime?: string;
-  author?: string;
-  authorImage?: string;
-  thumbnail?: string;
-  category?: string;
-}
-
-interface BlogPage {
-  url: string;
-  data: BlogData;
-}
 
 const blogSource = loader({
   baseUrl: "/blog",
@@ -37,40 +18,41 @@ const formatDate = (date: Date): string => {
   });
 };
 
-export default async function HomePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ tag?: string; category?: string }>;
-}) {
-  const resolvedSearchParams = await searchParams;
-  const allPages = blogSource.getPages() as BlogPage[];
-  const sortedBlogs = allPages.sort((a, b) => {
-    const dateA = new Date(a.data.date).getTime();
-    const dateB = new Date(b.data.date).getTime();
-    return dateB - dateA;
-  });
+export default function HomePage() {
+  const allPages = blogSource.getPages();
+  const sortedBlogs = allPages
+    .map((page) => {
+      const d = page.data as {
+        title: string;
+        description: string;
+        date: string;
+        tags?: string[];
+        thumbnail?: string;
+      };
+      return {
+        url: page.url,
+        title: d.title,
+        description: d.description,
+        date: d.date,
+        tags: d.tags ?? [],
+        thumbnail: d.thumbnail ?? null,
+        formattedDate: formatDate(new Date(d.date)),
+      };
+    })
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const allTags = [
     "All",
     ...Array.from(
-      new Set(sortedBlogs.flatMap((blog) => blog.data.tags || []))
+      new Set(sortedBlogs.flatMap((b) => b.tags))
     ).sort(),
   ];
 
-  const selectedTag = resolvedSearchParams.tag || "All";
-  const filteredBlogs =
-    selectedTag === "All"
-      ? sortedBlogs
-      : sortedBlogs.filter((blog) => blog.data.tags?.includes(selectedTag));
-
   const tagCounts = allTags.reduce((acc, tag) => {
-    if (tag === "All") {
-      acc[tag] = sortedBlogs.length;
-    } else {
-      acc[tag] = sortedBlogs.filter((blog) =>
-        blog.data.tags?.includes(tag)
-      ).length;
-    }
+    acc[tag] =
+      tag === "All"
+        ? sortedBlogs.length
+        : sortedBlogs.filter((b) => b.tags.includes(tag)).length;
     return acc;
   }, {} as Record<string, number>);
 
@@ -97,43 +79,11 @@ export default async function HomePage({
             </p>
           </div>
         </div>
-        {allTags.length > 0 && (
-          <div className="max-w-7xl mx-auto w-full">
-            <TagFilter
-              tags={allTags}
-              selectedTag={selectedTag}
-              tagCounts={tagCounts}
-            />
-          </div>
-        )}
       </div>
 
-      <div className="max-w-7xl mx-auto w-full px-6 lg:px-0">
-        <Suspense fallback={<div>Loading articles...</div>}>
-          <div
-            className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 relative overflow-hidden border-x border-border ${
-              filteredBlogs.length < 4 ? "border-b" : "border-b-0"
-            }`}
-          >
-            {filteredBlogs.map((blog) => {
-              const date = new Date(blog.data.date);
-              const formattedDate = formatDate(date);
-
-              return (
-                <BlogCard
-                  key={blog.url}
-                  url={blog.url}
-                  title={blog.data.title}
-                  description={blog.data.description}
-                  date={formattedDate}
-                  thumbnail={blog.data.thumbnail}
-                  showRightBorder={filteredBlogs.length < 3}
-                />
-              );
-            })}
-          </div>
-        </Suspense>
-      </div>
+      <Suspense>
+        <BlogList blogs={sortedBlogs} allTags={allTags} tagCounts={tagCounts} />
+      </Suspense>
     </div>
   );
 }
