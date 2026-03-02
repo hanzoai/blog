@@ -14,7 +14,7 @@ Today we are releasing Zen Flash, a 7B distilled model purpose-built for product
 
 ## Architecture
 
-Zen Flash was distilled from Zen Max using the Zen MoDE (Mixture of Distilled Experts) pipeline. The distillation process is not naive knowledge distillation. We used speculative decoding alignment during training, which means Zen Flash's output distribution was shaped specifically for high-throughput serving patterns. The model learns to produce correct first tokens quickly, not just correct final answers.
+Zen Flash was distilled from Zen Max using the Zen MoDE (Mixture of Diverse Experts) pipeline. The distillation process is not naive knowledge distillation. We used speculative decoding alignment during training, which means Zen Flash's output distribution was shaped specifically for high-throughput serving patterns. The model learns to produce correct first tokens quickly, not just correct final answers.
 
 At 7B parameters, Zen Flash fits comfortably in 14GB of GPU memory at BF16, or 7GB at Q4_K_M. A single A10G can serve multiple concurrent requests. For edge deployment, the GGUF Q4 variant runs on M1/M2 MacBooks with time-to-first-token under 60ms at local batch size 1.
 

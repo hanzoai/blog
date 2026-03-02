@@ -11,7 +11,7 @@ featured: true
 
 Most AI platforms force a choice: use their models or bring your own. We eliminated that choice.
 
-Today we're launching the Hanzo AI Gateway — a single OpenAI-compatible endpoint that gives developers access to over 100 AI models from every major provider, plus 14 proprietary Zen models built on our Mixture of Distilled Experts (MoDE) architecture. One API key. One bill. Zero markup on third-party models.
+Today we're launching the Hanzo AI Gateway — a single OpenAI-compatible endpoint that gives developers access to over 100 AI models from every major provider, plus 14 proprietary Zen models built on our Mixture of Diverse Experts (MoDE) architecture. One API key. One bill. Zero markup on third-party models.
 
 ## What Makes This Different
 

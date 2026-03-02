@@ -34,7 +34,7 @@ Today we're launching Zen4 Coder, a 480-billion parameter Mixture of Experts mod
 
 ## Why MoE Architecture Matters for Code
 
-The Mixture of Distilled Experts (MoDE) architecture routes each token to specialized expert subnetworks. In Zen4 Coder, this creates dedicated pathways for:
+The Mixture of Diverse Experts (MoDE) architecture routes each token to specialized expert subnetworks. In Zen4 Coder, this creates dedicated pathways for:
 
 - **Syntax experts** — Language-specific grammar and structure
 - **Semantic experts** — Meaning, intent, and program logic

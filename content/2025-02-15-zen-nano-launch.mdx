@@ -10,7 +10,7 @@ description: "Zen Nano is a 0.6B on-device AI model built for mobile and embedde
 
 Today we are releasing Zen Nano, a 0.6B parameter model purpose-built for on-device inference. It runs on mobile SoCs, microcontrollers, and embedded systems where larger models simply cannot go.
 
-Zen Nano is part of the Zen MoDE (Mixture of Distilled Experts) family, distilled from larger Zen models with the explicit goal of preserving capability at the smallest possible footprint.
+Zen Nano is part of the Zen MoDE (Mixture of Diverse Experts) family, distilled from larger Zen models with the explicit goal of preserving capability at the smallest possible footprint.
 
 ## Performance on Edge Hardware
 
@@ -53,7 +53,7 @@ For agentic and complex reasoning tasks, Zen Nano pairs well with a larger Zen m
 
 ## Part of the Zen MoDE Family
 
-Zen Nano is the smallest model in the Zen MoDE lineup. Zen MoDE (Mixture of Distilled Experts) is our approach to building the full capability spectrum from edge to cloud using a common distillation methodology.
+Zen Nano is the smallest model in the Zen MoDE lineup. Zen MoDE (Mixture of Diverse Experts) is our approach to building the full capability spectrum from edge to cloud using a common distillation methodology.
 
 The full family spans from Zen Nano at 0.6B to Zen Max at 671B. Each model is distilled from a larger upstream, retaining the reasoning patterns and instruction-following quality of larger models in progressively smaller footprints.
 

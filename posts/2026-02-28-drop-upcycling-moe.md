@@ -10,7 +10,7 @@ description: "How Drop-Upcycling transforms a dense model into a high-quality Mo
 
 Training a Mixture of Experts model from scratch is expensive by design. You are not just training one set of FFN weights — you are training K sets, plus a routing mechanism that must learn to specialize them, plus the overhead of ensuring experts do not all collapse to the same representation. The full MoE training cost can reach 4-6x the cost of training an equivalent dense model, for a final model that activates only a fraction of its parameters at inference.
 
-There is a better path. Drop-Upcycling (arXiv:2502.19261) converts a pre-trained dense model into a high-quality MoE at approximately 1/4 the training cost of a from-scratch MoE, while matching or exceeding the quality of the from-scratch approach. For Zen MoDE (Mixture of Distilled Experts), this is not a research curiosity — it is the production training strategy.
+There is a better path. Drop-Upcycling (arXiv:2502.19261) converts a pre-trained dense model into a high-quality MoE at approximately 1/4 the training cost of a from-scratch MoE, while matching or exceeding the quality of the from-scratch approach. For Zen MoDE (Mixture of Diverse Experts), this is not a research curiosity — it is the production training strategy.
 
 ## The Dense-to-MoE Transformation Problem
 

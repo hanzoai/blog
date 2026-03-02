@@ -18,7 +18,7 @@ Zen Coder is a complete family of code-specialized models from edge to frontier.
 | **Zen Coder 35B** | 35B | 35B | Dense | 128K | Developer workstations |
 | **Zen Coder 480B** | 480B | ~40B | MoE | 128K | Cloud, agentic systems |
 
-Zen Coder 480B uses the Zen MoDE (Mixture of Distilled Experts) architecture: 480B total parameters with approximately 40B active per forward pass. Frontier-class output at a fraction of the inference compute of a comparable dense model.
+Zen Coder 480B uses the Zen MoDE (Mixture of Diverse Experts) architecture: 480B total parameters with approximately 40B active per forward pass. Frontier-class output at a fraction of the inference compute of a comparable dense model.
 
 ## Extended Thinking
 
