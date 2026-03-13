@@ -3,7 +3,7 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import Script from "next/script";
 import { ThemeProvider } from "@/components/theme-provider";
-import { InsightsProvider } from "@/components/posthog-provider";
+import { InsightsProvider } from "@/components/insights-provider";
 import { siteConfig } from "@/lib/site";
 import { metadataKeywords } from "./metadata";
 import { SiteNav } from "@/components/site-nav";
